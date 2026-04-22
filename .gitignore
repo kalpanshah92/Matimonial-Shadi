@@ -1,0 +1,25 @@
+# Uploads
+uploads/photos/*
+!uploads/photos/.gitkeep
+
+# Config overrides
+config/local.php
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+error_log
+
+# Environment
+.env
