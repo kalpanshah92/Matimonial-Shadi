@@ -253,11 +253,11 @@ require_once __DIR__ . '/includes/header.php';
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Caste</label>
+                                <label class="form-label">Samaj Name</label>
                                 <input type="text" class="form-control" name="caste" value="<?= sanitize($currentUser['caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Sub Caste</label>
+                                <label class="form-label">Sub Samaj</label>
                                 <input type="text" class="form-control" name="sub_caste" value="<?= sanitize($currentUser['sub_caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
@@ -556,7 +556,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="pref_religion" value="<?= sanitize($partnerPrefs['religion'] ?? '') ?>" placeholder="E.g., Hindu, Sikh">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Caste</label>
+                                <label class="form-label">Samaj Name</label>
                                 <input type="text" class="form-control" name="pref_caste" value="<?= sanitize($partnerPrefs['caste'] ?? '') ?>" placeholder="Any or specific">
                             </div>
                             <div class="col-md-4">

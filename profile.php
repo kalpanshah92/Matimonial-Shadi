@@ -131,7 +131,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="col-6"><small class="text-muted">Age:</small><br><strong><?= calculateAge($profile['dob']) ?> years</strong></div>
                                 <div class="col-6"><small class="text-muted">Height:</small><br><strong><?= $details ? formatHeight($details['height']) : 'Not specified' ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Religion:</small><br><strong><?= sanitize($profile['religion'] ?? 'Not specified') ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Caste:</small><br><strong><?= sanitize($profile['caste'] ?? 'Not specified') ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Samaj Name:</small><br><strong><?= sanitize($profile['caste'] ?? 'Not specified') ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Mother Tongue:</small><br><strong><?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Location:</small><br><strong><?= sanitize(($profile['city'] ? $profile['city'] . ', ' : '') . ($profile['state'] ?? 'India')) ?></strong></div>
                             </div>
@@ -229,7 +229,7 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4"><small class="text-muted">Religion</small><br><?= sanitize($partnerPrefs['religion']) ?></div>
                         <?php endif; ?>
                         <?php if ($partnerPrefs['caste']): ?>
-                            <div class="col-md-4"><small class="text-muted">Caste</small><br><?= sanitize($partnerPrefs['caste']) ?></div>
+                            <div class="col-md-4"><small class="text-muted">Samaj Name</small><br><?= sanitize($partnerPrefs['caste']) ?></div>
                         <?php endif; ?>
                         <?php if ($partnerPrefs['education']): ?>
                             <div class="col-md-4"><small class="text-muted">Education</small><br><?= sanitize($partnerPrefs['education']) ?></div>

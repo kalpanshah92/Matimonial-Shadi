@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     profile_id VARCHAR(10) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    phone VARCHAR(15) UNIQUE,
+    phone VARCHAR(15),
     password VARCHAR(255) NOT NULL,
     gender ENUM('Male', 'Female') NOT NULL,
     dob DATE NOT NULL,
@@ -308,4 +308,4 @@ INSERT INTO plans (name, price, duration_days, features, max_contacts, max_messa
 
 -- Insert Default Admin User (password: admin123)
 INSERT INTO admin_users (username, email, password, name, role) VALUES
-('admin', 'admin@matrimonialshadi.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Super Admin', 'super_admin');
+('admin', 'admin@matrimonialshadi.com', '$2y$10$wYzoSbodf1mf/dEaEwUS8.py/Oy1vT.2I6wBm/tELpSO6m8HSZDxW', 'Super Admin', 'super_admin');

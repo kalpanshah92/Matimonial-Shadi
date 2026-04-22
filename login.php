@@ -26,21 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
         
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            
-            // Update last login
-            $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-            $stmt->execute([$user['id']]);
-            
-            // Handle remember me
-            if (isset($_POST['remember_me'])) {
-                $token = bin2hex(random_bytes(32));
-                setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+            // Check if account is approved by admin
+            if ($user['status'] === 'pending') {
+                $errors[] = 'Your account is pending approval. Please wait for admin to approve your registration.';
+            } elseif ($user['status'] === 'rejected') {
+                $errors[] = 'Your account has been rejected. Please contact support for more information.';
+            } elseif ($user['status'] === 'suspended') {
+                $errors[] = 'Your account has been suspended. Please contact support.';
+            } else {
+                $_SESSION['user_id'] = $user['id'];
+                
+                // Update last login
+                $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+                $stmt->execute([$user['id']]);
+                
+                // Handle remember me
+                if (isset($_POST['remember_me'])) {
+                    $token = bin2hex(random_bytes(32));
+                    setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+                }
+                
+                $redirect = $_GET['redirect'] ?? SITE_URL . '/dashboard.php';
+                setFlash('success', 'Welcome back, ' . $user['name'] . '!');
+                redirect($redirect);
             }
-            
-            $redirect = $_GET['redirect'] ?? SITE_URL . '/dashboard.php';
-            setFlash('success', 'Welcome back, ' . $user['name'] . '!');
-            redirect($redirect);
         } else {
             $errors[] = 'Invalid email/phone or password.';
         }

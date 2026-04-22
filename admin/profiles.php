@@ -149,10 +149,12 @@ $users = $stmt->fetchAll();
                             <td><small><?= date('d M Y', strtotime($user['created_at'])) ?></small></td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <?php if ($user['status'] === 'pending'): ?>
+                                    <?php if ($user['status'] !== 'approved'): ?>
                                         <button class="btn btn-success btn-approve-profile" data-user-id="<?= $user['id'] ?>" title="Approve">
                                             <i class="bi bi-check"></i>
                                         </button>
+                                    <?php endif; ?>
+                                    <?php if ($user['status'] !== 'rejected'): ?>
                                         <button class="btn btn-danger btn-reject-profile" data-user-id="<?= $user['id'] ?>" title="Reject">
                                             <i class="bi bi-x"></i>
                                         </button>

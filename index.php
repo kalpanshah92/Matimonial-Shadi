@@ -37,62 +37,70 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-overlay"></div>
-    <div class="container position-relative">
-        <div class="row align-items-center min-vh-75">
-            <div class="col-lg-7 text-white">
-                <h1 class="hero-title animate__animated animate__fadeInUp">
-                    Find Your <span class="text-accent">Perfect Match</span><br>
-                    Made in Heaven
-                </h1>
-                <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
-                    India's most trusted matrimonial platform. Connecting hearts across communities, 
-                    cultures, and traditions. Join lakhs of happy couples who found their soulmate here.
-                </p>
-                
-                <!-- Quick Search -->
-                <div class="hero-search animate__animated animate__fadeInUp animate__delay-2s">
-                    <form action="<?= isset($_SESSION['user_id']) ? 'search.php' : 'login.php' ?>" method="GET" class="row g-2">
-                        <div class="col-md-3">
-                            <select name="looking_for" class="form-select">
-                                <option value="Female">Looking for Bride</option>
-                                <option value="Male">Looking for Groom</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="religion" class="form-select">
-                                <option value="">All Religions</option>
-                                <?php foreach ($RELIGIONS as $r): ?>
-                                    <option value="<?= $r ?>"><?= $r ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="min_age" class="form-select">
-                                <option value="">Min Age</option>
-                                <?php for ($i = 18; $i <= 60; $i++): ?>
-                                    <option value="<?= $i ?>"><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="max_age" class="form-select">
-                                <option value="">Max Age</option>
-                                <?php for ($i = 18; $i <= 60; $i++): ?>
-                                    <option value="<?= $i ?>"><?= $i ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-accent w-100">
-                                <i class="bi bi-search me-1"></i>Search
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    <div class="container-fluid position-relative px-0">
+        <div class="row g-0 align-items-stretch min-vh-75">
+            <!-- Left Ad Placement -->
+            <div class="col-lg-2 d-none d-lg-flex align-items-center justify-content-center">
+                <a href="#" class="hero-ad-slot animate__animated animate__fadeInLeft">
+                    <img src="<?= SITE_URL ?>/assets/images/ads/ad-left.jpg" alt="Advertisement">
+                </a>
             </div>
-            <div class="col-lg-5 d-none d-lg-block text-center">
-                <div class="hero-image animate__animated animate__fadeInRight">
-                    <div class="hero-stats">
+            
+            <!-- Center Content -->
+            <div class="col-lg-8 text-white d-flex align-items-center">
+                <div class="hero-center-content text-center w-100 py-5 px-3">
+                    <h1 class="hero-title animate__animated animate__fadeInUp">
+                        Find Your <span class="text-accent">Perfect Match</span><br>
+                        Made in Heaven
+                    </h1>
+                    <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s mx-auto" style="max-width: 600px;">
+                        India's most trusted matrimonial platform. Connecting hearts across communities, 
+                        cultures, and traditions. Join lakhs of happy couples who found their soulmate here.
+                    </p>
+                    
+                    <!-- Quick Search -->
+                    <div class="hero-search animate__animated animate__fadeInUp animate__delay-2s mx-auto" style="max-width: 900px;">
+                        <form action="<?= isset($_SESSION['user_id']) ? 'search.php' : 'login.php' ?>" method="GET" class="row g-3 justify-content-center">
+                            <div class="col-md">
+                                <select name="looking_for" class="form-select">
+                                    <option value="Female">Bride</option>
+                                    <option value="Male">Groom</option>
+                                </select>
+                            </div>
+                            <div class="col-md">
+                                <select name="religion" class="form-select">
+                                    <option value="">Religion</option>
+                                    <?php foreach ($RELIGIONS as $r): ?>
+                                        <option value="<?= $r ?>"><?= $r ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md">
+                                <select name="min_age" class="form-select">
+                                    <option value="">Min Age</option>
+                                    <?php for ($i = 18; $i <= 60; $i++): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                            <div class="col-md">
+                                <select name="max_age" class="form-select">
+                                    <option value="">Max Age</option>
+                                    <?php for ($i = 18; $i <= 60; $i++): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-auto">
+                                <button type="submit" class="btn btn-accent px-4">
+                                    <i class="bi bi-search me-1"></i>Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="hero-stats animate__animated animate__fadeInUp animate__delay-2s mt-4 justify-content-center">
                         <div class="stat-item">
                             <h3>10L+</h3>
                             <p>Active Profiles</p>
@@ -108,6 +116,44 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
             </div>
+            
+            <!-- Right Ad Placement -->
+            <div class="col-lg-2 d-none d-lg-flex align-items-center justify-content-center">
+                <a href="#" class="hero-ad-slot animate__animated animate__fadeInRight">
+                    <img src="<?= SITE_URL ?>/assets/images/ads/ad-right.jpg" alt="Advertisement">
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sponsors Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">Our Sponsors</h2>
+            <p class="section-subtitle">Join our community of enthusiasts. Engage, connect, and share your passions with like-minded individuals. Welcome to thriving discussions!</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <a href="#" class="sponsor-card d-block">
+                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor1.jpg" alt="Sponsor 1">
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <a href="#" class="sponsor-card d-block">
+                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor2.jpg" alt="Sponsor 2">
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <a href="#" class="sponsor-card d-block">
+                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor3.jpg" alt="Sponsor 3">
+                </a>
+            </div>
+        </div>
+        <p class="text-center text-muted mt-4"><small>Interested in advertising? <a href="mailto:<?= SITE_EMAIL ?>">Contact us</a>.</small></p>
+        <div class="text-center mt-3">
+            <a href="#" class="btn btn-outline-danger btn-lg px-4">More Community</a>
         </div>
     </div>
 </section>
@@ -185,77 +231,6 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         <h6><?= $community ?></h6>
                         <small>Matrimony</small>
-                    </a>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-
-<!-- Featured Profiles -->
-<?php if (!empty($featuredProfiles)): ?>
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="section-header text-center mb-5">
-            <h2 class="section-title">Featured Profiles</h2>
-            <p class="section-subtitle">Verified and premium profiles for you</p>
-        </div>
-        <div class="row g-4">
-            <?php foreach ($featuredProfiles as $profile): ?>
-                <div class="col-lg-3 col-md-4 col-sm-6">
-                    <div class="profile-card">
-                        <div class="profile-card-img">
-                            <img src="<?= getProfilePic($profile['profile_pic'], $profile['gender']) ?>" alt="<?= sanitize($profile['name']) ?>">
-                            <?php if ($profile['is_verified']): ?>
-                                <span class="verified-badge"><i class="bi bi-patch-check-fill"></i></span>
-                            <?php endif; ?>
-                            <?php if ($profile['is_premium']): ?>
-                                <span class="premium-badge"><i class="bi bi-star-fill"></i> Premium</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="profile-card-body">
-                            <h5><?= sanitize($profile['name']) ?></h5>
-                            <p class="profile-id"><?= $profile['profile_id'] ?></p>
-                            <div class="profile-details-mini">
-                                <span><i class="bi bi-calendar3"></i> <?= calculateAge($profile['dob']) ?> yrs</span>
-                                <?php if ($profile['height']): ?>
-                                    <span><i class="bi bi-rulers"></i> <?= formatHeight($profile['height']) ?></span>
-                                <?php endif; ?>
-                                <span><i class="bi bi-mortarboard"></i> <?= sanitize($profile['education'] ?? 'Not specified') ?></span>
-                                <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['city'] ?? $profile['state'] ?? 'India') ?></span>
-                            </div>
-                            <a href="<?= SITE_URL ?>/profile.php?id=<?= $profile['id'] ?>" class="btn btn-outline-primary btn-sm w-100 mt-2">
-                                View Profile
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-        <div class="text-center mt-4">
-            <a href="<?= SITE_URL ?>/search.php" class="btn btn-primary btn-lg">
-                <i class="bi bi-search me-2"></i>View More Profiles
-            </a>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
-
-<!-- Browse by Mother Tongue -->
-<section class="py-5">
-    <div class="container">
-        <div class="section-header text-center mb-5">
-            <h2 class="section-title">Browse by Mother Tongue</h2>
-            <p class="section-subtitle">Connect with someone who speaks your language</p>
-        </div>
-        <div class="row g-3 justify-content-center">
-            <?php 
-            $topLanguages = ['Gujarati', 'Hindi', 'Marvadi', 'English'];
-            foreach ($topLanguages as $lang): 
-            ?>
-                <div class="col-auto">
-                    <a href="<?= SITE_URL ?>/search.php?mother_tongue=<?= urlencode($lang) ?>" class="btn btn-outline-primary btn-language">
-                        <?= $lang ?> Matrimony
                     </a>
                 </div>
             <?php endforeach; ?>

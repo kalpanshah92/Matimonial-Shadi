@@ -239,7 +239,7 @@ $(document).ready(function () {
 
         if (confirm('Are you sure you want to ' + action + ' this profile?')) {
             $.ajax({
-                url: 'admin/api/profiles.php',
+                url: 'api/profiles.php',
                 method: 'POST',
                 data: { action: action, user_id: userId },
                 dataType: 'json',

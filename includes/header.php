@@ -78,6 +78,11 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                         <i class="bi bi-search me-1"></i>Search
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'success-stories' ? 'active' : '' ?>" href="<?= SITE_URL ?>/success-stories.php">
+                        <i class="bi bi-heart me-1"></i>Success Story
+                    </a>
+                </li>
                 
                 <?php if ($currentUser): ?>
                     <li class="nav-item">

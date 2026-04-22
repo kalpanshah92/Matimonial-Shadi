@@ -36,7 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($formData['name'])) $errors[] = 'Name is required.';
     if (empty($formData['email']) || !filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
     if (empty($formData['phone']) || !preg_match('/^[6-9]\d{9}$/', $formData['phone'])) $errors[] = 'Valid Indian mobile number is required.';
-    if (strlen($formData['password']) < 8) $errors[] = 'Password must be at least 8 characters.';
+    if (strlen($formData['password']) < 14) $errors[] = 'Password must be at least 14 characters long.';
+    if (!preg_match('/[0-9]/', $formData['password'])) $errors[] = 'Password must contain at least 1 number.';
+    if (empty($_POST['terms'])) $errors[] = 'You must agree to the Terms of Service and Privacy Policy.';
     if ($formData['password'] !== $formData['confirm_password']) $errors[] = 'Passwords do not match.';
     if (empty($formData['gender'])) $errors[] = 'Gender is required.';
     if (empty($formData['dob'])) $errors[] = 'Date of birth is required.';
@@ -56,9 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$formData['email']]);
         if ($stmt->fetch()) $errors[] = 'Email is already registered.';
         
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
-        $stmt->execute([$formData['phone']]);
-        if ($stmt->fetch()) $errors[] = 'Phone number is already registered.';
+        // Phone number can be shared across profiles (family registrations)
     }
     
     // Register user
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $stmt = $pdo->prepare(
                 "INSERT INTO users (profile_id, name, email, phone, password, gender, dob, religion, caste, mother_tongue, state, city, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')"
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
             );
             
             $stmt->execute([
@@ -96,11 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO partner_preferences (user_id) VALUES (?)")->execute([$userId]);
             $pdo->prepare("INSERT INTO privacy_settings (user_id) VALUES (?)")->execute([$userId]);
             
-            // Auto login
-            $_SESSION['user_id'] = $userId;
-            
-            setFlash('success', 'Registration successful! Welcome to ' . SITE_NAME . '. Complete your profile to get better matches.');
-            redirect(SITE_URL . '/edit-profile.php');
+            setFlash('success', 'Registration successful! Your account is pending approval by admin. You will be able to login once approved.');
+            redirect(SITE_URL . '/login.php');
             
         } catch (PDOException $e) {
             error_log("Registration Error: " . $e->getMessage());
@@ -215,9 +212,9 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <!-- Caste -->
                             <div class="col-md-6">
-                                <label for="caste" class="form-label">Caste / Community</label>
+                                <label for="caste" class="form-label">Samaj Name</label>
                                 <input type="text" class="form-control" id="caste" name="caste" 
-                                       value="<?= $formData['caste'] ?? '' ?>" placeholder="Enter caste or community">
+                                       value="<?= $formData['caste'] ?? '' ?>" placeholder="Enter Samaj Name">
                             </div>
                             
                             <!-- Mother Tongue -->
@@ -254,7 +251,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password" name="password" 
-                                           required minlength="8" placeholder="Min 8 characters">
+                                           required minlength="14" placeholder="Min 14 characters, include a number">
                                     <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password">
                                         <i class="bi bi-eye"></i>
                                     </button>

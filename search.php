@@ -12,11 +12,10 @@ $offset = ($page - 1) * RESULTS_PER_PAGE;
 $where = ["u.is_active = 1", "u.status = 'approved'"];
 $params = [];
 
-// Gender / Looking for
-if (!empty($_GET['looking_for'])) {
-    $where[] = "u.gender = ?";
-    $params[] = sanitize($_GET['looking_for']);
-}
+// Force opposite gender - males see females, females see males
+$oppositeGender = ($currentUser['gender'] === 'Male') ? 'Female' : 'Male';
+$where[] = "u.gender = ?";
+$params[] = $oppositeGender;
 
 // Religion
 if (!empty($_GET['religion'])) {
@@ -118,15 +117,6 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="search-filters">
                     <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Search Filters</h5>
                     <form method="GET" action="" id="searchForm">
-                        <!-- Looking For -->
-                        <div class="filter-group">
-                            <label>Looking For</label>
-                            <select name="looking_for" class="form-select form-select-sm">
-                                <option value="">All</option>
-                                <option value="Female" <?= ($_GET['looking_for'] ?? '') === 'Female' ? 'selected' : '' ?>>Bride</option>
-                                <option value="Male" <?= ($_GET['looking_for'] ?? '') === 'Male' ? 'selected' : '' ?>>Groom</option>
-                            </select>
-                        </div>
 
                         <!-- Age Range -->
                         <div class="filter-group">
@@ -162,11 +152,11 @@ require_once __DIR__ . '/includes/header.php';
                             </select>
                         </div>
 
-                        <!-- Caste -->
+                        <!-- Samaj Name -->
                         <div class="filter-group">
-                            <label>Caste / Community</label>
+                            <label>Samaj Name</label>
                             <input type="text" name="caste" class="form-control form-control-sm" 
-                                   value="<?= sanitize($_GET['caste'] ?? '') ?>" placeholder="Enter caste">
+                                   value="<?= sanitize($_GET['caste'] ?? '') ?>" placeholder="Enter Samaj Name">
                         </div>
 
                         <!-- Marital Status -->
