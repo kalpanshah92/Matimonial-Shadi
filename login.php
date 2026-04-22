@@ -116,19 +116,6 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="bi bi-box-arrow-in-right me-2"></i>Login
                         </button>
                         
-                        <div class="divider my-4">
-                            <span>OR</span>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-outline-danger">
-                                <i class="bi bi-google me-2"></i>Login with Google
-                            </button>
-                            <button type="button" class="btn btn-outline-primary">
-                                <i class="bi bi-facebook me-2"></i>Login with Facebook
-                            </button>
-                        </div>
-                        
                         <div class="text-center mt-4">
                             <p>Don't have an account? <a href="<?= SITE_URL ?>/register.php" class="fw-semibold">Register Free</a></p>
                         </div>

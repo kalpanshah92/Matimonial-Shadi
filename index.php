@@ -54,8 +54,8 @@ require_once __DIR__ . '/includes/header.php';
                         Made in Heaven
                     </h1>
                     <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s mx-auto" style="max-width: 600px;">
-                        India's most trusted matrimonial platform. Connecting hearts across communities, 
-                        cultures, and traditions. Join lakhs of happy couples who found their soulmate here.
+                        Gujarat's most trusted matrimonial platform. Connecting hearts across communities, 
+                        cultures, and traditions. Join many of happy couples who found their soulmate here.
                     </p>
                     
                     <!-- Quick Search -->
@@ -206,34 +206,6 @@ require_once __DIR__ . '/includes/header.php';
                     <p>Meet your perfect match and start your journey together</p>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- Browse by Community -->
-<section class="py-5">
-    <div class="container">
-        <div class="section-header text-center mb-5">
-            <h2 class="section-title">Browse by Community</h2>
-            <p class="section-subtitle">Find matches from your community</p>
-        </div>
-        <div class="row g-3 justify-content-center">
-            <?php 
-            $communityIcons = [
-                'Hindu' => 'bi-flower1', 'Jain' => 'bi-gem'
-            ];
-            foreach ($communityIcons as $community => $icon): 
-            ?>
-                <div class="col-lg-3 col-md-4 col-6">
-                    <a href="<?= SITE_URL ?>/search.php?religion=<?= urlencode($community) ?>" class="community-card text-center d-block">
-                        <div class="community-icon">
-                            <i class="bi <?= $icon ?>"></i>
-                        </div>
-                        <h6><?= $community ?></h6>
-                        <small>Matrimony</small>
-                    </a>
-                </div>
-            <?php endforeach; ?>
         </div>
     </div>
 </section>
