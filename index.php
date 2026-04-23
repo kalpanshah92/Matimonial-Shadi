@@ -235,8 +235,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="col-lg-3 col-md-6">
                 <div class="feature-card text-center">
                     <i class="bi bi-people feature-icon"></i>
-                    <h5>Hindu & Jain</h5>
-                    <p>Profiles from Hindu and Jain communities across India</p>
+                    <h5>Hindu</h5>
+                    <p>Profiles from Hindu communities across India</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">

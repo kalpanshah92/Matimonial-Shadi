@@ -4,10 +4,10 @@
  * Update these settings to match your environment
  */
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'matrimonial_shadi');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'matrimonial_shadi');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_CHARSET', 'utf8mb4');
 
 /**

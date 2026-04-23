@@ -5,7 +5,7 @@
 
 // Site Settings
 define('SITE_NAME', 'Matrimonial Shadi');
-define('SITE_URL', 'http://localhost/matrimonial-shadi');
+define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost/matrimonial-shadi');
 define('SITE_EMAIL', 'support@matrimonialshadi.com');
 define('SITE_PHONE', '+91-9876543210');
 

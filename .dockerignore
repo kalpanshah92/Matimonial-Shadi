@@ -1,0 +1,11 @@
+.git
+.gitignore
+.vscode
+.idea
+*.md
+.env
+.DS_Store
+node_modules
+vendor
+.windsurf
+docker-compose.override.yml
