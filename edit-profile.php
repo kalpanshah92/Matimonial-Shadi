@@ -36,114 +36,152 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             switch ($section) {
                 case 'basic':
-                    $stmt = $pdo->prepare(
-                        "UPDATE users SET name=?, religion=?, caste=?, sub_caste=?, mother_tongue=?, 
-                         marital_status=?, state=?, city=?, about_me=?, updated_at=NOW() WHERE id=?"
-                    );
-                    $stmt->execute([
-                        sanitize($_POST['name']),
-                        sanitize($_POST['religion']),
-                        sanitize($_POST['caste']),
-                        sanitize($_POST['sub_caste'] ?? ''),
-                        sanitize($_POST['mother_tongue']),
-                        sanitize($_POST['marital_status']),
-                        sanitize($_POST['state']),
-                        sanitize($_POST['city']),
-                        sanitize($_POST['about_me']),
-                        $userId
-                    ]);
+                    $oldData = [
+                        'name' => $currentUser['name'],
+                        'religion' => $currentUser['religion'],
+                        'caste' => $currentUser['caste'],
+                        'sub_caste' => $currentUser['sub_caste'],
+                        'mother_tongue' => $currentUser['mother_tongue'],
+                        'marital_status' => $currentUser['marital_status'],
+                        'state' => $currentUser['state'],
+                        'city' => $currentUser['city'],
+                        'about_me' => $currentUser['about_me'],
+                    ];
+                    $newData = [
+                        'name' => sanitize($_POST['name']),
+                        'religion' => sanitize($_POST['religion']),
+                        'caste' => sanitize($_POST['caste']),
+                        'sub_caste' => sanitize($_POST['sub_caste'] ?? ''),
+                        'mother_tongue' => sanitize($_POST['mother_tongue']),
+                        'marital_status' => sanitize($_POST['marital_status']),
+                        'state' => sanitize($_POST['state']),
+                        'city' => sanitize($_POST['city']),
+                        'about_me' => sanitize($_POST['about_me']),
+                    ];
                     $activeTab = 'basic';
                     break;
 
                 case 'personal':
-                    $stmt = $pdo->prepare(
-                        "UPDATE profile_details SET height=?, weight=?, complexion=?, body_type=?, 
-                         blood_group=?, diet=?, smoking=?, drinking=?, hobbies=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        intval($_POST['height']),
-                        intval($_POST['weight'] ?? 0),
-                        sanitize($_POST['complexion'] ?? ''),
-                        sanitize($_POST['body_type'] ?? ''),
-                        sanitize($_POST['blood_group'] ?? ''),
-                        sanitize($_POST['diet'] ?? ''),
-                        sanitize($_POST['smoking'] ?? 'No'),
-                        sanitize($_POST['drinking'] ?? 'No'),
-                        sanitize($_POST['hobbies'] ?? ''),
-                        $userId
-                    ]);
+                    $oldData = [
+                        'height' => $details['height'] ?? '',
+                        'weight' => $details['weight'] ?? '',
+                        'complexion' => $details['complexion'] ?? '',
+                        'body_type' => $details['body_type'] ?? '',
+                        'blood_group' => $details['blood_group'] ?? '',
+                        'diet' => $details['diet'] ?? '',
+                        'smoking' => $details['smoking'] ?? 'No',
+                        'drinking' => $details['drinking'] ?? 'No',
+                        'hobbies' => $details['hobbies'] ?? '',
+                    ];
+                    $newData = [
+                        'height' => intval($_POST['height']),
+                        'weight' => intval($_POST['weight'] ?? 0),
+                        'complexion' => sanitize($_POST['complexion'] ?? ''),
+                        'body_type' => sanitize($_POST['body_type'] ?? ''),
+                        'blood_group' => sanitize($_POST['blood_group'] ?? ''),
+                        'diet' => sanitize($_POST['diet'] ?? ''),
+                        'smoking' => sanitize($_POST['smoking'] ?? 'No'),
+                        'drinking' => sanitize($_POST['drinking'] ?? 'No'),
+                        'hobbies' => sanitize($_POST['hobbies'] ?? ''),
+                    ];
                     $activeTab = 'personal';
                     break;
 
                 case 'professional':
-                    $stmt = $pdo->prepare(
-                        "UPDATE profile_details SET education=?, education_detail=?, occupation=?, 
-                         occupation_detail=?, company=?, annual_income=?, working_city=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        sanitize($_POST['education']),
-                        sanitize($_POST['education_detail'] ?? ''),
-                        sanitize($_POST['occupation']),
-                        sanitize($_POST['occupation_detail'] ?? ''),
-                        sanitize($_POST['company'] ?? ''),
-                        sanitize($_POST['annual_income'] ?? ''),
-                        sanitize($_POST['working_city'] ?? ''),
-                        $userId
-                    ]);
+                    $oldData = [
+                        'education' => $details['education'] ?? '',
+                        'education_detail' => $details['education_detail'] ?? '',
+                        'occupation' => $details['occupation'] ?? '',
+                        'occupation_detail' => $details['occupation_detail'] ?? '',
+                        'company' => $details['company'] ?? '',
+                        'annual_income' => $details['annual_income'] ?? '',
+                        'working_city' => $details['working_city'] ?? '',
+                    ];
+                    $newData = [
+                        'education' => sanitize($_POST['education']),
+                        'education_detail' => sanitize($_POST['education_detail'] ?? ''),
+                        'occupation' => sanitize($_POST['occupation']),
+                        'occupation_detail' => sanitize($_POST['occupation_detail'] ?? ''),
+                        'company' => sanitize($_POST['company'] ?? ''),
+                        'annual_income' => sanitize($_POST['annual_income'] ?? ''),
+                        'working_city' => sanitize($_POST['working_city'] ?? ''),
+                    ];
                     $activeTab = 'professional';
                     break;
 
                 case 'family':
-                    $stmt = $pdo->prepare(
-                        "UPDATE family_details SET father_name=?, father_occupation=?, mother_name=?, 
-                         mother_occupation=?, brothers=?, brothers_married=?, sisters=?, sisters_married=?,
-                         family_type=?, family_status=?, family_values=?, gotra=?, about_family=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        sanitize($_POST['father_name'] ?? ''),
-                        sanitize($_POST['father_occupation'] ?? ''),
-                        sanitize($_POST['mother_name'] ?? ''),
-                        sanitize($_POST['mother_occupation'] ?? ''),
-                        intval($_POST['brothers'] ?? 0),
-                        intval($_POST['brothers_married'] ?? 0),
-                        intval($_POST['sisters'] ?? 0),
-                        intval($_POST['sisters_married'] ?? 0),
-                        sanitize($_POST['family_type'] ?? ''),
-                        sanitize($_POST['family_status'] ?? ''),
-                        sanitize($_POST['family_values'] ?? ''),
-                        sanitize($_POST['gotra'] ?? ''),
-                        sanitize($_POST['about_family'] ?? ''),
-                        $userId
-                    ]);
+                    $oldData = [
+                        'father_name' => $family['father_name'] ?? '',
+                        'father_occupation' => $family['father_occupation'] ?? '',
+                        'mother_name' => $family['mother_name'] ?? '',
+                        'mother_occupation' => $family['mother_occupation'] ?? '',
+                        'brothers' => $family['brothers'] ?? 0,
+                        'brothers_married' => $family['brothers_married'] ?? 0,
+                        'sisters' => $family['sisters'] ?? 0,
+                        'sisters_married' => $family['sisters_married'] ?? 0,
+                        'family_type' => $family['family_type'] ?? '',
+                        'family_status' => $family['family_status'] ?? '',
+                        'family_values' => $family['family_values'] ?? '',
+                        'gotra' => $family['gotra'] ?? '',
+                        'about_family' => $family['about_family'] ?? '',
+                    ];
+                    $newData = [
+                        'father_name' => sanitize($_POST['father_name'] ?? ''),
+                        'father_occupation' => sanitize($_POST['father_occupation'] ?? ''),
+                        'mother_name' => sanitize($_POST['mother_name'] ?? ''),
+                        'mother_occupation' => sanitize($_POST['mother_occupation'] ?? ''),
+                        'brothers' => intval($_POST['brothers'] ?? 0),
+                        'brothers_married' => intval($_POST['brothers_married'] ?? 0),
+                        'sisters' => intval($_POST['sisters'] ?? 0),
+                        'sisters_married' => intval($_POST['sisters_married'] ?? 0),
+                        'family_type' => sanitize($_POST['family_type'] ?? ''),
+                        'family_status' => sanitize($_POST['family_status'] ?? ''),
+                        'family_values' => sanitize($_POST['family_values'] ?? ''),
+                        'gotra' => sanitize($_POST['gotra'] ?? ''),
+                        'about_family' => sanitize($_POST['about_family'] ?? ''),
+                    ];
                     $activeTab = 'family';
                     break;
 
                 case 'partner':
-                    $stmt = $pdo->prepare(
-                        "UPDATE partner_preferences SET min_age=?, max_age=?, min_height=?, max_height=?,
-                         marital_status=?, religion=?, caste=?, mother_tongue=?, education=?, occupation=?,
-                         min_income=?, max_income=?, state=?, diet=?, smoking=?, drinking=?, about_partner=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        intval($_POST['pref_min_age'] ?? 18),
-                        intval($_POST['pref_max_age'] ?? 60),
-                        intval($_POST['pref_min_height'] ?? 0),
-                        intval($_POST['pref_max_height'] ?? 0),
-                        sanitize($_POST['pref_marital_status'] ?? ''),
-                        sanitize($_POST['pref_religion'] ?? ''),
-                        sanitize($_POST['pref_caste'] ?? ''),
-                        sanitize($_POST['pref_mother_tongue'] ?? ''),
-                        sanitize($_POST['pref_education'] ?? ''),
-                        sanitize($_POST['pref_occupation'] ?? ''),
-                        sanitize($_POST['pref_min_income'] ?? ''),
-                        sanitize($_POST['pref_max_income'] ?? ''),
-                        sanitize($_POST['pref_state'] ?? ''),
-                        sanitize($_POST['pref_diet'] ?? ''),
-                        sanitize($_POST['pref_smoking'] ?? "Doesn't Matter"),
-                        sanitize($_POST['pref_drinking'] ?? "Doesn't Matter"),
-                        sanitize($_POST['pref_about_partner'] ?? ''),
-                        $userId
-                    ]);
+                    $oldData = [
+                        'min_age' => $partnerPrefs['min_age'] ?? 18,
+                        'max_age' => $partnerPrefs['max_age'] ?? 60,
+                        'min_height' => $partnerPrefs['min_height'] ?? 0,
+                        'max_height' => $partnerPrefs['max_height'] ?? 0,
+                        'marital_status' => $partnerPrefs['marital_status'] ?? '',
+                        'religion' => $partnerPrefs['religion'] ?? '',
+                        'caste' => $partnerPrefs['caste'] ?? '',
+                        'mother_tongue' => $partnerPrefs['mother_tongue'] ?? '',
+                        'education' => $partnerPrefs['education'] ?? '',
+                        'occupation' => $partnerPrefs['occupation'] ?? '',
+                        'min_income' => $partnerPrefs['min_income'] ?? '',
+                        'max_income' => $partnerPrefs['max_income'] ?? '',
+                        'state' => $partnerPrefs['state'] ?? '',
+                        'diet' => $partnerPrefs['diet'] ?? '',
+                        'smoking' => $partnerPrefs['smoking'] ?? "Doesn't Matter",
+                        'drinking' => $partnerPrefs['drinking'] ?? "Doesn't Matter",
+                        'about_partner' => $partnerPrefs['about_partner'] ?? '',
+                    ];
+                    $newData = [
+                        'min_age' => intval($_POST['pref_min_age'] ?? 18),
+                        'max_age' => intval($_POST['pref_max_age'] ?? 60),
+                        'min_height' => intval($_POST['pref_min_height'] ?? 0),
+                        'max_height' => intval($_POST['pref_max_height'] ?? 0),
+                        'marital_status' => sanitize($_POST['pref_marital_status'] ?? ''),
+                        'religion' => sanitize($_POST['pref_religion'] ?? ''),
+                        'caste' => sanitize($_POST['pref_caste'] ?? ''),
+                        'mother_tongue' => sanitize($_POST['pref_mother_tongue'] ?? ''),
+                        'education' => sanitize($_POST['pref_education'] ?? ''),
+                        'occupation' => sanitize($_POST['pref_occupation'] ?? ''),
+                        'min_income' => sanitize($_POST['pref_min_income'] ?? ''),
+                        'max_income' => sanitize($_POST['pref_max_income'] ?? ''),
+                        'state' => sanitize($_POST['pref_state'] ?? ''),
+                        'diet' => sanitize($_POST['pref_diet'] ?? ''),
+                        'smoking' => sanitize($_POST['pref_smoking'] ?? "Doesn't Matter"),
+                        'drinking' => sanitize($_POST['pref_drinking'] ?? "Doesn't Matter"),
+                        'about_partner' => sanitize($_POST['pref_about_partner'] ?? ''),
+                    ];
                     $activeTab = 'partner';
                     break;
 
@@ -151,19 +189,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
                         $result = uploadPhoto($_FILES['profile_photo'], $userId);
                         if ($result['success']) {
-                            // Check photo count
-                            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM photos WHERE user_id = ?");
-                            $stmt->execute([$userId]);
-                            $photoCount = $stmt->fetch()['count'];
+                            $setAsPrimary = isset($_POST['set_primary']) ? 1 : 0;
                             
-                            $isPrimary = ($photoCount === 0) ? 1 : 0;
-                            
-                            $stmt = $pdo->prepare("INSERT INTO photos (user_id, photo_path, is_primary) VALUES (?, ?, ?)");
-                            $stmt->execute([$userId, $result['path'], $isPrimary]);
-                            
-                            if ($isPrimary || isset($_POST['set_primary'])) {
-                                $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?")->execute([$result['path'], $userId]);
-                            }
+                            $stmt = $pdo->prepare("INSERT INTO photos (user_id, photo_path, is_primary, is_approved) VALUES (?, ?, ?, 0)");
+                            $stmt->execute([$userId, $result['path'], $setAsPrimary]);
                         } else {
                             $errors[] = $result['message'];
                         }
@@ -172,13 +201,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
             }
             
-            if (empty($errors)) {
-                setFlash('success', 'Profile updated successfully!');
+            // For non-photo sections, save as pending change request
+            if (empty($errors) && $section !== 'photo' && isset($oldData, $newData)) {
+                // Check if there are actual changes
+                $hasChanges = false;
+                foreach ($newData as $key => $val) {
+                    if ((string)$val !== (string)($oldData[$key] ?? '')) {
+                        $hasChanges = true;
+                        break;
+                    }
+                }
+                
+                if ($hasChanges) {
+                    // Cancel any previous pending request for same section
+                    $pdo->prepare("DELETE FROM profile_change_requests WHERE user_id = ? AND section = ? AND status = 'pending'")
+                        ->execute([$userId, $section]);
+                    
+                    $stmt = $pdo->prepare(
+                        "INSERT INTO profile_change_requests (user_id, section, old_data, new_data) VALUES (?, ?, ?, ?)"
+                    );
+                    $stmt->execute([$userId, $section, json_encode($oldData), json_encode($newData)]);
+                    
+                    setFlash('info', 'Your changes have been submitted for review. A Super Admin will approve them shortly.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
+                } else {
+                    setFlash('info', 'No changes detected.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
+                }
+            }
+            
+            if (empty($errors) && $section === 'photo') {
+                setFlash('info', 'Photo uploaded and submitted for review. It will be visible after admin approval.');
                 redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
             }
         } catch (PDOException $e) {
             error_log("Profile Update Error: " . $e->getMessage());
-            $errors[] = 'Failed to update profile. Please try again.';
+            if (strpos($e->getMessage(), 'profile_change_requests') !== false) {
+                $errors[] = 'Profile change tracking table is missing. Please contact the administrator to run the database migration.';
+            } else {
+                $errors[] = 'Failed to update profile. Please try again.';
+            }
         }
     }
 }
@@ -204,6 +266,16 @@ $stmt = $pdo->prepare("SELECT * FROM photos WHERE user_id = ? ORDER BY is_primar
 $stmt->execute([$userId]);
 $photos = $stmt->fetchAll();
 
+// Fetch pending change requests for this user
+$pendingChanges = [];
+try {
+    $stmt = $pdo->prepare("SELECT section, created_at FROM profile_change_requests WHERE user_id = ? AND status = 'pending'");
+    $stmt->execute([$userId]);
+    foreach ($stmt->fetchAll() as $pc) {
+        $pendingChanges[$pc['section']] = $pc['created_at'];
+    }
+} catch (Exception $e) {}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -211,6 +283,22 @@ require_once __DIR__ . '/includes/header.php';
     <div class="container">
         <h3 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Profile</h3>
         
+        <?php if (!empty($pendingChanges)): ?>
+            <div class="alert alert-warning">
+                <i class="bi bi-clock-history me-2"></i>
+                <strong>Pending Review:</strong> You have changes awaiting admin approval in:
+                <?php 
+                    $sectionNames = ['basic' => 'Basic Info', 'personal' => 'Personal', 'professional' => 'Professional', 'family' => 'Family', 'partner' => 'Partner Preferences'];
+                    $pendingLabels = [];
+                    foreach ($pendingChanges as $sec => $date) {
+                        $pendingLabels[] = '<strong>' . ($sectionNames[$sec] ?? ucfirst($sec)) . '</strong> (submitted ' . date('d M Y', strtotime($date)) . ')';
+                    }
+                    echo implode(', ', $pendingLabels);
+                ?>
+                <br><small class="text-muted">Your current profile will continue to show the old values until the admin approves your changes.</small>
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($errors)): ?>
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -602,9 +690,12 @@ require_once __DIR__ . '/includes/header.php';
                         <?php foreach ($photos as $photo): ?>
                             <div class="col-md-3 col-6">
                                 <div class="position-relative">
-                                    <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" class="rounded w-100" style="height: 180px; object-fit: cover;">
-                                    <?php if ($photo['is_primary']): ?>
+                                    <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" class="rounded w-100" style="height: 180px; object-fit: cover;<?= !$photo['is_approved'] ? ' opacity: 0.6;' : '' ?>">
+                                    <?php if ($photo['is_primary'] && $photo['is_approved']): ?>
                                         <span class="badge bg-success position-absolute top-0 start-0 m-2">Primary</span>
+                                    <?php endif; ?>
+                                    <?php if (!$photo['is_approved']): ?>
+                                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">Pending Approval</span>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -618,8 +709,12 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="row align-items-end g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Upload Photo</label>
-                                    <input type="file" class="form-control" name="profile_photo" accept="image/jpeg,image/png,image/webp" required>
-                                    <small class="text-muted">Max 5MB. JPG, PNG, or WebP</small>
+                                    <input type="file" class="form-control" name="profile_photo" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" required>
+                                    <small class="text-danger fw-bold">Maximum file size: 5MB. Files larger than 5MB cannot be uploaded.</small>
+                                    <br><small class="text-muted">Allowed formats: JPG, PNG, or WebP</small>
+                                    <div id="photoSizeError" class="alert alert-danger mt-2 py-1 d-none">
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>Selected file exceeds 5MB. Please choose a smaller image.</small>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-check">
@@ -641,4 +736,23 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('profilePhotoInput');
+    if (input) {
+        input.addEventListener('change', function() {
+            var errDiv = document.getElementById('photoSizeError');
+            var submitBtn = input.closest('form').querySelector('button[type="submit"]');
+            if (this.files.length && this.files[0].size > 5 * 1024 * 1024) {
+                errDiv.classList.remove('d-none');
+                submitBtn.disabled = true;
+                this.value = '';
+            } else {
+                errDiv.classList.add('d-none');
+                submitBtn.disabled = false;
+            }
+        });
+    }
+});
+</script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -12,6 +12,22 @@
         <a class="nav-link <?= ($adminPage ?? '') === 'profiles' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/profiles.php">
             <i class="bi bi-people"></i>Manage Profiles
         </a>
+        <?php
+            $pcPdo = getDBConnection();
+            $pcCount = 0;
+            try {
+                $pcStmt = $pcPdo->query("SELECT COUNT(*) FROM profile_change_requests WHERE status = 'pending'");
+                $pcCount = $pcStmt->fetchColumn();
+                $pcStmt2 = $pcPdo->query("SELECT COUNT(*) FROM photos WHERE is_approved = 0");
+                $pcCount += $pcStmt2->fetchColumn();
+            } catch (Exception $e) {}
+        ?>
+        <a class="nav-link <?= ($adminPage ?? '') === 'profile-changes' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/profile-changes.php">
+            <i class="bi bi-pencil-square"></i>Profile Changes
+            <?php if ($pcCount > 0): ?>
+                <span class="badge bg-danger rounded-pill ms-1"><?= $pcCount ?></span>
+            <?php endif; ?>
+        </a>
         <a class="nav-link <?= ($adminPage ?? '') === 'subscriptions' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/subscriptions.php">
             <i class="bi bi-credit-card"></i>Subscriptions
         </a>

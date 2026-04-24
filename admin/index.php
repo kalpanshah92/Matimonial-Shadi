@@ -38,6 +38,15 @@ $stats['pending_reports'] = $stmt->fetch()['count'];
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE is_active = 1 AND last_login >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
 $stats['active_users_7d'] = $stmt->fetch()['count'];
 
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM profile_change_requests WHERE status = 'pending'");
+    $stats['pending_changes'] = $stmt->fetch()['count'];
+    $stmt2 = $pdo->query("SELECT COUNT(*) as count FROM photos WHERE is_approved = 0");
+    $stats['pending_changes'] += $stmt2->fetch()['count'];
+} catch (Exception $e) {
+    $stats['pending_changes'] = 0;
+}
+
 // Recent registrations
 $stmt = $pdo->query("SELECT id, profile_id, name, email, gender, religion, status, created_at FROM users ORDER BY created_at DESC LIMIT 10");
 $recentUsers = $stmt->fetchAll();
@@ -117,6 +126,17 @@ $adminPage = 'dashboard';
                     <small class="text-muted">Total Revenue</small>
                 </div>
             </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <a href="profile-changes.php" class="text-decoration-none">
+                <div class="admin-stat-card">
+                    <div class="stat-icon" style="background: rgba(230,126,34,0.1); color: #e67e22;"><i class="bi bi-pencil-square"></i></div>
+                    <div>
+                        <h4 class="mb-0"><?= $stats['pending_changes'] ?></h4>
+                        <small class="text-muted">Pending Profile Changes</small>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 
