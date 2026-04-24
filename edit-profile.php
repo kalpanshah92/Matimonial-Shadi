@@ -185,6 +185,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $activeTab = 'partner';
                     break;
 
+                case 'delete_photo':
+                    $photoId = intval($_POST['photo_id'] ?? 0);
+                    if ($photoId) {
+                        $stmt = $pdo->prepare("SELECT * FROM photos WHERE id = ? AND user_id = ?");
+                        $stmt->execute([$photoId, $userId]);
+                        $photo = $stmt->fetch();
+                        
+                        if ($photo) {
+                            // Delete file from disk
+                            $filePath = __DIR__ . '/' . $photo['photo_path'];
+                            if (file_exists($filePath)) {
+                                unlink($filePath);
+                            }
+                            
+                            // If this was the primary approved photo, clear profile_pic on user
+                            if ($photo['is_primary'] && $photo['is_approved']) {
+                                $pdo->prepare("UPDATE users SET profile_pic = NULL WHERE id = ?")->execute([$userId]);
+                            }
+                            
+                            $pdo->prepare("DELETE FROM photos WHERE id = ?")->execute([$photoId]);
+                            setFlash('success', 'Photo deleted successfully.');
+                        } else {
+                            $errors[] = 'Photo not found.';
+                        }
+                    }
+                    $activeTab = 'photos';
+                    if (empty($errors)) {
+                        redirect(SITE_URL . '/edit-profile.php?tab=photos');
+                    }
+                    break;
+
                 case 'photo':
                     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
                         $result = uploadPhoto($_FILES['profile_photo'], $userId);
@@ -697,21 +728,27 @@ require_once __DIR__ . '/includes/header.php';
                                     <?php if (!$photo['is_approved']): ?>
                                         <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">Pending Approval</span>
                                     <?php endif; ?>
+                                    <form method="POST" action="" class="position-absolute bottom-0 end-0 m-2 delete-photo-form" onsubmit="return confirm('Delete this photo? This cannot be undone.');">
+                                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                        <input type="hidden" name="section" value="delete_photo">
+                                        <input type="hidden" name="photo_id" value="<?= $photo['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete photo"><i class="bi bi-trash"></i></button>
+                                    </form>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
 
                     <?php if (count($photos) < MAX_PHOTOS): ?>
-                        <form method="POST" action="" enctype="multipart/form-data">
+                        <form method="POST" action="" enctype="multipart/form-data" id="photoUploadForm">
                             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                             <input type="hidden" name="section" value="photo">
                             <div class="row align-items-end g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Upload Photo</label>
-                                    <input type="file" class="form-control" name="profile_photo" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" required>
+                                    <input type="file" class="form-control" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" required>
                                     <small class="text-danger fw-bold">Maximum file size: 5MB. Files larger than 5MB cannot be uploaded.</small>
-                                    <br><small class="text-muted">Allowed formats: JPG, PNG, or WebP</small>
+                                    <br><small class="text-muted">Allowed formats: JPG, PNG, or WebP. You'll be able to crop before uploading.</small>
                                     <div id="photoSizeError" class="alert alert-danger mt-2 py-1 d-none">
                                         <small><i class="bi bi-exclamation-triangle me-1"></i>Selected file exceeds 5MB. Please choose a smaller image.</small>
                                     </div>
@@ -722,37 +759,118 @@ require_once __DIR__ . '/includes/header.php';
                                         <label class="form-check-label" for="setPrimary">Set as primary</label>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload me-1"></i>Upload</button>
-                                </div>
                             </div>
                         </form>
                     <?php else: ?>
                         <p class="text-muted">Maximum photos limit reached.</p>
                     <?php endif; ?>
+
+                    <!-- Crop Modal -->
+                    <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="bi bi-crop me-2"></i>Crop Your Photo</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div style="max-height:500px;">
+                                        <img id="cropImage" style="max-width:100%;display:block;">
+                                    </div>
+                                    <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i>Drag to reposition, use corners to resize. Aspect ratio is locked to square for best profile display.</small>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="cropUploadBtn"><i class="bi bi-upload me-1"></i>Crop &amp; Upload</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
+<!-- Cropper.js for photo cropping before upload -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var input = document.getElementById('profilePhotoInput');
-    if (input) {
-        input.addEventListener('change', function() {
-            var errDiv = document.getElementById('photoSizeError');
-            var submitBtn = input.closest('form').querySelector('button[type="submit"]');
-            if (this.files.length && this.files[0].size > 5 * 1024 * 1024) {
-                errDiv.classList.remove('d-none');
-                submitBtn.disabled = true;
-                this.value = '';
-            } else {
-                errDiv.classList.add('d-none');
-                submitBtn.disabled = false;
-            }
+    var uploadForm = document.getElementById('photoUploadForm');
+    var cropImage = document.getElementById('cropImage');
+    var cropModalEl = document.getElementById('cropModal');
+    var cropUploadBtn = document.getElementById('cropUploadBtn');
+    var errDiv = document.getElementById('photoSizeError');
+    var cropper = null;
+    var cropModal = cropModalEl ? new bootstrap.Modal(cropModalEl) : null;
+
+    if (!input || !uploadForm || !cropModal) return;
+
+    input.addEventListener('change', function() {
+        if (!this.files.length) return;
+        var file = this.files[0];
+
+        // 5MB client-side validation
+        if (file.size > 5 * 1024 * 1024) {
+            errDiv.classList.remove('d-none');
+            this.value = '';
+            return;
+        }
+        errDiv.classList.add('d-none');
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            cropImage.src = e.target.result;
+            cropModal.show();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    cropModalEl.addEventListener('shown.bs.modal', function() {
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 1,
+            movable: true,
+            zoomable: true,
+            scalable: false,
+            rotatable: false
         });
-    }
+    });
+
+    cropModalEl.addEventListener('hidden.bs.modal', function() {
+        if (cropper) { cropper.destroy(); cropper = null; }
+        input.value = '';
+    });
+
+    cropUploadBtn.addEventListener('click', function() {
+        if (!cropper) return;
+        cropUploadBtn.disabled = true;
+        cropUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading...';
+
+        cropper.getCroppedCanvas({
+            width: 800,
+            height: 800,
+            imageSmoothingQuality: 'high'
+        }).toBlob(function(blob) {
+            var formData = new FormData(uploadForm);
+            formData.append('profile_photo', blob, 'cropped.jpg');
+
+            fetch(uploadForm.action || window.location.href, {
+                method: 'POST',
+                body: formData
+            }).then(function(res) {
+                window.location.href = '<?= SITE_URL ?>/edit-profile.php?tab=photos';
+            }).catch(function() {
+                alert('Upload failed. Please try again.');
+                cropUploadBtn.disabled = false;
+                cropUploadBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Crop & Upload';
+            });
+        }, 'image/jpeg', 0.9);
+    });
 });
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
