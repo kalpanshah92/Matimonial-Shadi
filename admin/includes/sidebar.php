@@ -12,6 +12,11 @@
         <a class="nav-link <?= ($adminPage ?? '') === 'profiles' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/profiles.php">
             <i class="bi bi-people"></i>Manage Profiles
         </a>
+        <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+            <a class="nav-link <?= ($adminPage ?? '') === 'advertisements' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/advertisements.php">
+                <i class="bi bi-image"></i>Advertisements
+            </a>
+        <?php endif; ?>
         <?php
             $pcPdo = getDBConnection();
             $pcCount = 0;

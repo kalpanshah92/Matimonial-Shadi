@@ -19,6 +19,17 @@ try {
     // Table may not exist yet
 }
 
+// Fetch active advertisements grouped by position
+$adsByPosition = ['hero_left' => [], 'hero_right' => [], 'sponsor' => []];
+try {
+    $stmt = $pdo->query("SELECT * FROM advertisements WHERE is_active = 1 ORDER BY display_order, created_at DESC");
+    foreach ($stmt->fetchAll() as $ad) {
+        if (isset($adsByPosition[$ad['position']])) {
+            $adsByPosition[$ad['position']][] = $ad;
+        }
+    }
+} catch (Exception $e) {}
+
 // Fetch approved success stories
 $successStories = [];
 try {
@@ -41,8 +52,9 @@ require_once __DIR__ . '/includes/header.php';
         <div class="row g-0 align-items-stretch min-vh-75">
             <!-- Left Ad Placement -->
             <div class="col-lg-2 d-none d-lg-flex align-items-center justify-content-center">
-                <a href="#" class="hero-ad-slot animate__animated animate__fadeInLeft">
-                    <img src="<?= SITE_URL ?>/assets/images/ads/ad-left.jpg" alt="Advertisement">
+                <?php $leftAd = $adsByPosition['hero_left'][0] ?? null; ?>
+                <a href="<?= htmlspecialchars($leftAd['link_url'] ?? '#') ?>" class="hero-ad-slot animate__animated animate__fadeInLeft" <?= !empty($leftAd['link_url']) && $leftAd['link_url'] !== '#' ? 'target="_blank" rel="noopener"' : '' ?>>
+                    <img src="<?= SITE_URL ?>/<?= htmlspecialchars($leftAd['image_path'] ?? 'assets/images/ads/ad-left.jpg') ?>" alt="<?= htmlspecialchars($leftAd['alt_text'] ?? 'Advertisement') ?>">
                 </a>
             </div>
             
@@ -119,8 +131,9 @@ require_once __DIR__ . '/includes/header.php';
             
             <!-- Right Ad Placement -->
             <div class="col-lg-2 d-none d-lg-flex align-items-center justify-content-center">
-                <a href="#" class="hero-ad-slot animate__animated animate__fadeInRight">
-                    <img src="<?= SITE_URL ?>/assets/images/ads/ad-right.jpg" alt="Advertisement">
+                <?php $rightAd = $adsByPosition['hero_right'][0] ?? null; ?>
+                <a href="<?= htmlspecialchars($rightAd['link_url'] ?? '#') ?>" class="hero-ad-slot animate__animated animate__fadeInRight" <?= !empty($rightAd['link_url']) && $rightAd['link_url'] !== '#' ? 'target="_blank" rel="noopener"' : '' ?>>
+                    <img src="<?= SITE_URL ?>/<?= htmlspecialchars($rightAd['image_path'] ?? 'assets/images/ads/ad-right.jpg') ?>" alt="<?= htmlspecialchars($rightAd['alt_text'] ?? 'Advertisement') ?>">
                 </a>
             </div>
         </div>
@@ -135,21 +148,31 @@ require_once __DIR__ . '/includes/header.php';
             <p class="section-subtitle">Join our community of enthusiasts. Engage, connect, and share your passions with like-minded individuals. Welcome to thriving discussions!</p>
         </div>
         <div class="row g-4 justify-content-center">
-            <div class="col-lg-4 col-md-6">
-                <a href="#" class="sponsor-card d-block">
-                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor1.jpg" alt="Sponsor 1">
-                </a>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <a href="#" class="sponsor-card d-block">
-                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor2.jpg" alt="Sponsor 2">
-                </a>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <a href="#" class="sponsor-card d-block">
-                    <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor3.jpg" alt="Sponsor 3">
-                </a>
-            </div>
+            <?php if (!empty($adsByPosition['sponsor'])): ?>
+                <?php foreach ($adsByPosition['sponsor'] as $sponsor): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <a href="<?= htmlspecialchars($sponsor['link_url'] ?: '#') ?>" class="sponsor-card d-block" <?= !empty($sponsor['link_url']) && $sponsor['link_url'] !== '#' ? 'target="_blank" rel="noopener"' : '' ?>>
+                            <img src="<?= SITE_URL ?>/<?= htmlspecialchars($sponsor['image_path']) ?>" alt="<?= htmlspecialchars($sponsor['alt_text']) ?>">
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-lg-4 col-md-6">
+                    <a href="#" class="sponsor-card d-block">
+                        <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor1.jpg" alt="Sponsor 1">
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="#" class="sponsor-card d-block">
+                        <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor2.jpg" alt="Sponsor 2">
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="#" class="sponsor-card d-block">
+                        <img src="<?= SITE_URL ?>/assets/images/sponsors/sponsor3.jpg" alt="Sponsor 3">
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
         <p class="text-center text-muted mt-4"><small>Interested in advertising? <a href="mailto:<?= SITE_EMAIL ?>">Contact us</a>.</small></p>
         <div class="text-center mt-3">

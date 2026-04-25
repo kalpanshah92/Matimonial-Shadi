@@ -318,6 +318,20 @@ CREATE TABLE IF NOT EXISTS profile_change_requests (
     INDEX idx_pcr_status (status)
 ) ENGINE=InnoDB;
 
+-- Advertisements Table (homepage banners and sponsor logos)
+CREATE TABLE IF NOT EXISTS advertisements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    position ENUM('hero_left', 'hero_right', 'sponsor') NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    link_url VARCHAR(500) DEFAULT '#',
+    alt_text VARCHAR(150) DEFAULT 'Advertisement',
+    display_order INT DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ad_position (position),
+    INDEX idx_ad_active (is_active)
+) ENGINE=InnoDB;
+
 -- Insert Default Subscription Plans
 INSERT INTO plans (name, price, duration_days, features, max_contacts, max_messages) VALUES
 ('Male Plan - 2 Years', 1000.00, 730, '["2 Year Subscription for Male Candidates","View Contact Details","Send Unlimited Interests","Advanced Search","Chat with Matches","Live Chat","Personal Messages"]', 100, 999),
