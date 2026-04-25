@@ -71,6 +71,10 @@ $users = $stmt->fetchAll();
         <h4 class="mb-0">Manage Profiles (<?= number_format($totalUsers) ?>)</h4>
     </div>
 
+    <?php if (($_GET['error'] ?? '') === 'permission'): ?>
+        <div class="alert alert-warning"><i class="bi bi-shield-exclamation me-1"></i>Only Super Admins can edit user profiles or reset passwords.</div>
+    <?php endif; ?>
+
     <!-- Filters -->
     <div class="card mb-4">
         <div class="card-body">
@@ -167,6 +171,11 @@ $users = $stmt->fetchAll();
                                     <a href="<?= SITE_URL ?>/profile.php?id=<?= $user['id'] ?>" class="btn btn-outline-primary" target="_blank" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+                                        <a href="edit-user.php?id=<?= $user['id'] ?>" class="btn btn-warning" title="Edit user">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
