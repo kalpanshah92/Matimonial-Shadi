@@ -99,77 +99,76 @@ switch ($action) {
         // Approve: apply changes
         $newData = json_decode($request['new_data'], true);
         $userId = $request['user_id'];
-        $section = $request['section'];
 
         try {
             $pdo->beginTransaction();
 
-            switch ($section) {
-                case 'basic':
-                    $stmt = $pdo->prepare(
-                        "UPDATE users SET name=?, religion=?, caste=?, sub_caste=?, mother_tongue=?, 
-                         marital_status=?, state=?, city=?, about_me=?, updated_at=NOW() WHERE id=?"
-                    );
-                    $stmt->execute([
-                        $newData['name'], $newData['religion'], $newData['caste'], $newData['sub_caste'],
-                        $newData['mother_tongue'], $newData['marital_status'], $newData['state'],
-                        $newData['city'], $newData['about_me'], $userId
-                    ]);
-                    break;
+            // Apply changes to users table (basic fields)
+            $basicFields = ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'state', 'city', 'about_me'];
+            $basicUpdates = [];
+            $basicParams = [];
+            foreach ($basicFields as $field) {
+                if (isset($newData[$field])) {
+                    $basicUpdates[] = "$field = ?";
+                    $basicParams[] = $newData[$field];
+                }
+            }
+            if (!empty($basicUpdates)) {
+                $basicUpdates[] = 'updated_at = NOW()';
+                $basicParams[] = $userId;
+                $sql = "UPDATE users SET " . implode(', ', $basicUpdates) . " WHERE id = ?";
+                $pdo->prepare($sql)->execute($basicParams);
+            }
 
-                case 'personal':
-                    $stmt = $pdo->prepare(
-                        "UPDATE profile_details SET height=?, weight=?, complexion=?, body_type=?, 
-                         blood_group=?, diet=?, smoking=?, drinking=?, hobbies=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        $newData['height'], $newData['weight'], $newData['complexion'], $newData['body_type'],
-                        $newData['blood_group'], $newData['diet'], $newData['smoking'], $newData['drinking'],
-                        $newData['hobbies'], $userId
-                    ]);
-                    break;
+            // Apply changes to profile_details table (personal and professional fields)
+            $profileFields = ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'about_me', 'education', 'education_detail', 'occupation', 'occupation_detail', 'company', 'annual_income', 'working_city'];
+            $profileUpdates = [];
+            $profileParams = [];
+            foreach ($profileFields as $field) {
+                if (isset($newData[$field])) {
+                    $profileUpdates[] = "$field = ?";
+                    $profileParams[] = $newData[$field];
+                }
+            }
+            if (!empty($profileUpdates)) {
+                $profileUpdates[] = 'updated_at = NOW()';
+                $profileParams[] = $userId;
+                $sql = "UPDATE profile_details SET " . implode(', ', $profileUpdates) . " WHERE user_id = ?";
+                $pdo->prepare($sql)->execute($profileParams);
+            }
 
-                case 'professional':
-                    $stmt = $pdo->prepare(
-                        "UPDATE profile_details SET education=?, education_detail=?, occupation=?, 
-                         occupation_detail=?, company=?, annual_income=?, working_city=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        $newData['education'], $newData['education_detail'], $newData['occupation'],
-                        $newData['occupation_detail'], $newData['company'], $newData['annual_income'],
-                        $newData['working_city'], $userId
-                    ]);
-                    break;
+            // Apply changes to family_details table
+            $familyFields = ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'family_values', 'gotra', 'about_family'];
+            $familyUpdates = [];
+            $familyParams = [];
+            foreach ($familyFields as $field) {
+                if (isset($newData[$field])) {
+                    $familyUpdates[] = "$field = ?";
+                    $familyParams[] = $newData[$field];
+                }
+            }
+            if (!empty($familyUpdates)) {
+                $familyUpdates[] = 'updated_at = NOW()';
+                $familyParams[] = $userId;
+                $sql = "UPDATE family_details SET " . implode(', ', $familyUpdates) . " WHERE user_id = ?";
+                $pdo->prepare($sql)->execute($familyParams);
+            }
 
-                case 'family':
-                    $stmt = $pdo->prepare(
-                        "UPDATE family_details SET father_name=?, father_occupation=?, mother_name=?, 
-                         mother_occupation=?, brothers=?, brothers_married=?, sisters=?, sisters_married=?,
-                         family_type=?, family_status=?, family_values=?, gotra=?, about_family=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        $newData['father_name'], $newData['father_occupation'], $newData['mother_name'],
-                        $newData['mother_occupation'], $newData['brothers'], $newData['brothers_married'],
-                        $newData['sisters'], $newData['sisters_married'], $newData['family_type'],
-                        $newData['family_status'], $newData['family_values'], $newData['gotra'],
-                        $newData['about_family'], $userId
-                    ]);
-                    break;
-
-                case 'partner':
-                    $stmt = $pdo->prepare(
-                        "UPDATE partner_preferences SET min_age=?, max_age=?, min_height=?, max_height=?,
-                         marital_status=?, religion=?, caste=?, mother_tongue=?, education=?, occupation=?,
-                         min_income=?, max_income=?, state=?, diet=?, smoking=?, drinking=?, about_partner=?, updated_at=NOW() WHERE user_id=?"
-                    );
-                    $stmt->execute([
-                        $newData['min_age'], $newData['max_age'], $newData['min_height'], $newData['max_height'],
-                        $newData['marital_status'], $newData['religion'], $newData['caste'], $newData['mother_tongue'],
-                        $newData['education'], $newData['occupation'], $newData['min_income'], $newData['max_income'],
-                        $newData['state'], $newData['diet'], $newData['smoking'], $newData['drinking'],
-                        $newData['about_partner'], $userId
-                    ]);
-                    break;
+            // Apply changes to partner_preferences table
+            $partnerFields = ['min_age', 'max_age', 'min_height', 'max_height', 'marital_status', 'religion', 'caste', 'mother_tongue', 'education', 'occupation', 'min_income', 'max_income', 'state', 'diet', 'smoking', 'drinking', 'about_partner'];
+            $partnerUpdates = [];
+            $partnerParams = [];
+            foreach ($partnerFields as $field) {
+                if (isset($newData[$field])) {
+                    $partnerUpdates[] = "$field = ?";
+                    $partnerParams[] = $newData[$field];
+                }
+            }
+            if (!empty($partnerUpdates)) {
+                $partnerUpdates[] = 'updated_at = NOW()';
+                $partnerParams[] = $userId;
+                $sql = "UPDATE partner_preferences SET " . implode(', ', $partnerUpdates) . " WHERE user_id = ?";
+                $pdo->prepare($sql)->execute($partnerParams);
             }
 
             $stmt = $pdo->prepare(

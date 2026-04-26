@@ -244,15 +244,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if ($hasChanges) {
-                    // Cancel any previous pending request for same section
-                    $pdo->prepare("DELETE FROM profile_change_requests WHERE user_id = ? AND section = ? AND status = 'pending'")
-                        ->execute([$userId, $section]);
-                    
-                    $stmt = $pdo->prepare(
-                        "INSERT INTO profile_change_requests (user_id, section, old_data, new_data) VALUES (?, ?, ?, ?)"
-                    );
-                    $stmt->execute([$userId, $section, json_encode($oldData), json_encode($newData)]);
-                    
+                    // Check if user already has a pending request (any section)
+                    $stmt = $pdo->prepare("SELECT * FROM profile_change_requests WHERE user_id = ? AND status = 'pending' LIMIT 1");
+                    $stmt->execute([$userId]);
+                    $existingRequest = $stmt->fetch();
+
+                    if ($existingRequest) {
+                        // Merge new changes into existing request
+                        $existingOldData = json_decode($existingRequest['old_data'], true) ?? [];
+                        $existingNewData = json_decode($existingRequest['new_data'], true) ?? [];
+
+                        // Merge old_data and new_data with the new changes
+                        $mergedOldData = array_merge($existingOldData, $oldData);
+                        $mergedNewData = array_merge($existingNewData, $newData);
+
+                        // Update the existing request with merged data
+                        $updateStmt = $pdo->prepare(
+                            "UPDATE profile_change_requests SET old_data = ?, new_data = ?, updated_at = NOW() WHERE id = ?"
+                        );
+                        $updateStmt->execute([json_encode($mergedOldData), json_encode($mergedNewData), $existingRequest['id']]);
+                    } else {
+                        // Create new request with this section's changes
+                        $insertStmt = $pdo->prepare(
+                            "INSERT INTO profile_change_requests (user_id, section, old_data, new_data) VALUES (?, ?, ?, ?)"
+                        );
+                        $insertStmt->execute([$userId, $section, json_encode($oldData), json_encode($newData)]);
+                    }
+
                     setFlash('info', 'Your changes have been submitted for review. A Super Admin will approve them shortly.');
                     redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
                 } else {

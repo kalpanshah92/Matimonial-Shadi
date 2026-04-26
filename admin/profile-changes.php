@@ -235,7 +235,31 @@ $sectionLabels = [
                                 </div>
                             </div>
                             <div class="col-md-3 text-center">
-                                <span class="badge bg-primary"><?= $sectionLabels[$req['section']] ?? ucfirst($req['section']) ?></span>
+                                <?php
+                                    // Determine which sections have changes in merged data
+                                    $newData = json_decode($req['new_data'], true) ?: [];
+                                    $sectionsWithChanges = [];
+                                    foreach ($newData as $key => $val) {
+                                        // Map field to section based on field labels
+                                        if (in_array($key, ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'state', 'city'])) {
+                                            $sectionsWithChanges['basic'] = true;
+                                        } elseif (in_array($key, ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'about_me'])) {
+                                            $sectionsWithChanges['personal'] = true;
+                                        } elseif (in_array($key, ['education', 'education_detail', 'occupation', 'occupation_detail', 'company', 'annual_income', 'working_city'])) {
+                                            $sectionsWithChanges['professional'] = true;
+                                        } elseif (in_array($key, ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'family_values', 'gotra', 'about_family'])) {
+                                            $sectionsWithChanges['family'] = true;
+                                        } elseif (in_array($key, ['min_age', 'max_age', 'min_height', 'max_height', 'min_income', 'max_income', 'about_partner'])) {
+                                            $sectionsWithChanges['partner'] = true;
+                                        }
+                                    }
+                                ?>
+                                <?php if (count($sectionsWithChanges) > 1): ?>
+                                    <span class="badge bg-primary">Multiple Sections</span>
+                                    <small class="d-block text-muted mt-1"><?= implode(', ', array_keys($sectionsWithChanges)) ?></small>
+                                <?php else: ?>
+                                    <span class="badge bg-primary"><?= $sectionLabels[$req['section']] ?? ucfirst($req['section']) ?></span>
+                                <?php endif; ?>
                                 <small class="d-block text-muted mt-1"><?= date('d M Y, h:i A', strtotime($req['created_at'])) ?></small>
                             </div>
                             <div class="col-md-3 text-end">
