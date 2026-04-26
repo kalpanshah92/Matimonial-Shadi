@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Update the existing request with merged data
                         $updateStmt = $pdo->prepare(
-                            "UPDATE profile_change_requests SET old_data = ?, new_data = ?, updated_at = NOW() WHERE id = ?"
+                            "UPDATE profile_change_requests SET old_data = ?, new_data = ? WHERE id = ?"
                         );
                         $updateStmt->execute([json_encode($mergedOldData), json_encode($mergedNewData), $existingRequest['id']]);
                     } else {
