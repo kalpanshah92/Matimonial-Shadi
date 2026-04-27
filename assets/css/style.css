@@ -661,8 +661,11 @@ img {
     position: relative;
     z-index: 1;
     box-shadow: var(--shadow);
-    height: 100%;
     transition: var(--transition);
+}
+
+.dashboard-stat {
+    height: 100%;
 }
 
 .dashboard-card:hover {
