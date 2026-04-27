@@ -125,8 +125,49 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="row g-4">
-            <!-- Recent Matches -->
             <div class="col-lg-8">
+                <!-- Connection Requests (shown first when pending) -->
+                <?php if (!empty($connectionRequests)): ?>
+                <div class="dashboard-card mb-4" style="border-left: 4px solid var(--success);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-person-plus text-success me-2"></i>Pending Connection Requests
+                            <span class="badge bg-success ms-1"><?= count($connectionRequests) ?></span>
+                        </h5>
+                    </div>
+                    <?php foreach ($connectionRequests as $req): ?>
+                        <div class="request-item d-flex align-items-center justify-content-between p-3 border-bottom">
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>">
+                                    <img src="<?= getProfilePic($req['profile_pic'], $req['gender']) ?>" 
+                                         class="rounded-circle" width="50" height="50" style="object-fit: cover;">
+                                </a>
+                                <div>
+                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>" class="fw-bold text-dark text-decoration-none">
+                                        <?= sanitize($req['name']) ?>
+                                    </a>
+                                    <small class="d-block text-muted"><?= $req['profile_id'] ?></small>
+                                    <small class="d-block text-muted">
+                                        <?= calculateAge($req['dob']) ?> yrs | <?= sanitize($req['religion'] ?? '') ?> | <?= sanitize($req['city'] ?? '') ?>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                <button class="btn btn-sm btn-success btn-accept-request" data-request-id="<?= $req['id'] ?>">
+                                    <i class="bi bi-check-lg"></i> Accept
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-decline-request" data-request-id="<?= $req['id'] ?>">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- Recommended Matches -->
                 <div class="dashboard-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-heart text-danger me-2"></i>Recommended Matches</h5>
@@ -156,37 +197,6 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-
-                <!-- Connection Requests -->
-                <?php if (!empty($connectionRequests)): ?>
-                <div class="dashboard-card mt-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0"><i class="bi bi-person-plus text-success me-2"></i>Connection Requests</h5>
-                    </div>
-                    <?php foreach ($connectionRequests as $req): ?>
-                        <div class="request-item d-flex align-items-center justify-content-between p-3 border-bottom">
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="<?= getProfilePic($req['profile_pic'], $req['gender']) ?>" 
-                                     class="rounded-circle" width="50" height="50" style="object-fit: cover;">
-                                <div>
-                                    <strong><?= sanitize($req['name']) ?></strong>
-                                    <small class="d-block text-muted">
-                                        <?= calculateAge($req['dob']) ?> yrs | <?= sanitize($req['religion'] ?? '') ?> | <?= sanitize($req['city'] ?? '') ?>
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-success btn-accept-request" data-request-id="<?= $req['id'] ?>">
-                                    <i class="bi bi-check-lg"></i> Accept
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger btn-decline-request" data-request-id="<?= $req['id'] ?>">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
             </div>
 
             <!-- Sidebar -->
