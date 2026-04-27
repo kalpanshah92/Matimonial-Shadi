@@ -30,20 +30,6 @@ $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM shortlisted WHERE shortlist
 $stmt->execute([$userId]);
 $shortlistedByCount = $stmt->fetch()['count'];
 
-// Recent profile visits
-$stmt = $pdo->prepare(
-    "SELECT u.id, u.name, u.profile_id, u.profile_pic, u.gender, u.dob, u.city, u.state, pv.visited_at 
-     FROM profile_visits pv 
-     JOIN users u ON pv.visitor_id = u.id 
-     WHERE pv.visited_id = ? 
-     ORDER BY pv.visited_at DESC LIMIT 5"
-);
-$stmt->execute([$userId]);
-$recentVisitors = $stmt->fetchAll();
-
-// Recent matches
-$recentMatches = getMatchedProfiles($userId, 4, 0);
-
 // Pending connection requests
 $stmt = $pdo->prepare(
     "SELECT cr.*, u.name, u.profile_id, u.profile_pic, u.gender, u.dob, u.city, u.religion 
@@ -167,36 +153,6 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <?php endif; ?>
 
-                <!-- Recommended Matches -->
-                <div class="dashboard-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0"><i class="bi bi-heart text-danger me-2"></i>Recommended Matches</h5>
-                        <a href="<?= SITE_URL ?>/matches.php" class="btn btn-sm btn-outline-primary">View All</a>
-                    </div>
-                    <div class="row g-3">
-                        <?php if (!empty($recentMatches)): ?>
-                            <?php foreach ($recentMatches as $match): ?>
-                                <div class="col-md-6 col-lg-3">
-                                    <div class="profile-card">
-                                        <div class="profile-card-img" style="height: 160px;">
-                                            <img src="<?= getProfilePic($match['profile_pic'], $match['gender']) ?>" alt="">
-                                        </div>
-                                        <div class="profile-card-body p-2">
-                                            <h6 class="mb-1" style="font-size: 0.85rem;"><?= sanitize($match['name']) ?></h6>
-                                            <small class="text-muted d-block"><?= calculateAge($match['dob']) ?> yrs, <?= sanitize($match['city'] ?? $match['state'] ?? '') ?></small>
-                                            <a href="<?= SITE_URL ?>/profile.php?id=<?= $match['id'] ?>" class="btn btn-outline-primary btn-sm w-100 mt-2" style="font-size: 0.75rem;">View</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="col-12 text-center py-4">
-                                <i class="bi bi-search-heart" style="font-size: 3rem; color: var(--text-muted);"></i>
-                                <p class="text-muted mt-2">Complete your profile to get better matches!</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
             </div>
 
             <!-- Sidebar -->
@@ -211,6 +167,9 @@ require_once __DIR__ . '/includes/header.php';
                         <a href="<?= SITE_URL ?>/search.php" class="btn btn-outline-primary btn-sm text-start">
                             <i class="bi bi-search me-2"></i>Search Profiles
                         </a>
+                        <a href="<?= SITE_URL ?>/matches.php" class="btn btn-outline-primary btn-sm text-start">
+                            <i class="bi bi-heart me-2"></i>View Matches
+                        </a>
                         <a href="<?= SITE_URL ?>/settings.php" class="btn btn-outline-primary btn-sm text-start">
                             <i class="bi bi-shield-lock me-2"></i>Privacy Settings
                         </a>
@@ -220,27 +179,6 @@ require_once __DIR__ . '/includes/header.php';
                             </a>
                         <?php endif; ?>
                     </div>
-                </div>
-
-                <!-- Recent Visitors -->
-                <div class="dashboard-card">
-                    <h5 class="mb-3"><i class="bi bi-eye me-2"></i>Recent Visitors</h5>
-                    <?php if (!empty($recentVisitors)): ?>
-                        <?php foreach ($recentVisitors as $visitor): ?>
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <img src="<?= getProfilePic($visitor['profile_pic'], $visitor['gender']) ?>" 
-                                     class="rounded-circle" width="40" height="40" style="object-fit: cover;">
-                                <div class="flex-grow-1">
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['id'] ?>" class="fw-semibold text-dark d-block" style="font-size: 0.9rem;">
-                                        <?= sanitize($visitor['name']) ?>
-                                    </a>
-                                    <small class="text-muted"><?= timeAgo($visitor['visited_at']) ?></small>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="text-muted text-center py-3">No recent visitors yet.</p>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
