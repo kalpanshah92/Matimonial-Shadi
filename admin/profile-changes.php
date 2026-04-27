@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: login.php');
@@ -226,7 +227,7 @@ $sectionLabels = [
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <div class="d-flex align-items-center">
-                                    <img src="<?= SITE_URL ?>/<?= $req['profile_pic'] ?: 'assets/images/default-' . strtolower($req['gender']) . '.png' ?>"
+                                    <img src="<?= getProfilePic($req['profile_pic'], $req['gender']) ?>"
                                          class="rounded-circle me-3" width="45" height="45" alt="">
                                     <div>
                                         <strong><?= htmlspecialchars($req['name']) ?></strong>

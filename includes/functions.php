@@ -362,11 +362,21 @@ function verifyCSRFToken($token) {
 /**
  * Get profile picture URL
  */
-function getProfilePic($profilePic, $gender = 'Male') {
+function getProfilePic($profilePic, $gender = null) {
     if ($profilePic && file_exists(ROOT_PATH . $profilePic)) {
         return SITE_URL . '/' . $profilePic;
     }
-    return SITE_URL . '/assets/images/default-' . strtolower($gender) . '.png';
+    // Gender-based placeholder
+    if ($gender && in_array($gender, ['Male', 'Female'])) {
+        $placeholder = 'default-' . strtolower($gender);
+    } else {
+        $placeholder = 'default-male'; // neutral fallback
+    }
+    // Try PNG first, then SVG
+    if (file_exists(ROOT_PATH . 'assets/images/' . $placeholder . '.png') && filesize(ROOT_PATH . 'assets/images/' . $placeholder . '.png') > 0) {
+        return SITE_URL . '/assets/images/' . $placeholder . '.png';
+    }
+    return SITE_URL . '/assets/images/' . $placeholder . '.svg';
 }
 
 /**
