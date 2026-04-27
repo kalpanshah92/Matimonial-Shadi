@@ -131,14 +131,12 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="col-6"><small class="text-muted">Age:</small><br><strong><?= calculateAge($profile['dob']) ?> years</strong></div>
                                 <div class="col-6"><small class="text-muted">Date of Birth:</small><br><strong><?= date('d M Y', strtotime($profile['dob'])) ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Gender:</small><br><strong><?= sanitize($profile['gender']) ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Height:</small><br><strong><?= $details ? formatHeight($details['height']) : 'Not specified' ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Religion:</small><br><strong><?= sanitize($profile['religion'] ?? 'Not specified') ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Samaj Name:</small><br><strong><?= sanitize($profile['caste'] ?? 'Not specified') ?></strong></div>
-                                <?php if (!empty($profile['sub_caste'])): ?>
-                                    <div class="col-6"><small class="text-muted">Sub Samaj:</small><br><strong><?= sanitize($profile['sub_caste']) ?></strong></div>
-                                <?php endif; ?>
-                                <div class="col-6"><small class="text-muted">Mother Tongue:</small><br><strong><?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Location:</small><br><strong><?= sanitize(($profile['city'] ? $profile['city'] . ', ' : '') . ($profile['state'] ?? 'India')) ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Height:</small><br><strong><?= $details && !empty($details['height']) ? formatHeight($details['height']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Religion:</small><br><strong><?= !empty($profile['religion']) ? sanitize($profile['religion']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Samaj Name:</small><br><strong><?= !empty($profile['caste']) ? sanitize($profile['caste']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Sub Samaj:</small><br><strong><?= !empty($profile['sub_caste']) ? sanitize($profile['sub_caste']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Mother Tongue:</small><br><strong><?= !empty($profile['mother_tongue']) ? sanitize($profile['mother_tongue']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Location:</small><br><strong><?= !empty($profile['city']) || !empty($profile['state']) ? sanitize(($profile['city'] ? $profile['city'] . ', ' : '') . ($profile['state'] ?? '')) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
                             </div>
 
                             <?php if (isLoggedIn() && !$isOwner): ?>
@@ -163,35 +161,25 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <!-- About -->
-                <?php if (!empty($profile['about_me'])): ?>
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-person-lines-fill me-2 text-primary"></i>About</h5>
-                    <p class="mt-2"><?= nl2br(sanitize($profile['about_me'])) ?></p>
+                    <p class="mt-2"><?= !empty($profile['about_me']) ? nl2br(sanitize($profile['about_me'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></p>
                 </div>
-                <?php endif; ?>
 
                 <!-- Personal Details -->
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-info-circle me-2 text-primary"></i>Personal Details</h5>
                     <div class="row g-3 mt-2">
-                        <div class="col-md-4"><small class="text-muted">Marital Status</small><br><?= sanitize($profile['marital_status'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Complexion</small><br><?= sanitize($details['complexion'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Body Type</small><br><?= sanitize($details['body_type'] ?? 'Not specified') ?></div>
-                        <?php if (!empty($details['weight'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Weight</small><br><?= $details['weight'] ?> kg</div>
-                        <?php endif; ?>
-                        <?php if (!empty($details['blood_group'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Blood Group</small><br><?= sanitize($details['blood_group']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($details['disability']) && $details['disability'] !== 'None'): ?>
-                            <div class="col-md-4"><small class="text-muted">Disability</small><br><?= sanitize($details['disability']) ?></div>
-                        <?php endif; ?>
-                        <div class="col-md-4"><small class="text-muted">Diet</small><br><?= sanitize($details['diet'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Smoking</small><br><?= sanitize($details['smoking'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Drinking</small><br><?= sanitize($details['drinking'] ?? 'Not specified') ?></div>
-                        <?php if (!empty($details['hobbies'])): ?>
-                            <div class="col-12"><small class="text-muted">Hobbies</small><br><?= nl2br(sanitize($details['hobbies'])) ?></div>
-                        <?php endif; ?>
+                        <div class="col-md-4"><small class="text-muted">Marital Status</small><br><?= !empty($profile['marital_status']) ? sanitize($profile['marital_status']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Complexion</small><br><?= !empty($details['complexion']) ? sanitize($details['complexion']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Body Type</small><br><?= !empty($details['body_type']) ? sanitize($details['body_type']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Weight</small><br><?= !empty($details['weight']) ? $details['weight'] . ' kg' : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Blood Group</small><br><?= !empty($details['blood_group']) ? sanitize($details['blood_group']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Disability</small><br><?= !empty($details['disability']) && $details['disability'] !== 'None' ? sanitize($details['disability']) : 'None' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Diet</small><br><?= !empty($details['diet']) ? sanitize($details['diet']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Smoking</small><br><?= !empty($details['smoking']) ? sanitize($details['smoking']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Drinking</small><br><?= !empty($details['drinking']) ? sanitize($details['drinking']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-12"><small class="text-muted">Hobbies</small><br><?= !empty($details['hobbies']) ? nl2br(sanitize($details['hobbies'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>
 
@@ -199,108 +187,62 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-briefcase me-2 text-primary"></i>Professional Details</h5>
                     <div class="row g-3 mt-2">
-                        <div class="col-md-4"><small class="text-muted">Education</small><br><?= sanitize($details['education'] ?? 'Not specified') ?></div>
-                        <?php if (!empty($details['education_detail'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Education Detail</small><br><?= sanitize($details['education_detail']) ?></div>
-                        <?php endif; ?>
-                        <div class="col-md-4"><small class="text-muted">Occupation</small><br><?= sanitize($details['occupation'] ?? 'Not specified') ?></div>
-                        <?php if (!empty($details['occupation_detail'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Occupation Detail</small><br><?= sanitize($details['occupation_detail']) ?></div>
-                        <?php endif; ?>
+                        <div class="col-md-4"><small class="text-muted">Education</small><br><?= !empty($details['education']) ? sanitize($details['education']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Education Detail</small><br><?= !empty($details['education_detail']) ? sanitize($details['education_detail']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Occupation</small><br><?= !empty($details['occupation']) ? sanitize($details['occupation']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Occupation Detail</small><br><?= !empty($details['occupation_detail']) ? sanitize($details['occupation_detail']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                         <div class="col-md-4"><small class="text-muted">Annual Income</small><br>
                             <?php if ($canViewContact): ?>
-                                <?= sanitize($details['annual_income'] ?? 'Not specified') ?>
+                                <?= !empty($details['annual_income']) ? sanitize($details['annual_income']) : '<span class="text-muted fst-italic">Not Provided</span>' ?>
                             <?php else: ?>
                                 <span class="text-muted"><i class="bi bi-lock"></i> Connect to view</span>
                             <?php endif; ?>
                         </div>
-                        <div class="col-md-4"><small class="text-muted">Company</small><br><?= sanitize($details['company'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Working City</small><br><?= sanitize($details['working_city'] ?? 'Not specified') ?></div>
+                        <div class="col-md-4"><small class="text-muted">Company</small><br><?= !empty($details['company']) ? sanitize($details['company']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Working City</small><br><?= !empty($details['working_city']) ? sanitize($details['working_city']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>
 
                 <!-- Family Details -->
-                <?php if ($family): ?>
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-people me-2 text-primary"></i>Family Details</h5>
                     <div class="row g-3 mt-2">
-                        <?php if (!empty($family['father_name'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Father's Name</small><br><?= sanitize($family['father_name']) ?></div>
-                        <?php endif; ?>
-                        <div class="col-md-4"><small class="text-muted">Father's Occupation</small><br><?= sanitize($family['father_occupation'] ?? 'Not specified') ?></div>
-                        <?php if (!empty($family['mother_name'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Mother's Name</small><br><?= sanitize($family['mother_name']) ?></div>
-                        <?php endif; ?>
-                        <div class="col-md-4"><small class="text-muted">Mother's Occupation</small><br><?= sanitize($family['mother_occupation'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Family Type</small><br><?= sanitize($family['family_type'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Family Status</small><br><?= sanitize($family['family_status'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Family Values</small><br><?= sanitize($family['family_values'] ?? 'Not specified') ?></div>
-                        <div class="col-md-4"><small class="text-muted">Brothers</small><br><?= ($family['brothers'] ?? 0) ?> (<?= ($family['brothers_married'] ?? 0) ?> married)</div>
-                        <div class="col-md-4"><small class="text-muted">Sisters</small><br><?= ($family['sisters'] ?? 0) ?> (<?= ($family['sisters_married'] ?? 0) ?> married)</div>
-                        <?php if (!empty($family['gotra'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Gotra</small><br><?= sanitize($family['gotra']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($family['family_income'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Family Income</small><br><?= sanitize($family['family_income']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($family['family_location'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Family Location</small><br><?= sanitize($family['family_location']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($family['about_family'])): ?>
-                            <div class="col-12"><small class="text-muted">About Family</small><br><?= nl2br(sanitize($family['about_family'])) ?></div>
-                        <?php endif; ?>
+                        <div class="col-md-4"><small class="text-muted">Father's Name</small><br><?= !empty($family['father_name']) ? sanitize($family['father_name']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Father's Occupation</small><br><?= !empty($family['father_occupation']) ? sanitize($family['father_occupation']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Mother's Name</small><br><?= !empty($family['mother_name']) ? sanitize($family['mother_name']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Mother's Occupation</small><br><?= !empty($family['mother_occupation']) ? sanitize($family['mother_occupation']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Family Type</small><br><?= !empty($family['family_type']) ? sanitize($family['family_type']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Family Status</small><br><?= !empty($family['family_status']) ? sanitize($family['family_status']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Family Values</small><br><?= !empty($family['family_values']) ? sanitize($family['family_values']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Brothers</small><br><?= isset($family['brothers']) ? ($family['brothers'] . ' (' . ($family['brothers_married'] ?? 0) . ' married)') : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Sisters</small><br><?= isset($family['sisters']) ? ($family['sisters'] . ' (' . ($family['sisters_married'] ?? 0) . ' married)') : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Gotra</small><br><?= !empty($family['gotra']) ? sanitize($family['gotra']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Family Income</small><br><?= !empty($family['family_income']) ? sanitize($family['family_income']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Family Location</small><br><?= !empty($family['family_location']) ? sanitize($family['family_location']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-12"><small class="text-muted">About Family</small><br><?= !empty($family['about_family']) ? nl2br(sanitize($family['about_family'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>
-                <?php endif; ?>
 
                 <!-- Partner Preferences -->
-                <?php if ($partnerPrefs): ?>
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-heart me-2 text-primary"></i>Partner Preferences</h5>
                     <div class="row g-3 mt-2">
-                        <div class="col-md-4"><small class="text-muted">Age</small><br><?= $partnerPrefs['min_age'] ?? 18 ?> - <?= $partnerPrefs['max_age'] ?? 60 ?> years</div>
-                        <?php if ($partnerPrefs['min_height'] || $partnerPrefs['max_height']): ?>
-                            <div class="col-md-4"><small class="text-muted">Height</small><br><?= formatHeight($partnerPrefs['min_height']) ?> - <?= formatHeight($partnerPrefs['max_height']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['marital_status'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Marital Status</small><br><?= sanitize($partnerPrefs['marital_status']) ?></div>
-                        <?php endif; ?>
-                        <?php if ($partnerPrefs['religion']): ?>
-                            <div class="col-md-4"><small class="text-muted">Religion</small><br><?= sanitize($partnerPrefs['religion']) ?></div>
-                        <?php endif; ?>
-                        <?php if ($partnerPrefs['caste']): ?>
-                            <div class="col-md-4"><small class="text-muted">Samaj Name</small><br><?= sanitize($partnerPrefs['caste']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['mother_tongue'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Mother Tongue</small><br><?= sanitize($partnerPrefs['mother_tongue']) ?></div>
-                        <?php endif; ?>
-                        <?php if ($partnerPrefs['education']): ?>
-                            <div class="col-md-4"><small class="text-muted">Education</small><br><?= sanitize($partnerPrefs['education']) ?></div>
-                        <?php endif; ?>
-                        <?php if ($partnerPrefs['occupation']): ?>
-                            <div class="col-md-4"><small class="text-muted">Occupation</small><br><?= sanitize($partnerPrefs['occupation']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['min_income']) || !empty($partnerPrefs['max_income'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Income Range</small><br><?= sanitize($partnerPrefs['min_income'] ?? 'Any') ?> - <?= sanitize($partnerPrefs['max_income'] ?? 'Any') ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['state'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Preferred State</small><br><?= sanitize($partnerPrefs['state']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['diet'])): ?>
-                            <div class="col-md-4"><small class="text-muted">Diet</small><br><?= sanitize($partnerPrefs['diet']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['smoking']) && $partnerPrefs['smoking'] !== "Doesn't Matter"): ?>
-                            <div class="col-md-4"><small class="text-muted">Smoking</small><br><?= sanitize($partnerPrefs['smoking']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['drinking']) && $partnerPrefs['drinking'] !== "Doesn't Matter"): ?>
-                            <div class="col-md-4"><small class="text-muted">Drinking</small><br><?= sanitize($partnerPrefs['drinking']) ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($partnerPrefs['about_partner'])): ?>
-                            <div class="col-12"><small class="text-muted">About Partner</small><br><?= nl2br(sanitize($partnerPrefs['about_partner'])) ?></div>
-                        <?php endif; ?>
+                        <div class="col-md-4"><small class="text-muted">Age</small><br><?= ($partnerPrefs['min_age'] ?? 18) ?> - <?= ($partnerPrefs['max_age'] ?? 60) ?> years</div>
+                        <div class="col-md-4"><small class="text-muted">Height</small><br><?= !empty($partnerPrefs['min_height']) || !empty($partnerPrefs['max_height']) ? formatHeight($partnerPrefs['min_height']) . ' - ' . formatHeight($partnerPrefs['max_height']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Marital Status</small><br><?= !empty($partnerPrefs['marital_status']) ? sanitize($partnerPrefs['marital_status']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Religion</small><br><?= !empty($partnerPrefs['religion']) ? sanitize($partnerPrefs['religion']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Samaj Name</small><br><?= !empty($partnerPrefs['caste']) ? sanitize($partnerPrefs['caste']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Mother Tongue</small><br><?= !empty($partnerPrefs['mother_tongue']) ? sanitize($partnerPrefs['mother_tongue']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Education</small><br><?= !empty($partnerPrefs['education']) ? sanitize($partnerPrefs['education']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Occupation</small><br><?= !empty($partnerPrefs['occupation']) ? sanitize($partnerPrefs['occupation']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Income Range</small><br><?= !empty($partnerPrefs['min_income']) || !empty($partnerPrefs['max_income']) ? sanitize($partnerPrefs['min_income'] ?? 'Any') . ' - ' . sanitize($partnerPrefs['max_income'] ?? 'Any') : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Preferred State</small><br><?= !empty($partnerPrefs['state']) ? sanitize($partnerPrefs['state']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Diet</small><br><?= !empty($partnerPrefs['diet']) ? sanitize($partnerPrefs['diet']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Smoking</small><br><?= !empty($partnerPrefs['smoking']) ? sanitize($partnerPrefs['smoking']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-md-4"><small class="text-muted">Drinking</small><br><?= !empty($partnerPrefs['drinking']) ? sanitize($partnerPrefs['drinking']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <div class="col-12"><small class="text-muted">About Partner</small><br><?= !empty($partnerPrefs['about_partner']) ? nl2br(sanitize($partnerPrefs['about_partner'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>
-                <?php endif; ?>
             </div>
 
             <!-- Sidebar -->
