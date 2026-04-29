@@ -216,6 +216,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     break;
 
+                case 'set_primary_photo':
+                    $photoId = intval($_POST['photo_id'] ?? 0);
+                    if ($photoId) {
+                        $stmt = $pdo->prepare("SELECT * FROM photos WHERE id = ? AND user_id = ? AND is_approved = 1");
+                        $stmt->execute([$photoId, $userId]);
+                        $photo = $stmt->fetch();
+                        
+                        if ($photo) {
+                            // Set is_primary = 0 for all photos of this user
+                            $pdo->prepare("UPDATE photos SET is_primary = 0 WHERE user_id = ?")->execute([$userId]);
+                            
+                            // Set is_primary = 1 for the selected photo
+                            $pdo->prepare("UPDATE photos SET is_primary = 1 WHERE id = ?")->execute([$photoId]);
+                            
+                            // Update users.profile_pic to this photo
+                            $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?")->execute([$photo['photo_path'], $userId]);
+                            
+                            setFlash('success', 'Primary photo updated successfully.');
+                        } else {
+                            $errors[] = 'Photo not found or not approved.';
+                        }
+                    }
+                    $activeTab = 'photos';
+                    if (empty($errors)) {
+                        redirect(SITE_URL . '/edit-profile.php?tab=photos');
+                    }
+                    break;
+
                 case 'photo':
                     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
                         $result = uploadPhoto($_FILES['profile_photo'], $userId);
@@ -746,12 +774,22 @@ require_once __DIR__ . '/includes/header.php';
                                     <?php if (!$photo['is_approved']): ?>
                                         <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">Pending Approval</span>
                                     <?php endif; ?>
-                                    <form method="POST" action="" class="position-absolute bottom-0 end-0 m-2 delete-photo-form" onsubmit="return confirm('Delete this photo? This cannot be undone.');">
-                                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                                        <input type="hidden" name="section" value="delete_photo">
-                                        <input type="hidden" name="photo_id" value="<?= $photo['id'] ?>">
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete photo"><i class="bi bi-trash"></i></button>
-                                    </form>
+                                    <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                                        <?php if ($photo['is_approved'] && !$photo['is_primary']): ?>
+                                            <form method="POST" action="" onsubmit="return confirm('Set this photo as primary?');">
+                                                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                                <input type="hidden" name="section" value="set_primary_photo">
+                                                <input type="hidden" name="photo_id" value="<?= $photo['id'] ?>">
+                                                <button type="submit" class="btn btn-primary btn-sm" title="Set as primary"><i class="bi bi-star"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <form method="POST" action="" class="delete-photo-form" onsubmit="return confirm('Delete this photo? This cannot be undone.');">
+                                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                            <input type="hidden" name="section" value="delete_photo">
+                                            <input type="hidden" name="photo_id" value="<?= $photo['id'] ?>">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete photo"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
