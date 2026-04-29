@@ -223,6 +223,7 @@ CREATE TABLE IF NOT EXISTS success_stories (
     story TEXT NOT NULL,
     photo VARCHAR(255),
     marriage_date DATE,
+    location VARCHAR(255),
     is_approved TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
