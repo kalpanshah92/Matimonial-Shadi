@@ -822,7 +822,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
                     <!-- Crop Modal -->
-                    <div class="modal fade" id="cropModal" tabindex="-1">
+                    <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="false">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
