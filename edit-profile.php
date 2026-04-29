@@ -822,7 +822,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
                     <!-- Crop Modal -->
-                    <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal fade" id="cropModal" tabindex="-1">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -879,22 +879,33 @@ document.addEventListener('DOMContentLoaded', function() {
         var reader = new FileReader();
         reader.onload = function(e) {
             cropImage.src = e.target.result;
+            cropImage.style.display = 'block';
             cropModal.show();
+        };
+        reader.onerror = function() {
+            alert('Failed to read the image file. Please try another file.');
+            input.value = '';
         };
         reader.readAsDataURL(file);
     });
 
     cropModalEl.addEventListener('shown.bs.modal', function() {
         if (cropper) cropper.destroy();
-        cropper = new Cropper(cropImage, {
-            aspectRatio: 1,
-            viewMode: 1,
-            autoCropArea: 1,
-            movable: true,
-            zoomable: true,
-            scalable: false,
-            rotatable: false
-        });
+        try {
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 1,
+                movable: true,
+                zoomable: true,
+                scalable: false,
+                rotatable: false
+            });
+        } catch (e) {
+            console.error('Cropper initialization error:', e);
+            alert('Failed to initialize image cropper. Please try again.');
+            cropModal.hide();
+        }
     });
 
     cropModalEl.addEventListener('hidden.bs.modal', function() {
