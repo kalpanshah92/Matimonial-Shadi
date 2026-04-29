@@ -851,6 +851,21 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Cropper.js for photo cropping before upload -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
+<style>
+#cropModal .modal-dialog {
+    z-index: 1060 !important;
+}
+#cropModal .modal-content {
+    z-index: 1061 !important;
+}
+#cropModal .modal-footer {
+    position: relative;
+    z-index: 1062 !important;
+}
+#cropModal .cropper-container {
+    z-index: 1;
+}
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var input = document.getElementById('profilePhotoInput');
@@ -891,20 +906,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     cropModalEl.addEventListener('shown.bs.modal', function() {
         if (cropper) cropper.destroy();
-        try {
-            cropper = new Cropper(cropImage, {
-                aspectRatio: 1,
-                viewMode: 1,
-                autoCropArea: 1,
-                movable: true,
-                zoomable: true,
-                scalable: false,
-                rotatable: false
-            });
-        } catch (e) {
-            console.error('Cropper initialization error:', e);
-            alert('Failed to initialize image cropper. Please try again.');
-            cropModal.hide();
+
+        // Wait for image to load before initializing cropper
+        if (cropImage.complete) {
+            initCropper();
+        } else {
+            cropImage.onload = initCropper;
+            cropImage.onerror = function() {
+                console.error('Image failed to load');
+                alert('Failed to load the image. Please try another file.');
+                cropModal.hide();
+            };
+        }
+
+        function initCropper() {
+            try {
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    movable: true,
+                    zoomable: true,
+                    scalable: false,
+                    rotatable: false,
+                    background: false
+                });
+            } catch (e) {
+                console.error('Cropper initialization error:', e);
+                alert('Failed to initialize image cropper. Please try again.');
+                cropModal.hide();
+            }
         }
     });
 
@@ -914,29 +945,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     cropUploadBtn.addEventListener('click', function() {
-        if (!cropper) return;
+        if (!cropper) {
+            alert('Cropper not initialized. Please try selecting the image again.');
+            return;
+        }
         cropUploadBtn.disabled = true;
         cropUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading...';
 
-        cropper.getCroppedCanvas({
-            width: 800,
-            height: 800,
-            imageSmoothingQuality: 'high'
-        }).toBlob(function(blob) {
-            var formData = new FormData(uploadForm);
-            formData.append('profile_photo', blob, 'cropped.jpg');
+        try {
+            cropper.getCroppedCanvas({
+                width: 800,
+                height: 800,
+                imageSmoothingQuality: 'high'
+            }).toBlob(function(blob) {
+                if (!blob) {
+                    alert('Failed to crop the image. Please try again.');
+                    cropUploadBtn.disabled = false;
+                    cropUploadBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Crop & Upload';
+                    return;
+                }
+                var formData = new FormData(uploadForm);
+                formData.append('profile_photo', blob, 'cropped.jpg');
 
-            fetch(uploadForm.action || window.location.href, {
-                method: 'POST',
-                body: formData
-            }).then(function(res) {
-                window.location.href = '<?= SITE_URL ?>/edit-profile.php?tab=photos';
-            }).catch(function() {
-                alert('Upload failed. Please try again.');
-                cropUploadBtn.disabled = false;
-                cropUploadBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Crop & Upload';
-            });
-        }, 'image/jpeg', 0.9);
+                fetch(uploadForm.action || window.location.href, {
+                    method: 'POST',
+                    body: formData
+                }).then(function(res) {
+                    window.location.href = '<?= SITE_URL ?>/edit-profile.php?tab=photos';
+                }).catch(function() {
+                    alert('Upload failed. Please try again.');
+                    cropUploadBtn.disabled = false;
+                    cropUploadBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Crop & Upload';
+                });
+            }, 'image/jpeg', 0.9);
+        } catch (e) {
+            console.error('Cropping error:', e);
+            alert('Failed to crop the image. Please try again.');
+            cropUploadBtn.disabled = false;
+            cropUploadBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Crop & Upload';
+        }
     });
 });
 </script>
