@@ -23,7 +23,7 @@ $sampleStories = [
         'title' => 'A Match Made in Heaven',
         'story' => 'We connected on ' . SITE_NAME . ' in early 2023. What started as a simple "hello" turned into endless conversations about life, dreams, and family. Our families met within a month and instantly bonded. Today we are blessed with a beautiful marriage and cherish every moment together. Thank you for making our dreams come true!',
         'marriage_date' => '2024-02-14',
-        'photo' => 'https://placehold.co/600x400/C0392B/FFFFFF?text=Priya+%26+Rahul',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20couple%20holding%20hands%20under%20cherry%20blossom%20tree%20soft%20pastel%20colors%20romantic%20illustration?width=600&height=400&nologo=true',
         'location' => 'Ahmedabad, Gujarat',
     ],
     [
@@ -32,7 +32,7 @@ $sampleStories = [
         'title' => 'Found My Soulmate',
         'story' => 'After months of searching, I almost gave up. Then I came across Vivek\'s profile and something just clicked. We share the same values, love for family, and passion for travel. Our wedding was a dream come true with both families blessing us. ' . SITE_NAME . ' truly changed our lives forever.',
         'marriage_date' => '2024-05-22',
-        'photo' => 'https://placehold.co/600x400/E67E22/FFFFFF?text=Ankita+%26+Vivek',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20couple%20walking%20on%20beach%20sunset%20soft%20warm%20colors%20romantic%20illustration?width=600&height=400&nologo=true',
         'location' => 'Surat, Gujarat',
     ],
     [
@@ -41,7 +41,7 @@ $sampleStories = [
         'title' => 'Tradition Meets Love',
         'story' => 'Both our families were looking for someone from the same Samaj. When our parents connected through ' . SITE_NAME . ', they knew it was a perfect match. Karan and I met and instantly felt a deep connection. Our traditional wedding was blessed with love from everyone. We are forever grateful!',
         'marriage_date' => '2023-11-10',
-        'photo' => 'https://placehold.co/600x400/8E44AD/FFFFFF?text=Neha+%26+Karan',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20wedding%20couple%20traditional%20ceremony%20soft%20elegant%20colors%20illustration?width=600&height=400&nologo=true',
         'location' => 'Vadodara, Gujarat',
     ],
     [
@@ -50,7 +50,7 @@ $sampleStories = [
         'title' => 'From Strangers to Soulmates',
         'story' => 'Our story began with a simple "interest" sent through ' . SITE_NAME . '. What followed was weeks of beautiful conversations that grew into deep love and understanding. Our families loved each other instantly. The wedding was a magical celebration of our journey together.',
         'marriage_date' => '2024-01-18',
-        'photo' => 'https://placehold.co/600x400/16A085/FFFFFF?text=Riya+%26+Amit',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20couple%20in%20flower%20field%20spring%20soft%20pink%20and%20green%20colors%20romantic%20illustration?width=600&height=400&nologo=true',
         'location' => 'Rajkot, Gujarat',
     ],
     [
@@ -59,7 +59,7 @@ $sampleStories = [
         'title' => 'Destiny Through Destiny',
         'story' => 'I was skeptical about online matrimony until I met Rohan. Our values aligned perfectly and we both wanted similar things in life. Our parents met, blessed our union, and we got married within 6 months. Every day feels like a blessing. Thank you ' . SITE_NAME . '!',
         'marriage_date' => '2024-06-15',
-        'photo' => 'https://placehold.co/600x400/2980B9/FFFFFF?text=Meera+%26+Rohan',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20couple%20stargazing%20night%20sky%20soft%20dreamy%20colors%20romantic%20illustration?width=600&height=400&nologo=true',
         'location' => 'Mumbai, Maharashtra',
     ],
     [
@@ -68,7 +68,7 @@ $sampleStories = [
         'title' => 'Happily Ever After',
         'story' => 'Sagar\'s profile stood out from the rest. His kindness, ambition, and family values matched exactly what I was looking for. Our engagement happened within 3 months and we celebrated our wedding surrounded by loved ones. We recommend ' . SITE_NAME . ' to everyone searching for true love.',
         'marriage_date' => '2023-12-05',
-        'photo' => 'https://placehold.co/600x400/D35400/FFFFFF?text=Pooja+%26+Sagar',
+        'photo' => 'https://image.pollinations.ai/prompt/ghibli%20style%20anime%20couple%20in%20garden%20surrounded%20by%20butterflies%20soft%20pastel%20colors%20romantic%20illustration?width=600&height=400&nologo=true',
         'location' => 'Bhavnagar, Gujarat',
     ],
 ];
