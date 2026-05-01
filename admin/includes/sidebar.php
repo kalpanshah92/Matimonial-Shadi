@@ -49,6 +49,9 @@
             <i class="bi bi-graph-up"></i>Analytics
         </a>
         <hr class="border-light mx-3">
+        <a class="nav-link <?= ($adminPage ?? '') === 'change-password' ? 'active' : '' ?>" href="<?= SITE_URL ?>/admin/change-password.php">
+            <i class="bi bi-key"></i>Change Password
+        </a>
         <a class="nav-link" href="<?= SITE_URL ?>" target="_blank">
             <i class="bi bi-globe"></i>View Website
         </a>
