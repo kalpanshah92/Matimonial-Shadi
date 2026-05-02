@@ -24,63 +24,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         
-        if ($user) {
-            // Check if account is approved
-            if ($user['status'] !== 'approved') {
-                $errors[] = 'Account Approval is Pending. Please contact admin for approval.';
-            } else {
-                $otp = generateOTP();
-                saveOTP($email, $otp, 'password_reset');
-                
-                // Send email with OTP
-                $subject = 'Password Reset OTP - ' . SITE_NAME;
-                $body = "
-                    <html>
-                    <head>
-                        <style>
-                            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                            .header { background: #C0392B; color: #fff; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-                            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-                            .otp { font-size: 32px; font-weight: bold; color: #C0392B; text-align: center; margin: 20px 0; letter-spacing: 5px; }
-                            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='header'>
-                                <h2>Password Reset</h2>
-                            </div>
-                            <div class='content'>
-                                <p>Dear {$user['name']},</p>
-                                <p>We received a request to reset your password for your " . SITE_NAME . " account.</p>
-                                <p>Your One-Time Password (OTP) is:</p>
-                                <div class='otp'>$otp</div>
-                                <p><strong>This OTP is valid for " . OTP_EXPIRY_MINUTES . " minutes.</strong></p>
-                                <p>If you did not request this password reset, please ignore this email.</p>
-                                <p>For security reasons, do not share this OTP with anyone.</p>
-                            </div>
-                            <div class='footer'>
-                                <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
-                            </div>
+        if ($user && $user['status'] === 'approved') {
+            $otp = generateOTP();
+            saveOTP($email, $otp, 'password_reset');
+            
+            // Send email with OTP
+            $subject = 'Password Reset OTP - ' . SITE_NAME;
+            $body = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #C0392B; color: #fff; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
+                        .otp { font-size: 32px; font-weight: bold; color: #C0392B; text-align: center; margin: 20px 0; letter-spacing: 5px; }
+                        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h2>Password Reset</h2>
                         </div>
-                    </body>
-                    </html>
-                ";
-                
-                $emailSent = sendEmail($email, $subject, $body);
-                
-                if ($emailSent) {
-                    setFlash('success', 'Password reset OTP has been sent to your email.');
-                    redirect(SITE_URL . '/reset-password.php');
-                } else {
-                    $errors[] = 'Failed to send email. Please try again later.';
-                }
+                        <div class='content'>
+                            <p>Dear {$user['name']},</p>
+                            <p>We received a request to reset your password for your " . SITE_NAME . " account.</p>
+                            <p>Your One-Time Password (OTP) is:</p>
+                            <div class='otp'>$otp</div>
+                            <p><strong>This OTP is valid for " . OTP_EXPIRY_MINUTES . " minutes.</strong></p>
+                            <p>If you did not request this password reset, please ignore this email.</p>
+                            <p>For security reasons, do not share this OTP with anyone.</p>
+                        </div>
+                        <div class='footer'>
+                            <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            ";
+            
+            $emailSent = sendEmail($email, $subject, $body);
+            
+            if ($emailSent) {
+                setFlash('success', 'Password reset OTP has been sent to your email.');
+                redirect(SITE_URL . '/reset-password.php');
+            } else {
+                $errors[] = 'Failed to send email. Please try again later.';
             }
         } else {
-            // Don't reveal if email exists
-            $success = true;
-            setFlash('success', 'If this email is registered, you will receive a password reset OTP.');
+            $errors[] = 'Account do not exist or not approved by admin.';
         }
     }
 }
