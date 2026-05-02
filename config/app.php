@@ -43,6 +43,51 @@ define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'noreply@matrimonialshadi
 define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Matrimonial Shadi');
 define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'tls');
 
+// Common Email Provider SMTP Settings (for reference)
+/*
+Gmail:
+  SMTP_HOST: smtp.gmail.com
+  SMTP_PORT: 587
+  SMTP_ENCRYPTION: tls
+  Note: Generate App Password at https://myaccount.google.com/apppasswords
+
+Yahoo Mail:
+  SMTP_HOST: smtp.mail.yahoo.com
+  SMTP_PORT: 587
+  SMTP_ENCRYPTION: tls
+  Note: Generate App Password at https://login.yahoo.com/account/security
+
+Outlook/Hotmail:
+  SMTP_HOST: smtp.office365.com
+  SMTP_PORT: 587
+  SMTP_ENCRYPTION: tls
+  Note: Use your full email address as username
+
+Bigpond (Telstra):
+  SMTP_HOST: mail.bigpond.com
+  SMTP_PORT: 465
+  SMTP_ENCRYPTION: ssl
+  Note: May require authentication with your Bigpond credentials
+
+AOL:
+  SMTP_HOST: smtp.aol.com
+  SMTP_PORT: 587
+  SMTP_ENCRYPTION: tls
+  Note: Generate App Password in AOL account settings
+
+iCloud:
+  SMTP_HOST: smtp.mail.me.com
+  SMTP_PORT: 587
+  SMTP_ENCRYPTION: tls
+  Note: Generate App Password in iCloud settings
+
+Fastmail:
+  SMTP_HOST: smtp.fastmail.com
+  SMTP_PORT: 465
+  SMTP_ENCRYPTION: ssl
+  Note: Use your Fastmail app-specific password
+*/
+
 // Indian Communities Data
 $RELIGIONS = [
     'Hindu', 'Jain'
