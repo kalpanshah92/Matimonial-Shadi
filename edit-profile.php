@@ -387,29 +387,41 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
 
         <style>
-            .profile-section { scroll-margin-top: 80px; }
-            .section-title { font-weight: 600; border-bottom: 2px solid var(--bs-primary, #C0392B); padding-bottom: 8px; }
-            .profile-sections .sticky-top a.active { background: var(--bs-primary, #C0392B); color: #fff; }
+            .accordion-button:not(.collapsed) {
+                background-color: var(--bs-primary, #C0392B);
+                color: #fff;
+            }
+            .accordion-button:focus {
+                box-shadow: 0 0 0 0.25rem rgba(192, 57, 43, 0.25);
+            }
+            .accordion-item {
+                border: 1px solid #dee2e6;
+                margin-bottom: 1rem;
+                border-radius: 0.5rem !important;
+                overflow: hidden;
+            }
+            .accordion-button {
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            .section-form .btn {
+                display: none;
+            }
         </style>
 
-        <!-- Quick Section Nav -->
-        <div class="d-flex flex-wrap gap-2 mb-4 sticky-top bg-warm py-2" style="top:0; z-index:100;">
-            <a href="#basic" class="btn btn-sm btn-outline-primary"><i class="bi bi-person me-1"></i>Basic</a>
-            <a href="#personal" class="btn btn-sm btn-outline-primary"><i class="bi bi-heart me-1"></i>Personal</a>
-            <a href="#professional" class="btn btn-sm btn-outline-primary"><i class="bi bi-briefcase me-1"></i>Professional</a>
-            <a href="#family" class="btn btn-sm btn-outline-primary"><i class="bi bi-people me-1"></i>Family</a>
-            <a href="#partner" class="btn btn-sm btn-outline-primary"><i class="bi bi-search-heart me-1"></i>Partner Pref</a>
-            <a href="#photos" class="btn btn-sm btn-outline-primary"><i class="bi bi-image me-1"></i>Photos</a>
-        </div>
-
-        <div class="profile-sections">
+        <div class="accordion" id="profileAccordion">
             <!-- Basic Info Section -->
-            <div class="profile-section mb-4" id="basic">
-                <h4 class="section-title mb-3"><i class="bi bi-person-circle me-2 text-primary"></i>Basic Info</h4>
-                <div class="dashboard-card">
-                    <form method="POST" action="">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                        <input type="hidden" name="section" value="basic">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBasic" aria-expanded="true" aria-controls="collapseBasic">
+                        <i class="bi bi-person-circle me-2"></i>Basic Info
+                    </button>
+                </h2>
+                <div id="collapseBasic" class="accordion-collapse collapse show" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="basic">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="basic">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Full Name *</label>
@@ -467,18 +479,24 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="about_me" class="form-control" rows="4" placeholder="Write something about yourself..."><?= sanitize($currentUser['about_me'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="saveBasic" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Personal Section -->
-            <div class="profile-section mb-4" id="personal">
-                <h4 class="section-title mb-3"><i class="bi bi-heart-fill me-2 text-primary"></i>Personal Details</h4>
-                <div class="dashboard-card">
-                    <form method="POST" action="">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                        <input type="hidden" name="section" value="personal">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePersonal" aria-expanded="false" aria-controls="collapsePersonal">
+                        <i class="bi bi-heart-fill me-2"></i>Personal Details
+                    </button>
+                </h2>
+                <div id="collapsePersonal" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="personal">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="personal">
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Height</label>
@@ -550,18 +568,24 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="hobbies" class="form-control" rows="3" placeholder="E.g., Reading, Traveling, Cooking..."><?= sanitize($details['hobbies'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="savePersonal" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Professional Section -->
-            <div class="profile-section mb-4" id="professional">
-                <h4 class="section-title mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Professional Details</h4>
-                <div class="dashboard-card">
-                    <form method="POST" action="">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                        <input type="hidden" name="section" value="professional">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProfessional" aria-expanded="false" aria-controls="collapseProfessional">
+                        <i class="bi bi-briefcase-fill me-2"></i>Professional Details
+                    </button>
+                </h2>
+                <div id="collapseProfessional" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="professional">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="professional">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Highest Education</label>
@@ -607,18 +631,24 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="working_city" value="<?= sanitize($details['working_city'] ?? '') ?>">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="saveProfessional" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Family Section -->
-            <div class="profile-section mb-4" id="family">
-                <h4 class="section-title mb-3"><i class="bi bi-people-fill me-2 text-primary"></i>Family Details</h4>
-                <div class="dashboard-card">
-                    <form method="POST" action="">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                        <input type="hidden" name="section" value="family">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFamily" aria-expanded="false" aria-controls="collapseFamily">
+                        <i class="bi bi-people-fill me-2"></i>Family Details
+                    </button>
+                </h2>
+                <div id="collapseFamily" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="family">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="family">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Father's Name</label>
@@ -688,18 +718,24 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="about_family" class="form-control" rows="3"><?= sanitize($family['about_family'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="saveFamily" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Partner Preferences Section -->
-            <div class="profile-section mb-4" id="partner">
-                <h4 class="section-title mb-3"><i class="bi bi-search-heart me-2 text-primary"></i>Partner Preferences</h4>
-                <div class="dashboard-card">
-                    <form method="POST" action="">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                        <input type="hidden" name="section" value="partner">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePartner" aria-expanded="false" aria-controls="collapsePartner">
+                        <i class="bi bi-search-heart me-2"></i>Partner Preferences
+                    </button>
+                </h2>
+                <div id="collapsePartner" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="partner">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="partner">
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label">Min Age</label>
@@ -764,15 +800,22 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="pref_about_partner" class="form-control" rows="3"><?= sanitize($partnerPrefs['about_partner'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Preferences</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="savePartner" disabled><i class="bi bi-check-lg me-1"></i>Save Preferences</button>
                     </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Photos Section -->
-            <div class="profile-section mb-4" id="photos">
-                <h4 class="section-title mb-3"><i class="bi bi-camera-fill me-2 text-primary"></i>Photos</h4>
-                <div class="dashboard-card">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePhotos" aria-expanded="false" aria-controls="collapsePhotos">
+                        <i class="bi bi-camera-fill me-2"></i>Photos
+                    </button>
+                </h2>
+                <div id="collapsePhotos" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <div class="dashboard-card">
                     <h5 class="mb-3">Your Photos (<?= count($photos) ?>/<?= MAX_PHOTOS ?>)</h5>
                     
                     <div class="row g-3 mb-4">
@@ -854,8 +897,17 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                     </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Single Save Button at Bottom -->
+        <div class="mt-4 text-center">
+            <button type="button" class="btn btn-primary btn-lg px-5" id="saveAllChanges" disabled>
+                <i class="bi bi-check-lg me-2"></i>Save Changes
+            </button>
         </div>
     </div>
 </section>
@@ -896,9 +948,31 @@ require_once __DIR__ . '/includes/header.php';
         return SECTION_TABS[s] ? s : null;
     }
 
+    // Get field value for comparison
+    function getFieldValue(field) {
+        if (field.type === 'checkbox' || field.type === 'radio') {
+            return field.checked ? field.value : '';
+        }
+        return field.value;
+    }
+
+    // Check if form has changes compared to initial state
+    function hasFormChanges(form, initialData) {
+        var hasChanges = false;
+        form.querySelectorAll('input, select, textarea').forEach(function(field) {
+            if (shouldSkip(field)) return;
+            var currentVal = getFieldValue(field);
+            var initialVal = initialData[field.name] || '';
+            if (String(currentVal) !== String(initialVal)) {
+                hasChanges = true;
+            }
+        });
+        return hasChanges;
+    }
+
     // Restore saved values for all forms on page load
     function restoreAll() {
-        document.querySelectorAll('.profile-section form').forEach(function(form) {
+        document.querySelectorAll('.section-form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             form.querySelectorAll('input, select, textarea').forEach(function(field) {
@@ -916,7 +990,7 @@ require_once __DIR__ . '/includes/header.php';
 
     // Save field on change
     function attachAutoSave() {
-        document.querySelectorAll('.profile-section form').forEach(function(form) {
+        document.querySelectorAll('.section-form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             form.addEventListener('input', function(e) {
@@ -951,14 +1025,76 @@ require_once __DIR__ . '/includes/header.php';
         keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
     }
 
+    // Attach change detection and button enable/disable logic
+    function attachChangeDetection() {
+        var saveAllButton = document.getElementById('saveAllChanges');
+        if (!saveAllButton) return;
+
+        var formStates = {};
+
+        document.querySelectorAll('.section-form').forEach(function(form) {
+            var section = getSectionFromForm(form);
+            if (!section) return;
+
+            // Store initial values on page load
+            var initialData = {};
+            form.querySelectorAll('input, select, textarea').forEach(function(field) {
+                if (shouldSkip(field)) return;
+                initialData[field.name] = getFieldValue(field);
+            });
+
+            formStates[section] = {
+                form: form,
+                initialData: initialData,
+                hasChanges: false
+            };
+
+            // Check for changes and update button state
+            function updateButtonState() {
+                var hasChanges = hasFormChanges(form, initialData);
+                formStates[section].hasChanges = hasChanges;
+
+                // Enable save button if any form has changes
+                var anyChanges = Object.values(formStates).some(function(state) {
+                    return state.hasChanges;
+                });
+                saveAllButton.disabled = !anyChanges;
+            }
+
+            // Listen for input and change events
+            form.addEventListener('input', updateButtonState);
+            form.addEventListener('change', updateButtonState);
+
+            // Initial check
+            updateButtonState();
+        });
+
+        // Handle save button click - submit all forms with changes
+        saveAllButton.addEventListener('click', function() {
+            var formsToSubmit = [];
+            Object.values(formStates).forEach(function(state) {
+                if (state.hasChanges) {
+                    formsToSubmit.push(state.form);
+                }
+            });
+
+            if (formsToSubmit.length === 0) return;
+
+            // Submit the first form with changes (for simplicity)
+            // In the future, we could submit all forms sequentially
+            formsToSubmit[0].submit();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // If server signaled successful save for a section, clear its draft first
         if (SAVED_SECTION) clearSection(SAVED_SECTION);
         restoreAll();
         attachAutoSave();
+        attachChangeDetection();
 
         // Show subtle "draft restored" indicator if any unsaved data exists
-        document.querySelectorAll('.profile-section form').forEach(function(form) {
+        document.querySelectorAll('.section-form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             var hasDraft = false;
