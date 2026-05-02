@@ -68,14 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($emailSent) {
                 $success = true;
-                setFlash('success', 'Password reset OTP has been sent to your email. Please check your inbox.');
+                setFlash('success', 'Password reset OTP has been sent to your email. <a href="' . SITE_URL . '/reset-password.php" class="alert-link">Click here to reset your password</a>.');
             } else {
                 $errors[] = 'Failed to send email. Please try again later.';
             }
         } else {
             // Don't reveal if email exists
             $success = true;
-            setFlash('success', 'If this email is registered, you will receive a password reset OTP.');
+            setFlash('success', 'If this email is registered, you will receive a password reset OTP. <a href="' . SITE_URL . '/reset-password.php" class="alert-link">Click here to reset your password</a>.');
         }
     }
 }
