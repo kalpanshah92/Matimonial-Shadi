@@ -23,3 +23,7 @@ error_log
 
 # Environment
 .env
+
+# Docker
+Dockerfile
+docker-compose.yml
