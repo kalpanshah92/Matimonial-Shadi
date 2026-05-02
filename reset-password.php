@@ -7,19 +7,23 @@ if (isLoggedIn()) redirect(SITE_URL . '/dashboard.php');
 $errors = [];
 $success = false;
 
+// Get email from session if available
+$email = $_SESSION['reset_email'] ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $errors[] = 'Invalid form submission.';
     }
     
-    $email = sanitize($_POST['email'] ?? '');
+    // Use email from session, not from form
+    $email = $_SESSION['reset_email'] ?? '';
     $otp = sanitize($_POST['otp'] ?? '');
     $newPassword = $_POST['new_password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
     
     // Validation
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+    if (empty($email)) {
+        $errors[] = 'Email is missing. Please request a new password reset.';
     }
     if (empty($otp)) {
         $errors[] = 'Please enter the OTP.';
@@ -43,6 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
             if ($stmt->execute([$hashedPassword, $email])) {
+                // Clear session email after successful reset
+                unset($_SESSION['reset_email']);
                 setFlash('success', 'Your password has been reset successfully. You can now login with your new password.');
                 redirect(SITE_URL . '/login.php');
             } else {
@@ -94,8 +100,9 @@ require_once __DIR__ . '/includes/header.php';
                                 <label for="email" class="form-label">Email Address</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control" id="email" name="email" required placeholder="your@email.com">
+                                    <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($email) ?>" readonly required placeholder="your@email.com">
                                 </div>
+                                <small class="text-muted">Email is locked and cannot be changed</small>
                             </div>
                             
                             <div class="mb-3">

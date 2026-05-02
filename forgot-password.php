@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $emailSent = sendEmail($email, $subject, $body);
             
             if ($emailSent) {
+                $_SESSION['reset_email'] = $email;
                 setFlash('success', 'Password reset OTP has been sent to your email.');
                 redirect(SITE_URL . '/reset-password.php');
             } else {
