@@ -386,19 +386,26 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         <?php endif; ?>
 
-        <!-- Tabs -->
-        <ul class="nav nav-tabs profile-tabs mb-4" role="tablist">
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'basic' ? 'active' : '' ?>" data-bs-toggle="tab" href="#basic">Basic Info</a></li>
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'personal' ? 'active' : '' ?>" data-bs-toggle="tab" href="#personal">Personal</a></li>
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'professional' ? 'active' : '' ?>" data-bs-toggle="tab" href="#professional">Professional</a></li>
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'family' ? 'active' : '' ?>" data-bs-toggle="tab" href="#family">Family</a></li>
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'partner' ? 'active' : '' ?>" data-bs-toggle="tab" href="#partner">Partner Pref</a></li>
-            <li class="nav-item"><a class="nav-link <?= $activeTab === 'photos' ? 'active' : '' ?>" data-bs-toggle="tab" href="#photos">Photos</a></li>
-        </ul>
+        <style>
+            .profile-section { scroll-margin-top: 80px; }
+            .section-title { font-weight: 600; border-bottom: 2px solid var(--bs-primary, #C0392B); padding-bottom: 8px; }
+            .profile-sections .sticky-top a.active { background: var(--bs-primary, #C0392B); color: #fff; }
+        </style>
 
-        <div class="tab-content">
-            <!-- Basic Info Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'basic' ? 'show active' : '' ?>" id="basic">
+        <!-- Quick Section Nav -->
+        <div class="d-flex flex-wrap gap-2 mb-4 sticky-top bg-warm py-2" style="top:0; z-index:100;">
+            <a href="#basic" class="btn btn-sm btn-outline-primary"><i class="bi bi-person me-1"></i>Basic</a>
+            <a href="#personal" class="btn btn-sm btn-outline-primary"><i class="bi bi-heart me-1"></i>Personal</a>
+            <a href="#professional" class="btn btn-sm btn-outline-primary"><i class="bi bi-briefcase me-1"></i>Professional</a>
+            <a href="#family" class="btn btn-sm btn-outline-primary"><i class="bi bi-people me-1"></i>Family</a>
+            <a href="#partner" class="btn btn-sm btn-outline-primary"><i class="bi bi-search-heart me-1"></i>Partner Pref</a>
+            <a href="#photos" class="btn btn-sm btn-outline-primary"><i class="bi bi-image me-1"></i>Photos</a>
+        </div>
+
+        <div class="profile-sections">
+            <!-- Basic Info Section -->
+            <div class="profile-section mb-4" id="basic">
+                <h4 class="section-title mb-3"><i class="bi bi-person-circle me-2 text-primary"></i>Basic Info</h4>
                 <div class="dashboard-card">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
@@ -465,8 +472,9 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Personal Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'personal' ? 'show active' : '' ?>" id="personal">
+            <!-- Personal Section -->
+            <div class="profile-section mb-4" id="personal">
+                <h4 class="section-title mb-3"><i class="bi bi-heart-fill me-2 text-primary"></i>Personal Details</h4>
                 <div class="dashboard-card">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
@@ -547,8 +555,9 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Professional Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'professional' ? 'show active' : '' ?>" id="professional">
+            <!-- Professional Section -->
+            <div class="profile-section mb-4" id="professional">
+                <h4 class="section-title mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Professional Details</h4>
                 <div class="dashboard-card">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
@@ -603,8 +612,9 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Family Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'family' ? 'show active' : '' ?>" id="family">
+            <!-- Family Section -->
+            <div class="profile-section mb-4" id="family">
+                <h4 class="section-title mb-3"><i class="bi bi-people-fill me-2 text-primary"></i>Family Details</h4>
                 <div class="dashboard-card">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
@@ -683,8 +693,9 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Partner Preferences Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'partner' ? 'show active' : '' ?>" id="partner">
+            <!-- Partner Preferences Section -->
+            <div class="profile-section mb-4" id="partner">
+                <h4 class="section-title mb-3"><i class="bi bi-search-heart me-2 text-primary"></i>Partner Preferences</h4>
                 <div class="dashboard-card">
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
@@ -758,8 +769,9 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Photos Tab -->
-            <div class="tab-pane fade <?= $activeTab === 'photos' ? 'show active' : '' ?>" id="photos">
+            <!-- Photos Section -->
+            <div class="profile-section mb-4" id="photos">
+                <h4 class="section-title mb-3"><i class="bi bi-camera-fill me-2 text-primary"></i>Photos</h4>
                 <div class="dashboard-card">
                     <h5 class="mb-3">Your Photos (<?= count($photos) ?>/<?= MAX_PHOTOS ?>)</h5>
                     
@@ -886,7 +898,7 @@ require_once __DIR__ . '/includes/header.php';
 
     // Restore saved values for all forms on page load
     function restoreAll() {
-        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+        document.querySelectorAll('.profile-section form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             form.querySelectorAll('input, select, textarea').forEach(function(field) {
@@ -904,7 +916,7 @@ require_once __DIR__ . '/includes/header.php';
 
     // Save field on change
     function attachAutoSave() {
-        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+        document.querySelectorAll('.profile-section form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             form.addEventListener('input', function(e) {
@@ -946,7 +958,7 @@ require_once __DIR__ . '/includes/header.php';
         attachAutoSave();
 
         // Show subtle "draft restored" indicator if any unsaved data exists
-        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+        document.querySelectorAll('.profile-section form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
             var hasDraft = false;
