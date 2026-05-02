@@ -121,7 +121,7 @@ switch ($action) {
             }
 
             // Apply changes to profile_details table (personal and professional fields)
-            $profileFields = ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'about_me', 'education', 'education_detail', 'occupation', 'occupation_detail', 'company', 'annual_income', 'working_city'];
+            $profileFields = ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'education', 'education_detail', 'occupation', 'occupation_detail', 'company', 'annual_income', 'working_city'];
             $profileUpdates = [];
             $profileParams = [];
             foreach ($profileFields as $field) {
@@ -182,7 +182,7 @@ switch ($action) {
         } catch (PDOException $e) {
             $pdo->rollBack();
             error_log("Approve Change Error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Failed to apply changes']);
+            echo json_encode(['success' => false, 'message' => 'Failed to apply changes: ' . $e->getMessage()]);
         }
         break;
 
