@@ -1,0 +1,72 @@
+services:
+  app:
+    build: .
+    container_name: matrimonial_app
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./uploads:/var/www/html/uploads
+    command: bash -c "cd /var/www/html && composer install --no-dev --optimize-autoloader && apache2-foreground"
+    environment:
+      DB_HOST: db
+      DB_NAME: matrimonial_shadi
+      DB_USER: matrimonial_user
+      DB_PASS: StrongPass@2026
+      SITE_URL: http://localhost:8080
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USERNAME: saathseetu@gmail.com
+      SMTP_PASSWORD: YOUR_GMAIL_APP_PASSWORD_HERE
+      SMTP_FROM_EMAIL: saathseetu@gmail.com
+      SMTP_FROM_NAME: Matrimonial Shadi
+      SMTP_ENCRYPTION: tls
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - matrimonial_net
+
+  db:
+    image: mysql:8.0
+    container_name: matrimonial_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass@2026
+      MYSQL_DATABASE: matrimonial_shadi
+      MYSQL_USER: matrimonial_user
+      MYSQL_PASSWORD: StrongPass@2026
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pRootPass@2026"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - matrimonial_net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: matrimonial_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: RootPass@2026
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      - db
+    networks:
+      - matrimonial_net
+
+volumes:
+  mysql_data:
+
+networks:
+  matrimonial_net:
+    driver: bridge
