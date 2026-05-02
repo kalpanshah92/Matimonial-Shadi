@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($formData['name'])) $errors[] = 'Name is required.';
     if (empty($formData['email']) || !filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
     if (empty($formData['phone']) || !preg_match('/^[6-9]\d{9}$/', $formData['phone'])) $errors[] = 'Valid Indian mobile number is required.';
-    if (strlen($formData['password']) < 14) $errors[] = 'Password must be at least 14 characters long.';
+    if (strlen($formData['password']) < 8) $errors[] = 'Password must be at least 8 characters long.';
     if (!preg_match('/[0-9]/', $formData['password'])) $errors[] = 'Password must contain at least 1 number.';
     if (empty($_POST['terms'])) $errors[] = 'You must agree to the Terms of Service and Privacy Policy.';
     if ($formData['password'] !== $formData['confirm_password']) $errors[] = 'Passwords do not match.';
@@ -251,7 +251,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password" name="password" 
-                                           required minlength="14" placeholder="Min 14 characters, include a number">
+                                           required minlength="8" placeholder="Min 8 characters, include a number">
                                     <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password">
                                         <i class="bi bi-eye"></i>
                                     </button>
