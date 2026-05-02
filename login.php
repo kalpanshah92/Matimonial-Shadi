@@ -13,16 +13,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Invalid form submission.';
     }
     
-    $emailOrPhone = sanitize($_POST['email_or_phone'] ?? '');
+    $email = sanitize($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     
-    if (empty($emailOrPhone)) $errors[] = 'Email or phone number is required.';
+    if (empty($email)) $errors[] = 'Email is required.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Please enter a valid email address.';
     if (empty($password)) $errors[] = 'Password is required.';
     
     if (empty($errors)) {
         $pdo = getDBConnection();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE (email = ? OR phone = ?) AND is_active = 1");
-        $stmt->execute([$emailOrPhone, $emailOrPhone]);
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND is_active = 1");
+        $stmt->execute([$email]);
         $user = $stmt->fetch();
         
         if ($user && password_verify($password, $user['password'])) {
@@ -51,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect($redirect);
             }
         } else {
-            $errors[] = 'Invalid email/phone or password.';
+            $errors[] = 'Invalid email or password.';
         }
     }
 }
@@ -84,12 +85,12 @@ require_once __DIR__ . '/includes/header.php';
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         
                         <div class="mb-3">
-                            <label for="email_or_phone" class="form-label">Email or Mobile Number</label>
+                            <label for="email" class="form-label">Email Address</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="email_or_phone" name="email_or_phone" 
-                                       value="<?= sanitize($_POST['email_or_phone'] ?? '') ?>" required 
-                                       placeholder="Enter email or mobile number">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="<?= sanitize($_POST['email'] ?? '') ?>" required 
+                                       placeholder="Enter email address">
                             </div>
                         </div>
                         
