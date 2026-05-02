@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
             if ($stmt->execute([$hashedPassword, $email])) {
-                $success = true;
                 setFlash('success', 'Your password has been reset successfully. You can now login with your new password.');
+                redirect(SITE_URL . '/login.php');
             } else {
                 $errors[] = 'Failed to update password. Please try again.';
             }
