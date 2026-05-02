@@ -15,14 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Invalid form submission.';
     }
     
-    // Use email from session, not from form
-    $email = $_SESSION['reset_email'] ?? '';
+    // Use email from hidden field (which comes from session)
+    $email = sanitize($_POST['email'] ?? '');
     $otp = sanitize($_POST['otp'] ?? '');
     $newPassword = $_POST['new_password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
     
     // Validation
-    if (empty($email)) {
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Email is missing. Please request a new password reset.';
     }
     if (empty($otp)) {
@@ -95,6 +95,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php else: ?>
                         <form method="POST" action="">
                             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
                             
                             <div class="mb-3">
                                 <label for="otp" class="form-label">OTP (One-Time Password)</label>
