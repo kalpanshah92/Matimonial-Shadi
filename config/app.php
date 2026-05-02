@@ -45,11 +45,13 @@ define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'tls');
 
 // Common Email Provider SMTP Settings (for reference)
 /*
-Gmail:
+Gmail (Recommended for password recovery):
   SMTP_HOST: smtp.gmail.com
   SMTP_PORT: 587
   SMTP_ENCRYPTION: tls
   Note: Generate App Password at https://myaccount.google.com/apppasswords
+        Enable 2FA first, then create App Password
+        Use App Password (not your regular password) for SMTP authentication
 
 Yahoo Mail:
   SMTP_HOST: smtp.mail.yahoo.com
@@ -86,6 +88,16 @@ Fastmail:
   SMTP_PORT: 465
   SMTP_ENCRYPTION: ssl
   Note: Use your Fastmail app-specific password
+
+SendGrid:
+  SMTP_HOST: smtp.sendgrid.net
+  SMTP_PORT: 587
+  SMTP_USERNAME: apikey  (literal string "apikey", not your email)
+  SMTP_PASSWORD: your_sendgrid_api_key (starts with SG.)
+  SMTP_ENCRYPTION: tls
+  Note: Create API key at https://app.sendgrid.com/settings/api_keys
+        Free tier: 100 emails/day
+        Verify sender email at https://app.sendgrid.com/settings/sender_auth
 */
 
 // Indian Communities Data

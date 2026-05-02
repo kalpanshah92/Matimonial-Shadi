@@ -14,11 +14,11 @@ services:
       DB_USER: matrimonial_user
       DB_PASS: StrongPass@2026
       SITE_URL: http://localhost:8080
-      SMTP_HOST: smtp.mail.yahoo.com
+      SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
-      SMTP_USERNAME: kalpanshah@ymail.com
-      SMTP_PASSWORD: your_yahoo_app_password_here
-      SMTP_FROM_EMAIL: kalpanshah@ymail.com
+      SMTP_USERNAME: saathseetu@gmail.com
+      SMTP_PASSWORD: your_gmail_app_password_here
+      SMTP_FROM_EMAIL: saathseetu@gmail.com
       SMTP_FROM_NAME: Matrimonial Shadi
       SMTP_ENCRYPTION: tls
     depends_on:
