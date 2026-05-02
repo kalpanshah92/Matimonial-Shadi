@@ -97,15 +97,6 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                             
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($email) ?>" readonly required placeholder="your@email.com">
-                                </div>
-                                <small class="text-muted">Email is locked and cannot be changed</small>
-                            </div>
-                            
-                            <div class="mb-3">
                                 <label for="otp" class="form-label">OTP (One-Time Password)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
