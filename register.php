@@ -138,7 +138,7 @@ require_once __DIR__ . '/includes/header.php';
                             <label class="form-label fw-semibold">This profile is for <span class="text-danger">*</span></label>
                             <div class="row g-2">
                                 <?php 
-                                $profileTypes = ['Myself', 'Son', 'Daughter', 'Brother', 'Sister', 'Relative', 'Friend'];
+                                $profileTypes = ['Myself', 'Son', 'Daughter'];
                                 foreach ($profileTypes as $type): 
                                 ?>
                                     <div class="col-auto">
