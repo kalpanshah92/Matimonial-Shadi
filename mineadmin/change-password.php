@@ -111,7 +111,7 @@ $adminPage = 'change-password';
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-1"></i>Update Password
                         </button>
-                        <a href="<?= SITE_URL ?>/admin/index.php" class="btn btn-outline-secondary ms-2">
+                        <a href="<?= SITE_URL ?>/mineadmin/index.php" class="btn btn-outline-secondary ms-2">
                             <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
                         </a>
                     </form>
