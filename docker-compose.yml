@@ -17,7 +17,7 @@ services:
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
       SMTP_USERNAME: saathseetu@gmail.com
-      SMTP_PASSWORD: your_gmail_app_password_here
+      SMTP_PASSWORD: hxty nnld wzzr lpqf
       SMTP_FROM_EMAIL: saathseetu@gmail.com
       SMTP_FROM_NAME: Matrimonial Shadi
       SMTP_ENCRYPTION: tls
