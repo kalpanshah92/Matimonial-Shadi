@@ -275,7 +275,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="form-check mt-4">
                             <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
                             <label class="form-check-label" for="terms">
-                                I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                                I agree to the <a href="<?= SITE_URL ?>/terms-of-service.php" target="_blank">Terms of Service</a>, <a href="<?= SITE_URL ?>/privacy-policy.php" target="_blank">Privacy Policy</a>, and <a href="<?= SITE_URL ?>/refund-policy.php" target="_blank">Refund Policy</a>
                             </label>
                         </div>
                         
