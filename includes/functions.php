@@ -6,6 +6,12 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/app.php';
 
+// Load Composer autoloader (for PHPMailer etc.)
+$composerAutoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
 // Start session if not started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -403,6 +409,8 @@ function sendEmail($to, $subject, $body, $isHtml = true) {
         // Use PHPMailer if available, otherwise fallback to mail()
         $usePHPMailer = class_exists('PHPMailer\PHPMailer\PHPMailer');
         
+        error_log("sendEmail: PHPMailer available=" . ($usePHPMailer ? 'yes' : 'no') . ", to=$to, host=" . SMTP_HOST . ", user=" . SMTP_USERNAME);
+        
         if ($usePHPMailer) {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             
@@ -413,7 +421,8 @@ function sendEmail($to, $subject, $body, $isHtml = true) {
             $mail->Username = SMTP_USERNAME;
             $mail->Password = SMTP_PASSWORD;
             $mail->SMTPSecure = SMTP_ENCRYPTION;
-            $mail->Port = SMTP_PORT;
+            $mail->Port = (int)SMTP_PORT;
+            $mail->CharSet = 'UTF-8';
             
             // Recipients
             $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
@@ -427,11 +436,11 @@ function sendEmail($to, $subject, $body, $isHtml = true) {
             $mail->send();
             return true;
         } else {
+            error_log("sendEmail: PHPMailer not found. Check vendor/autoload.php exists.");
             // Fallback to PHP mail() function
             $headers = [
                 'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM_EMAIL . '>',
                 'MIME-Version: 1.0',
-                'Content-Type: text/html; charset=UTF-8',
                 'X-Mailer: PHP/' . phpversion()
             ];
             
