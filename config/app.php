@@ -34,6 +34,15 @@ define('ADMIN_RESULTS_PER_PAGE', 20);
 define('RAZORPAY_KEY_ID', 'your_razorpay_key_id');
 define('RAZORPAY_KEY_SECRET', 'your_razorpay_key_secret');
 
+// Email/SMTP Settings
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+define('SMTP_USERNAME', getenv('SMTP_USERNAME') ?: 'your_email@gmail.com');
+define('SMTP_PASSWORD', getenv('SMTP_PASSWORD') ?: 'your_app_password');
+define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'noreply@matrimonialshadi.com');
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Matrimonial Shadi');
+define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'tls');
+
 // Indian Communities Data
 $RELIGIONS = [
     'Hindu', 'Jain'

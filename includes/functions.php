@@ -394,3 +394,57 @@ function timeAgo($datetime) {
     if ($diff->i > 0) return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
     return 'Just now';
 }
+
+/**
+ * Send email using SMTP
+ */
+function sendEmail($to, $subject, $body, $isHtml = true) {
+    try {
+        // Use PHPMailer if available, otherwise fallback to mail()
+        $usePHPMailer = class_exists('PHPMailer\PHPMailer\PHPMailer');
+        
+        if ($usePHPMailer) {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host = SMTP_HOST;
+            $mail->SMTPAuth = true;
+            $mail->Username = SMTP_USERNAME;
+            $mail->Password = SMTP_PASSWORD;
+            $mail->SMTPSecure = SMTP_ENCRYPTION;
+            $mail->Port = SMTP_PORT;
+            
+            // Recipients
+            $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+            $mail->addAddress($to);
+            
+            // Content
+            $mail->isHTML($isHtml);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            
+            $mail->send();
+            return true;
+        } else {
+            // Fallback to PHP mail() function
+            $headers = [
+                'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM_EMAIL . '>',
+                'MIME-Version: 1.0',
+                'Content-Type: text/html; charset=UTF-8',
+                'X-Mailer: PHP/' . phpversion()
+            ];
+            
+            if ($isHtml) {
+                $headers[] = 'Content-Type: text/html; charset=UTF-8';
+            } else {
+                $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+            }
+            
+            return mail($to, $subject, $body, implode("\r\n", $headers));
+        }
+    } catch (Exception $e) {
+        error_log("Email sending failed: " . $e->getMessage());
+        return false;
+    }
+}
