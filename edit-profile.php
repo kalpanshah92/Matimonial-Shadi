@@ -300,10 +300,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     setFlash('info', 'Your changes have been submitted for review. A Super Admin will approve them shortly.');
-                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
+                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab . '&saved=' . urlencode($section));
                 } else {
                     setFlash('info', 'No changes detected.');
-                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab);
+                    redirect(SITE_URL . '/edit-profile.php?tab=' . $activeTab . '&saved=' . urlencode($section));
                 }
             }
             
@@ -847,6 +847,125 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </section>
+
+<!-- Auto-save form data across tabs and reloads -->
+<script>
+(function() {
+    'use strict';
+    var STORAGE_PREFIX = 'editProfile_user<?= (int)$userId ?>_';
+    var SAVED_SECTION = <?php echo json_encode($_GET['saved'] ?? ''); ?>;
+
+    // Map of section name -> tab pane id
+    var SECTION_TABS = {
+        'basic': 'basic',
+        'personal': 'personal',
+        'professional': 'professional',
+        'family': 'family',
+        'partner': 'partner'
+    };
+
+    function getFieldKey(section, name) {
+        return STORAGE_PREFIX + section + '_' + name;
+    }
+
+    function shouldSkip(field) {
+        if (!field.name) return true;
+        if (field.type === 'hidden') return true;
+        if (field.type === 'file') return true;
+        if (field.type === 'submit' || field.type === 'button') return true;
+        if (field.name === 'csrf_token' || field.name === 'section' || field.name === 'photo_id') return true;
+        return false;
+    }
+
+    function getSectionFromForm(form) {
+        var sectionInput = form.querySelector('input[name="section"]');
+        if (!sectionInput) return null;
+        var s = sectionInput.value;
+        return SECTION_TABS[s] ? s : null;
+    }
+
+    // Restore saved values for all forms on page load
+    function restoreAll() {
+        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+            var section = getSectionFromForm(form);
+            if (!section) return;
+            form.querySelectorAll('input, select, textarea').forEach(function(field) {
+                if (shouldSkip(field)) return;
+                var saved = sessionStorage.getItem(getFieldKey(section, field.name));
+                if (saved === null) return;
+                if (field.type === 'checkbox' || field.type === 'radio') {
+                    field.checked = (saved === field.value || saved === '1');
+                } else {
+                    field.value = saved;
+                }
+            });
+        });
+    }
+
+    // Save field on change
+    function attachAutoSave() {
+        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+            var section = getSectionFromForm(form);
+            if (!section) return;
+            form.addEventListener('input', function(e) {
+                var f = e.target;
+                if (shouldSkip(f)) return;
+                var val = (f.type === 'checkbox' || f.type === 'radio') ? (f.checked ? f.value : '') : f.value;
+                try {
+                    sessionStorage.setItem(getFieldKey(section, f.name), val);
+                } catch (err) { /* quota etc. - ignore */ }
+            });
+            form.addEventListener('change', function(e) {
+                var f = e.target;
+                if (shouldSkip(f)) return;
+                var val = (f.type === 'checkbox' || f.type === 'radio') ? (f.checked ? f.value : '') : f.value;
+                try {
+                    sessionStorage.setItem(getFieldKey(section, f.name), val);
+                } catch (err) {}
+            });
+        });
+    }
+
+    // Clear a section's saved data (called after successful submit redirect)
+    function clearSection(section) {
+        if (!section) return;
+        var keysToRemove = [];
+        for (var i = 0; i < sessionStorage.length; i++) {
+            var key = sessionStorage.key(i);
+            if (key && key.indexOf(STORAGE_PREFIX + section + '_') === 0) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // If server signaled successful save for a section, clear its draft first
+        if (SAVED_SECTION) clearSection(SAVED_SECTION);
+        restoreAll();
+        attachAutoSave();
+
+        // Show subtle "draft restored" indicator if any unsaved data exists
+        document.querySelectorAll('.tab-pane form').forEach(function(form) {
+            var section = getSectionFromForm(form);
+            if (!section) return;
+            var hasDraft = false;
+            for (var i = 0; i < sessionStorage.length; i++) {
+                var key = sessionStorage.key(i);
+                if (key && key.indexOf(STORAGE_PREFIX + section + '_') === 0) {
+                    hasDraft = true; break;
+                }
+            }
+            if (hasDraft) {
+                var notice = document.createElement('div');
+                notice.className = 'alert alert-info py-2 px-3 mb-3 small';
+                notice.innerHTML = '<i class="bi bi-info-circle me-1"></i>Unsaved draft restored. Click <strong>Save</strong> to submit your changes for review.';
+                form.insertBefore(notice, form.firstChild.nextSibling);
+            }
+        });
+    });
+})();
+</script>
 
 <!-- Cropper.js for photo cropping before upload -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
