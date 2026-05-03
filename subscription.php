@@ -99,7 +99,7 @@ require_once __DIR__ . '/includes/header.php';
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                We offer a 7-day refund policy if you're not satisfied with the premium features. Contact our support team for assistance.
+                                All subscription fees are non-refundable once the subscription period has begun. In case of technical issues or payment errors, please contact our support team. For full details, please refer to our <a href="<?= SITE_URL ?>/refund-policy.php">Refund Policy</a>.
                             </div>
                         </div>
                     </div>
