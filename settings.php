@@ -184,7 +184,6 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="dashboard-card">
                     <h5><i class="bi bi-info-circle me-2 text-primary"></i>Account Info</h5>
                     <div class="mt-3">
-                        <p><strong>Profile ID:</strong> <?= $currentUser['profile_id'] ?></p>
                         <p><strong>Email:</strong> <?= sanitize($currentUser['email']) ?></p>
                         <p><strong>Phone:</strong> +91 <?= sanitize($currentUser['phone'] ?? 'Not set') ?></p>
                         <p><strong>Member Since:</strong> <?= date('d M Y', strtotime($currentUser['created_at'])) ?></p>

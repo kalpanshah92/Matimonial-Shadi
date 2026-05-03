@@ -118,7 +118,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <i class="bi bi-patch-check-fill text-primary" title="Verified"></i>
                                         <?php endif; ?>
                                     </h3>
-                                    <p class="text-muted mb-2"><?= $profile['profile_id'] ?>
+                                    <p class="text-muted mb-2">
                                         <?php if ($profile['is_premium']): ?>
                                             <span class="badge bg-warning text-dark ms-1"><i class="bi bi-star-fill"></i> Premium</span>
                                         <?php endif; ?>

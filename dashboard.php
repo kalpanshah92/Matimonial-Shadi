@@ -52,7 +52,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h3>Welcome, <?= sanitize($currentUser['name']) ?>!</h3>
-                    <p class="mb-2 opacity-75">Profile ID: <?= $currentUser['profile_id'] ?> 
+                    <p class="mb-2 opacity-75">
                         <?php if ($isPremiumUser): ?>
                             <span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill"></i> Premium</span>
                         <?php endif; ?>
@@ -131,7 +131,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>" class="fw-bold text-dark text-decoration-none">
                                         <?= sanitize($req['name']) ?>
                                     </a>
-                                    <small class="d-block text-muted"><?= $req['profile_id'] ?></small>
+                                    
                                     <small class="d-block text-muted">
                                         <?= calculateAge($req['dob']) ?> yrs | <?= sanitize($req['religion'] ?? '') ?> | <?= sanitize($req['city'] ?? '') ?>
                                     </small>
