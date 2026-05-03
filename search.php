@@ -23,12 +23,6 @@ if (!empty($_GET['religion'])) {
     $params[] = sanitize($_GET['religion']);
 }
 
-// Caste
-if (!empty($_GET['caste'])) {
-    $where[] = "u.caste LIKE ?";
-    $params[] = '%' . sanitize($_GET['caste']) . '%';
-}
-
 // Age range
 if (!empty($_GET['min_age'])) {
     $where[] = "TIMESTAMPDIFF(YEAR, u.dob, CURDATE()) >= ?";
@@ -55,24 +49,6 @@ if (!empty($_GET['mother_tongue'])) {
 if (!empty($_GET['state'])) {
     $where[] = "u.state = ?";
     $params[] = sanitize($_GET['state']);
-}
-
-// City
-if (!empty($_GET['city'])) {
-    $where[] = "u.city LIKE ?";
-    $params[] = '%' . sanitize($_GET['city']) . '%';
-}
-
-// Education
-if (!empty($_GET['education'])) {
-    $where[] = "pd.education = ?";
-    $params[] = sanitize($_GET['education']);
-}
-
-// Occupation
-if (!empty($_GET['occupation'])) {
-    $where[] = "pd.occupation = ?";
-    $params[] = sanitize($_GET['occupation']);
 }
 
 // Exclude current user
@@ -152,13 +128,6 @@ require_once __DIR__ . '/includes/header.php';
                             </select>
                         </div>
 
-                        <!-- Samaj Name -->
-                        <div class="filter-group">
-                            <label>Samaj Name</label>
-                            <input type="text" name="caste" class="form-control form-control-sm" 
-                                   value="<?= sanitize($_GET['caste'] ?? '') ?>" placeholder="Enter Samaj Name">
-                        </div>
-
                         <!-- Marital Status -->
                         <div class="filter-group">
                             <label>Marital Status</label>
@@ -188,35 +157,6 @@ require_once __DIR__ . '/includes/header.php';
                                 <option value="">All States</option>
                                 <?php foreach ($INDIAN_STATES as $state): ?>
                                     <option value="<?= $state ?>" <?= ($_GET['state'] ?? '') === $state ? 'selected' : '' ?>><?= $state ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- City -->
-                        <div class="filter-group">
-                            <label>City</label>
-                            <input type="text" name="city" class="form-control form-control-sm" 
-                                   value="<?= sanitize($_GET['city'] ?? '') ?>" placeholder="Enter city">
-                        </div>
-
-                        <!-- Education -->
-                        <div class="filter-group">
-                            <label>Education</label>
-                            <select name="education" class="form-select form-select-sm">
-                                <option value="">Any</option>
-                                <?php foreach ($EDUCATION_LEVELS as $edu): ?>
-                                    <option value="<?= $edu ?>" <?= ($_GET['education'] ?? '') === $edu ? 'selected' : '' ?>><?= $edu ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- Occupation -->
-                        <div class="filter-group">
-                            <label>Occupation</label>
-                            <select name="occupation" class="form-select form-select-sm">
-                                <option value="">Any</option>
-                                <?php foreach ($OCCUPATIONS as $occ): ?>
-                                    <option value="<?= $occ ?>" <?= ($_GET['occupation'] ?? '') === $occ ? 'selected' : '' ?>><?= $occ ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
