@@ -10,8 +10,13 @@ if (!$profileId) {
 
 $pdo = getDBConnection();
 
-// Fetch user
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND is_active = 1");
+// Fetch user - admins can view all profiles, regular users only see active ones
+$isAdmin = isset($_SESSION['admin_id']);
+if ($isAdmin) {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+} else {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND is_active = 1");
+}
 $stmt->execute([$profileId]);
 $profile = $stmt->fetch();
 
