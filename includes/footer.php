@@ -50,9 +50,9 @@
                     <p>&copy; <?= date('Y') ?> <?= SITE_NAME ?>. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#" class="ms-3">Terms of Service</a>
-                    <a href="#" class="ms-3">Refund Policy</a>
+                    <a href="<?= SITE_URL ?>/privacy-policy.php">Privacy Policy</a>
+                    <a href="<?= SITE_URL ?>/terms-of-service.php" class="ms-3">Terms of Service</a>
+                    <a href="<?= SITE_URL ?>/refund-policy.php" class="ms-3">Refund Policy</a>
                 </div>
             </div>
         </div>
