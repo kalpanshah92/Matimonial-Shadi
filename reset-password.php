@@ -5,57 +5,78 @@ require_once __DIR__ . '/includes/functions.php';
 if (isLoggedIn()) redirect(SITE_URL . '/dashboard.php');
 
 $errors = [];
-$success = false;
+$step = 'verify_otp'; // Step 1: verify OTP, Step 2: change password
 
 // Get email from session if available
 $email = $_SESSION['reset_email'] ?? '';
+
+// Check if OTP was already verified in this session
+if (!empty($_SESSION['otp_verified'])) {
+    $step = 'change_password';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $errors[] = 'Invalid form submission.';
     }
     
-    // Use email from hidden field (which comes from session)
-    $email = sanitize($_POST['email'] ?? '');
-    $otp = sanitize($_POST['otp'] ?? '');
-    $newPassword = $_POST['new_password'] ?? '';
-    $confirmPassword = $_POST['confirm_password'] ?? '';
+    $action = $_POST['action'] ?? '';
+    $email = $_SESSION['reset_email'] ?? '';
     
-    // Validation
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (empty($email)) {
         $errors[] = 'Email is missing. Please request a new password reset.';
     }
-    if (empty($otp)) {
-        $errors[] = 'Please enter the OTP.';
-    }
-    if (strlen($newPassword) < 8) {
-        $errors[] = 'Password must be at least 8 characters long.';
-    }
-    if (!preg_match('/[0-9]/', $newPassword)) {
-        $errors[] = 'Password must contain at least 1 number.';
-    }
-    if ($newPassword !== $confirmPassword) {
-        $errors[] = 'Passwords do not match.';
-    }
     
-    if (empty($errors)) {
-        // Verify OTP
-        if (verifyOTP($email, $otp, 'password_reset')) {
-            // Update password
-            $pdo = getDBConnection();
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-            
-            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
-            if ($stmt->execute([$hashedPassword, $email])) {
-                // Clear session email after successful reset
-                unset($_SESSION['reset_email']);
-                setFlash('success', 'Your password has been reset successfully. You can now login with your new password.');
-                redirect(SITE_URL . '/login.php');
+    if (empty($errors) && $action === 'verify_otp') {
+        // Step 1: Verify OTP
+        $otp = sanitize($_POST['otp'] ?? '');
+        
+        if (empty($otp)) {
+            $errors[] = 'Please enter the OTP.';
+        }
+        
+        if (empty($errors)) {
+            if (verifyOTP($email, $otp, 'password_reset')) {
+                $_SESSION['otp_verified'] = true;
+                $step = 'change_password';
             } else {
-                $errors[] = 'Failed to update password. Please try again.';
+                $errors[] = 'Invalid or expired OTP. Please request a new OTP.';
             }
+        }
+    } elseif (empty($errors) && $action === 'change_password') {
+        // Step 2: Change password (only if OTP was verified)
+        if (empty($_SESSION['otp_verified'])) {
+            $errors[] = 'OTP not verified. Please verify your OTP first.';
         } else {
-            $errors[] = 'Invalid or expired OTP. Please request a new OTP.';
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+            
+            if (strlen($newPassword) < 8) {
+                $errors[] = 'Password must be at least 8 characters long.';
+            }
+            if (!preg_match('/[0-9]/', $newPassword)) {
+                $errors[] = 'Password must contain at least 1 number.';
+            }
+            if ($newPassword !== $confirmPassword) {
+                $errors[] = 'Passwords do not match.';
+            }
+            
+            if (empty($errors)) {
+                $pdo = getDBConnection();
+                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                
+                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
+                if ($stmt->execute([$hashedPassword, $email])) {
+                    unset($_SESSION['reset_email']);
+                    unset($_SESSION['otp_verified']);
+                    setFlash('success', 'Your password has been reset successfully. You can now login with your new password.');
+                    redirect(SITE_URL . '/login.php');
+                } else {
+                    $errors[] = 'Failed to update password. Please try again.';
+                }
+            }
+            
+            $step = 'change_password';
         }
     }
 }
@@ -70,7 +91,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="auth-card">
                     <div class="auth-header text-center">
                         <h2><i class="bi bi-key"></i> Reset Password</h2>
-                        <p>Enter the OTP sent to your email</p>
+                        <p><?= $step === 'verify_otp' ? 'Enter the OTP sent to your email' : 'Set your new password' ?></p>
                     </div>
                     
                     <?php if (!empty($errors)): ?>
@@ -83,19 +104,11 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <?php if ($success): ?>
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle me-2"></i>Your password has been reset successfully.
-                        </div>
-                        <div class="text-center mt-3">
-                            <a href="<?= SITE_URL ?>/login.php" class="btn btn-primary btn-lg">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Login Now
-                            </a>
-                        </div>
-                    <?php else: ?>
+                    <?php if ($step === 'verify_otp'): ?>
+                        <!-- Step 1: Verify OTP -->
                         <form method="POST" action="">
                             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                            <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
+                            <input type="hidden" name="action" value="verify_otp">
                             
                             <div class="mb-3">
                                 <label for="otp" class="form-label">OTP (One-Time Password)</label>
@@ -105,6 +118,25 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                                 <small class="text-muted">OTP is valid for <?= OTP_EXPIRY_MINUTES ?> minutes</small>
                             </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-shield-check me-2"></i>Verify OTP
+                            </button>
+                            
+                            <div class="text-center mt-3">
+                                <a href="<?= SITE_URL ?>/forgot-password.php"><i class="bi bi-arrow-left me-1"></i>Request New OTP</a>
+                                <span class="mx-2">|</span>
+                                <a href="<?= SITE_URL ?>/login.php">Back to Login</a>
+                            </div>
+                        </form>
+                    <?php elseif ($step === 'change_password'): ?>
+                        <!-- Step 2: Change Password -->
+                        <div class="alert alert-success mb-3">
+                            <i class="bi bi-check-circle me-2"></i>OTP verified successfully. Please set your new password.
+                        </div>
+                        <form method="POST" action="">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="action" value="change_password">
                             
                             <div class="mb-3">
                                 <label for="new_password" class="form-label">New Password</label>
@@ -129,8 +161,6 @@ require_once __DIR__ . '/includes/header.php';
                             </button>
                             
                             <div class="text-center mt-3">
-                                <a href="<?= SITE_URL ?>/forgot-password.php"><i class="bi bi-arrow-left me-1"></i>Request New OTP</a>
-                                <span class="mx-2">|</span>
                                 <a href="<?= SITE_URL ?>/login.php">Back to Login</a>
                             </div>
                         </form>
