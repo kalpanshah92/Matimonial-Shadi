@@ -197,7 +197,6 @@ require_once __DIR__ . '/includes/header.php';
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <h6 class="mb-1"><?= sanitize($profile['name']) ?></h6>
-                                                <small class="text-muted"><?= $profile['profile_id'] ?></small>
                                             </div>
                                             <?php if (isLoggedIn()): ?>
                                                 <button class="btn btn-sm btn-outline-danger btn-shortlist" data-profile-id="<?= $profile['id'] ?>" title="Shortlist">
@@ -207,14 +206,9 @@ require_once __DIR__ . '/includes/header.php';
                                         </div>
                                         <div class="profile-details-mini mt-2">
                                             <span><i class="bi bi-calendar3"></i> <?= calculateAge($profile['dob']) ?> yrs</span>
-                                            <?php if ($profile['height']): ?>
-                                                <span><i class="bi bi-rulers"></i> <?= formatHeight($profile['height']) ?></span>
-                                            <?php endif; ?>
                                             <span><i class="bi bi-book"></i> <?= sanitize($profile['religion'] ?? 'Not specified') ?></span>
-                                            <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['city'] ?? $profile['state'] ?? 'India') ?></span>
-                                            <?php if ($profile['education']): ?>
-                                                <span><i class="bi bi-mortarboard"></i> <?= sanitize($profile['education']) ?></span>
-                                            <?php endif; ?>
+                                            <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['state'] ?? 'India') ?></span>
+                                            <span><i class="bi bi-translate"></i> <?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></span>
                                         </div>
                                         <div class="d-flex gap-2 mt-3">
                                             <a href="<?= SITE_URL ?>/profile.php?id=<?= $profile['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View Profile</a>
