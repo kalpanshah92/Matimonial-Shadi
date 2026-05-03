@@ -43,10 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($formData['gender'])) $errors[] = 'Gender is required.';
     if (empty($formData['dob'])) $errors[] = 'Date of birth is required.';
     
-    // Age validation (18+)
-    if (!empty($formData['dob'])) {
+    // Age validation based on gender (Female: 18+, Male: 21+)
+    if (!empty($formData['dob']) && !empty($formData['gender'])) {
         $age = calculateAge($formData['dob']);
-        if ($age < 18) $errors[] = 'You must be at least 18 years old.';
+        $minAge = ($formData['gender'] === 'Female') ? 18 : 21;
+        if ($age < $minAge) $errors[] = ($formData['gender'] === 'Female') ? 'Females must be at least 18 years old.' : 'Males must be at least 21 years old.';
         if ($age > 80) $errors[] = 'Please enter a valid date of birth.';
     }
     
@@ -197,6 +198,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label for="dob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="dob" name="dob" 
                                        value="<?= $formData['dob'] ?? '' ?>" required max="<?= date('Y-m-d', strtotime('-18 years')) ?>">
+                                <small class="text-muted">Minimum age: Males 21 years, Females 18 years</small>
                             </div>
                             
                             <!-- Religion -->
@@ -292,5 +294,17 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </section>
+
+<script>
+document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        var dobInput = document.getElementById('dob');
+        var today = new Date();
+        var minAge = (this.value === 'Female') ? 18 : 21;
+        var maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+        dobInput.max = maxDate.toISOString().split('T')[0];
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
