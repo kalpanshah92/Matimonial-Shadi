@@ -44,7 +44,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
             </div>
             <div class="col-md-6 text-end">
                 <?php if ($currentUser): ?>
-                    <span class="me-3">Welcome, <strong><?= sanitize($currentUser['name']) ?></strong> (<?= $currentUser['profile_id'] ?>)</span>
+                    <span class="me-3">Welcome, <strong><?= sanitize($currentUser['name']) ?></strong></span>
                 <?php else: ?>
                     <a href="<?= SITE_URL ?>/login.php" class="text-white me-3"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
                     <a href="<?= SITE_URL ?>/register.php" class="text-white"><i class="bi bi-person-plus me-1"></i>Register Free</a>
