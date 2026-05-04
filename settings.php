@@ -116,7 +116,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label><?= $label ?></label>
                                 <select name="<?= $field ?>" class="form-select form-select-sm" style="width: auto;">
                                     <?php foreach ($visibilityOptions as $val => $text): ?>
-                                        <option value="<?= $val ?>" <?= ($privacy[$field] ?? 'connected') === $val ? 'selected' : '' ?>><?= $text ?></option>
+                                        <option value="<?= $val ?>" <?= ($privacy[$field] ?? ($field === 'show_phone' ? 'connected' : 'everyone')) === $val ? 'selected' : '' ?>><?= $text ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -134,7 +134,7 @@ require_once __DIR__ . '/includes/header.php';
                             <label>Who Can Message Me</label>
                             <select name="allow_messages" class="form-select form-select-sm" style="width: auto;">
                                 <option value="everyone" <?= ($privacy['allow_messages'] ?? 'connected') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
-                                <option value="connected" <?= ($privacy['allow_messages'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
+                                <option value="connected" <?= ($privacy['allow_messages'] ?? 'connected') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
                             </select>
                         </div>
                         
