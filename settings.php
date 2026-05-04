@@ -102,7 +102,7 @@ require_once __DIR__ . '/includes/header.php';
                         <input type="hidden" name="section" value="privacy">
                         
                         <?php
-                        $visibilityOptions = ['everyone' => 'Everyone', 'premium' => 'Premium Members', 'connected' => 'Connected Only', 'nobody' => 'Nobody'];
+                        $visibilityOptions = ['everyone' => 'Everyone', 'connected' => 'Connected Only', 'nobody' => 'Nobody'];
                         $fields = [
                             'show_phone' => 'Phone Number Visibility',
                             'show_email' => 'Email Visibility',
@@ -127,7 +127,7 @@ require_once __DIR__ . '/includes/header.php';
                             <label>Profile Visibility</label>
                             <select name="profile_visibility" class="form-select form-select-sm" style="width: auto;">
                                 <option value="everyone" <?= ($privacy['profile_visibility'] ?? 'everyone') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
-                                <option value="premium" <?= ($privacy['profile_visibility'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Only</option>
+                                <option value="connected" <?= ($privacy['profile_visibility'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
                             </select>
                         </div>
                         
@@ -135,7 +135,6 @@ require_once __DIR__ . '/includes/header.php';
                             <label>Who Can Message Me</label>
                             <select name="allow_messages" class="form-select form-select-sm" style="width: auto;">
                                 <option value="everyone" <?= ($privacy['allow_messages'] ?? 'connected') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
-                                <option value="premium" <?= ($privacy['allow_messages'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Members</option>
                                 <option value="connected" <?= ($privacy['allow_messages'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
                             </select>
                         </div>
