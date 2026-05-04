@@ -172,7 +172,10 @@ $users = $stmt->fetchAll();
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
-                                        <a href="edit-user.php?id=<?= $user['id'] ?>" class="btn btn-warning" title="Edit user">
+                                        <button class="btn btn-warning btn-upgrade-premium" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars($user['name']) ?>" title="Upgrade to Premium">
+                                            <i class="bi bi-star"></i>
+                                        </button>
+                                        <a href="edit-user.php?id=<?= $user['id'] ?>" class="btn btn-outline-dark" title="Edit user">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
                                     <?php endif; ?>
@@ -200,6 +203,50 @@ $users = $stmt->fetchAll();
     <?php endif; ?>
 </div>
 
+<!-- Premium Upgrade Modal -->
+<div class="modal fade" id="premiumUpgradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upgrade to Premium</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="premiumUpgradeForm">
+                    <input type="hidden" name="user_id" id="premiumUserId">
+                    <div class="mb-3">
+                        <label class="form-label">User</label>
+                        <input type="text" class="form-control" id="premiumUserName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Premium Until</label>
+                        <input type="date" class="form-control" name="end_date" id="premiumEndDate" required>
+                        <small class="text-muted">Select the date when premium access should expire</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Plan</label>
+                        <select class="form-select" name="plan_id" id="premiumPlanId" required>
+                            <?php
+                            $planStmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
+                            $plans = $planStmt->fetchAll();
+                            foreach ($plans as $plan):
+                            ?>
+                                <option value="<?= $plan['id'] ?>" data-duration="<?= $plan['duration_days'] ?>">
+                                    <?= htmlspecialchars($plan['name']) ?> - ₹<?= number_format($plan['price']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmPremiumUpgrade">Upgrade to Premium</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="<?= SITE_URL ?>/assets/js/main.js"></script>
@@ -211,6 +258,51 @@ function verifyProfile(userId) {
         }, 'json');
     }
 }
+
+// Premium upgrade modal
+var premiumModal;
+$(document).ready(function() {
+    premiumModal = new bootstrap.Modal(document.getElementById('premiumUpgradeModal'));
+    
+    $('.btn-upgrade-premium').click(function() {
+        var userId = $(this).data('user-id');
+        var userName = $(this).data('user-name');
+        
+        $('#premiumUserId').val(userId);
+        $('#premiumUserName').val(userName);
+        
+        // Set default end date to 2 years from now
+        var defaultDate = new Date();
+        defaultDate.setFullYear(defaultDate.getFullYear() + 2);
+        $('#premiumEndDate').val(defaultDate.toISOString().split('T')[0]);
+        
+        premiumModal.show();
+    });
+    
+    $('#premiumPlanId').change(function() {
+        var duration = $(this).find(':selected').data('duration');
+        var endDate = new Date();
+        endDate.setDate(endDate.getDate() + parseInt(duration));
+        $('#premiumEndDate').val(endDate.toISOString().split('T')[0]);
+    });
+    
+    $('#btnConfirmPremiumUpgrade').click(function() {
+        var formData = $('#premiumUpgradeForm').serialize();
+        formData += '&action=upgrade_premium';
+        
+        $.post('api/profiles.php', formData, function(response) {
+            if (response.success) {
+                alert('User upgraded to premium successfully!');
+                premiumModal.hide();
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to upgrade user to premium.');
+            }
+        }, 'json').fail(function() {
+            alert('Failed to process request.');
+        });
+    });
+});
 </script>
 </body>
 </html>

@@ -91,6 +91,63 @@ switch ($action) {
         echo json_encode(['success' => true, 'message' => 'Profile verified']);
         break;
 
+    case 'upgrade_premium':
+        // Only super admin can upgrade to premium
+        if (($_SESSION['admin_role'] ?? '') !== 'super_admin') {
+            echo json_encode(['success' => false, 'message' => 'Only super admin can upgrade users to premium']);
+            break;
+        }
+
+        $planId = intval($_POST['plan_id'] ?? 0);
+        $endDate = $_POST['end_date'] ?? '';
+
+        if (!$planId || empty($endDate)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid plan or end date']);
+            break;
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            // Get plan details
+            $stmt = $pdo->prepare("SELECT * FROM plans WHERE id = ? AND is_active = 1");
+            $stmt->execute([$planId]);
+            $plan = $stmt->fetch();
+
+            if (!$plan) {
+                throw new Exception('Invalid plan');
+            }
+
+            // Create subscription record
+            $startDate = date('Y-m-d');
+            $stmt = $pdo->prepare(
+                "INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, payment_method, amount, status)
+                 VALUES (?, ?, ?, ?, 'admin_upgrade', ?, 'active')"
+            );
+            $stmt->execute([$userId, $planId, $startDate, $endDate, $plan['price']]);
+
+            // Update user premium status
+            $stmt = $pdo->prepare("UPDATE users SET is_premium = 1 WHERE id = ?");
+            $stmt->execute([$userId]);
+
+            // Get user details for notification
+            $stmt = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+
+            // Notify user
+            require_once __DIR__ . '/../../includes/functions.php';
+            createNotification($userId, 'premium', 'Premium Upgrade', 'You have been upgraded to Premium membership until ' . $endDate);
+
+            $pdo->commit();
+            echo json_encode(['success' => true, 'message' => 'User upgraded to premium successfully']);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            error_log("Premium upgrade error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to upgrade user to premium']);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
