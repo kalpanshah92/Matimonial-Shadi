@@ -81,16 +81,34 @@ if (isLoggedIn()) {
 
 $isConnected = ($connectionStatus === 'accepted');
 
+// Check if viewer is super admin (bypass all privacy restrictions)
+$viewerIsSuperAdmin = false;
+if (isLoggedIn() && isset($currentUserId)) {
+    $stmt = $pdo->prepare("SELECT role FROM admin_users WHERE id = ?");
+    $stmt->execute([$_SESSION['admin_id'] ?? 0]);
+    $admin = $stmt->fetch();
+    $viewerIsSuperAdmin = ($admin && $admin['role'] === 'super_admin');
+}
+
 // Premium access logic
 $viewerIsPremium = (isLoggedIn() && isset($currentUserId)) ? isPremium($currentUserId) : false;
 $profileIsPremium = isPremium($profileId);
 
-// Privacy-based visibility using canViewContent()
-$canViewPhone = canViewContent($privacy['show_phone'] ?? 'connected', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
-$canViewEmail = canViewContent($privacy['show_email'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
-$canViewPhoto = canViewContent($privacy['show_photo'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
-$canViewIncome = canViewContent($privacy['show_income'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
-$canViewContact = $canViewPhone || $canViewEmail;
+// Super admin bypass: can view everything
+if ($viewerIsSuperAdmin) {
+    $canViewPhone = true;
+    $canViewEmail = true;
+    $canViewPhoto = true;
+    $canViewIncome = true;
+    $canViewContact = true;
+} else {
+    // Privacy-based visibility using canViewContent()
+    $canViewPhone = canViewContent($privacy['show_phone'] ?? 'connected', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+    $canViewEmail = canViewContent($privacy['show_email'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+    $canViewPhoto = canViewContent($privacy['show_photo'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+    $canViewIncome = canViewContent($privacy['show_income'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+    $canViewContact = $canViewPhone || $canViewEmail;
+}
 
 $pageTitle = sanitize($profile['name']) . "'s Profile";
 require_once __DIR__ . '/includes/header.php';
