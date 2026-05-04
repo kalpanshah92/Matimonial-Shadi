@@ -333,6 +333,20 @@ CREATE TABLE IF NOT EXISTS advertisements (
     INDEX idx_ad_active (is_active)
 ) ENGINE=InnoDB;
 
+-- Account Deactivation Requests Table
+CREATE TABLE IF NOT EXISTS deactivation_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    reason TEXT,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    processed_by INT COMMENT 'Admin ID who processed the request',
+    processed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_user_deact (user_id, status)
+) ENGINE=InnoDB;
+
 -- Insert Default Subscription Plans
 INSERT INTO plans (name, price, duration_days, features, max_contacts, max_messages) VALUES
 ('Male Plan - 2 Years', 1000.00, 730, '["2 Year Subscription for Male Candidates","View Contact Details","Send Unlimited Interests","Advanced Search","Chat with Matches","Live Chat","Personal Messages"]', 100, 999),

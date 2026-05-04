@@ -59,11 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
 
                 case 'deactivate':
-                    $stmt = $pdo->prepare("UPDATE users SET is_active = 0 WHERE id = ?");
+                    // Check if there's already a pending request
+                    $stmt = $pdo->prepare("SELECT id FROM deactivation_requests WHERE user_id = ? AND status = 'pending'");
                     $stmt->execute([$userId]);
-                    session_destroy();
-                    header('Location: ' . SITE_URL . '/login.php');
-                    exit;
+                    if ($stmt->fetch()) {
+                        $errors[] = 'You already have a pending deactivation request.';
+                    } else {
+                        $reason = sanitize($_POST['reason'] ?? '');
+                        $stmt = $pdo->prepare("INSERT INTO deactivation_requests (user_id, reason, status) VALUES (?, ?, 'pending')");
+                        $stmt->execute([$userId, $reason]);
+                        setFlash('success', 'Your deactivation request has been submitted. An admin will review it shortly.');
+                        redirect(SITE_URL . '/settings.php');
+                    }
+                    break;
             }
             
             if (empty($errors)) {
@@ -168,12 +176,16 @@ require_once __DIR__ . '/includes/header.php';
 
                 <!-- Deactivate Account -->
                 <div class="dashboard-card border-danger">
-                    <h5 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Deactivate Account</h5>
-                    <p class="text-muted mt-2">Once deactivated, your profile will be hidden from search results. You can reactivate by contacting support.</p>
-                    <form method="POST" onsubmit="return confirm('Are you sure you want to deactivate your account?')">
+                    <h5 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Request Account Deactivation</h5>
+                    <p class="text-muted mt-2">Your deactivation request will be reviewed by an admin. Once approved, your profile will be hidden from search results.</p>
+                    <form method="POST" onsubmit="return confirm('Are you sure you want to request account deactivation?')">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         <input type="hidden" name="section" value="deactivate">
-                        <button type="submit" class="btn btn-outline-danger">Deactivate My Account</button>
+                        <div class="mb-3">
+                            <label class="form-label">Reason for deactivation (optional)</label>
+                            <textarea class="form-control" name="reason" rows="3" placeholder="Please let us know why you want to deactivate your account..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger">Submit Deactivation Request</button>
                     </form>
                 </div>
             </div>

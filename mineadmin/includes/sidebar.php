@@ -36,6 +36,22 @@
         <a class="nav-link <?= ($adminPage ?? '') === 'subscriptions' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/subscriptions.php">
             <i class="bi bi-credit-card"></i>Subscriptions
         </a>
+        <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+            <?php
+                $drPdo = getDBConnection();
+                $drCount = 0;
+                try {
+                    $drStmt = $drPdo->query("SELECT COUNT(*) FROM deactivation_requests WHERE status = 'pending'");
+                    $drCount = $drStmt->fetchColumn();
+                } catch (Exception $e) {}
+            ?>
+            <a class="nav-link <?= ($adminPage ?? '') === 'deactivation-requests' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/deactivation-requests.php">
+                <i class="bi bi-person-x"></i>Deactivation Requests
+                <?php if ($drCount > 0): ?>
+                    <span class="badge bg-danger rounded-pill ms-1"><?= $drCount ?></span>
+                <?php endif; ?>
+            </a>
+        <?php endif; ?>
         <a class="nav-link <?= ($adminPage ?? '') === 'reports' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/reports.php">
             <i class="bi bi-flag"></i>Reports
         </a>
