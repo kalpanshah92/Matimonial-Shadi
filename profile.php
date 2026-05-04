@@ -80,7 +80,17 @@ if (isLoggedIn()) {
 }
 
 $isConnected = ($connectionStatus === 'accepted');
-$canViewContact = $isOwner || $isConnected;
+
+// Premium access logic
+$viewerIsPremium = (isLoggedIn() && isset($currentUserId)) ? isPremium($currentUserId) : false;
+$profileIsPremium = isPremium($profileId);
+
+// Privacy-based visibility using canViewContent()
+$canViewPhone = canViewContent($privacy['show_phone'] ?? 'connected', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+$canViewEmail = canViewContent($privacy['show_email'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+$canViewPhoto = canViewContent($privacy['show_photo'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+$canViewIncome = canViewContent($privacy['show_income'] ?? 'everyone', $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium);
+$canViewContact = $canViewPhone || $canViewEmail;
 
 $pageTitle = sanitize($profile['name']) . "'s Profile";
 require_once __DIR__ . '/includes/header.php';
@@ -197,7 +207,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="col-md-4"><small class="text-muted">Occupation</small><br><?= !empty($details['occupation']) ? sanitize($details['occupation']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                         <div class="col-md-4"><small class="text-muted">Occupation Detail</small><br><?= !empty($details['occupation_detail']) ? sanitize($details['occupation_detail']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                         <div class="col-md-4"><small class="text-muted">Annual Income</small><br>
-                            <?php if ($canViewContact): ?>
+                            <?php if ($canViewIncome): ?>
                                 <?= !empty($details['annual_income']) ? sanitize($details['annual_income']) : '<span class="text-muted fst-italic">Not Provided</span>' ?>
                             <?php else: ?>
                                 <span class="text-muted"><i class="bi bi-lock"></i> Connect to view</span>
@@ -255,10 +265,14 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Contact Details -->
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-telephone me-2 text-primary"></i>Contact Details</h5>
-                    <?php if ($canViewContact): ?>
+                    <?php if ($canViewPhone || $canViewEmail): ?>
                         <div class="mt-3">
-                            <p><i class="bi bi-envelope me-2"></i><?= sanitize($profile['email']) ?></p>
-                            <p><i class="bi bi-phone me-2"></i>+91 <?= sanitize($profile['phone'] ?? 'Not provided') ?></p>
+                            <?php if ($canViewEmail): ?>
+                                <p><i class="bi bi-envelope me-2"></i><?= sanitize($profile['email']) ?></p>
+                            <?php endif; ?>
+                            <?php if ($canViewPhone): ?>
+                                <p><i class="bi bi-phone me-2"></i>+91 <?= sanitize($profile['phone'] ?? 'Not provided') ?></p>
+                            <?php endif; ?>
                         </div>
                     <?php elseif (isLoggedIn()): ?>
                         <div class="text-center py-3">

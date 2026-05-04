@@ -298,6 +298,39 @@ function isPremium($userId) {
 }
 
 /**
+ * Check if a viewer can access a specific privacy-controlled field of a profile.
+ * 
+ * Access Rules:
+ * - Premium viewers can see all content from non-premium profiles (bypass their privacy).
+ * - Non-premium viewers must respect non-premium profile privacy settings.
+ * - ALL viewers must respect premium profile privacy settings.
+ * - Owner can always see their own content.
+ * 
+ * @param string $privacySetting  The privacy setting value ('everyone', 'connected')
+ * @param bool   $isOwner         Whether the viewer is the profile owner
+ * @param bool   $isConnected     Whether viewer and profile are connected
+ * @param bool   $viewerIsPremium Whether the viewer is a premium user
+ * @param bool   $profileIsPremium Whether the profile being viewed is a premium user
+ * @return bool
+ */
+function canViewContent($privacySetting, $isOwner, $isConnected, $viewerIsPremium, $profileIsPremium) {
+    if ($isOwner) return true;
+    
+    // If profile is NOT premium, premium viewers bypass their privacy settings
+    if (!$profileIsPremium && $viewerIsPremium) return true;
+    
+    // Enforce privacy settings (for premium profiles always, for non-premium when viewer is non-premium)
+    switch ($privacySetting) {
+        case 'everyone':
+            return true;
+        case 'connected':
+            return $isConnected;
+        default:
+            return false;
+    }
+}
+
+/**
  * Get matched profiles based on preferences
  */
 function getMatchedProfiles($userId, $limit = 12, $offset = 0) {
