@@ -102,7 +102,7 @@ require_once __DIR__ . '/includes/header.php';
                         <input type="hidden" name="section" value="privacy">
                         
                         <?php
-                        $visibilityOptions = ['everyone' => 'Everyone', 'connected' => 'Connected Only', 'nobody' => 'Nobody'];
+                        $visibilityOptions = ['everyone' => 'Everyone', 'connected' => 'Connected Only'];
                         $fields = [
                             'show_phone' => 'Phone Number Visibility',
                             'show_email' => 'Email Visibility',
@@ -116,7 +116,6 @@ require_once __DIR__ . '/includes/header.php';
                                 <label><?= $label ?></label>
                                 <select name="<?= $field ?>" class="form-select form-select-sm" style="width: auto;">
                                     <?php foreach ($visibilityOptions as $val => $text): ?>
-                                        <?php if ($field === 'show_photo' && $val === 'nobody') continue; ?>
                                         <option value="<?= $val ?>" <?= ($privacy[$field] ?? 'connected') === $val ? 'selected' : '' ?>><?= $text ?></option>
                                     <?php endforeach; ?>
                                 </select>
