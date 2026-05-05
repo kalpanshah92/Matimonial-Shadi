@@ -168,7 +168,7 @@ $users = $stmt->fetchAll();
                                             <i class="bi bi-patch-check"></i>
                                         </button>
                                     <?php endif; ?>
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $user['id'] ?>" class="btn btn-outline-primary" target="_blank" title="View">
+                                    <a href="view-profile.php?id=<?= $user['id'] ?>" class="btn btn-outline-primary" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
