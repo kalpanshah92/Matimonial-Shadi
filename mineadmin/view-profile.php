@@ -262,15 +262,23 @@ if ($isPremium) {
             <!-- Subscription Info (if premium) -->
             <?php if ($isPremium): ?>
             <div class="card mb-4 border-warning">
-                <div class="card-header bg-warning">
+                <div class="card-header bg-warning d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Premium Subscription</h5>
+                    <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+                        <button class="btn btn-sm btn-dark" id="btnEditEndDate" data-user-id="<?= $user['id'] ?>" data-current-end-date="<?= $subscription ? $subscription['end_date'] : '' ?>">
+                            <i class="bi bi-pencil-square me-1"></i>Edit End Date
+                        </button>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body">
                     <?php if ($subscription): ?>
                     <div class="row g-3">
                         <div class="col-md-4"><strong>Plan:</strong> <?= htmlspecialchars($subscription['plan_id']) ?></div>
                         <div class="col-md-4"><strong>Start Date:</strong> <?= date('d M Y', strtotime($subscription['start_date'])) ?></div>
-                        <div class="col-md-4"><strong>End Date:</strong> <?= date('d M Y', strtotime($subscription['end_date'])) ?></div>
+                        <div class="col-md-4">
+                            <strong>End Date:</strong>
+                            <span id="displayEndDate"><?= date('d M Y', strtotime($subscription['end_date'])) ?></span>
+                        </div>
                         <div class="col-md-4"><strong>Status:</strong> <?= ucfirst($subscription['status']) ?></div>
                         <div class="col-md-4"><strong>Payment Method:</strong> <?= ucfirst($subscription['payment_method'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Amount:</strong> ₹<?= number_format($subscription['amount']) ?></div>
@@ -378,6 +386,32 @@ if ($isPremium) {
     </div>
 </div>
 
+<!-- Edit End Date Modal -->
+<div class="modal fade" id="editEndDateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Premium End Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEndDateForm">
+                    <input type="hidden" name="user_id" id="editEndDateUserId">
+                    <div class="mb-3">
+                        <label class="form-label">New End Date</label>
+                        <input type="date" class="form-control" name="end_date" id="editEndDateValue" required>
+                        <small class="text-muted">Select the new expiration date for premium access</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSaveEndDate">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="<?= SITE_URL ?>/assets/js/main.js"></script>
@@ -431,6 +465,38 @@ $(document).ready(function() {
             }
         }, 'json').fail(function() {
             alert('Failed to process request.');
+        });
+    });
+
+    // Edit End Date modal
+    var editEndDateModal;
+    $(document).ready(function() {
+        editEndDateModal = new bootstrap.Modal(document.getElementById('editEndDateModal'));
+        
+        $('#btnEditEndDate').click(function() {
+            var userId = $(this).data('user-id');
+            var currentEndDate = $(this).data('current-end-date');
+            
+            $('#editEndDateUserId').val(userId);
+            $('#editEndDateValue').val(currentEndDate);
+            
+            editEndDateModal.show();
+        });
+        
+        $('#btnSaveEndDate').click(function() {
+            var formData = $('#editEndDateForm').serialize();
+            
+            $.post('api/profiles.php', formData + '&action=update_end_date', function(response) {
+                if (response.success) {
+                    alert('End date updated successfully!');
+                    editEndDateModal.hide();
+                    location.reload();
+                } else {
+                    alert(response.message || 'Failed to update end date.');
+                }
+            }, 'json').fail(function() {
+                alert('Failed to process request.');
+            });
         });
     });
 });

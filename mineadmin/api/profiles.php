@@ -148,6 +148,46 @@ switch ($action) {
         }
         break;
 
+    case 'update_end_date':
+        // Only super admin can update end date
+        if (($_SESSION['admin_role'] ?? '') !== 'super_admin') {
+            echo json_encode(['success' => false, 'message' => 'Only super admin can update end date']);
+            break;
+        }
+
+        $endDate = $_POST['end_date'] ?? '';
+
+        if (empty($endDate)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid end date']);
+            break;
+        }
+
+        try {
+            // Update the most recent subscription end date
+            $stmt = $pdo->prepare(
+                "UPDATE subscriptions SET end_date = ? 
+                 WHERE user_id = ? 
+                 ORDER BY end_date DESC LIMIT 1"
+            );
+            $stmt->execute([$endDate, $userId]);
+
+            if ($stmt->rowCount() === 0) {
+                // No subscription record exists, create one
+                $startDate = date('Y-m-d');
+                $stmt = $pdo->prepare(
+                    "INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, payment_method, amount, status)
+                     VALUES (?, 1, ?, ?, 'admin_update', 0, 'active')"
+                );
+                $stmt->execute([$userId, $startDate, $endDate]);
+            }
+
+            echo json_encode(['success' => true, 'message' => 'End date updated successfully']);
+        } catch (Exception $e) {
+            error_log("End date update error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to update end date']);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
