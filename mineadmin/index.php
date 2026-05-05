@@ -219,7 +219,7 @@ $adminPage = 'dashboard';
                                     <button class="btn btn-sm btn-success btn-approve-profile" data-user-id="<?= $user['id'] ?>"><i class="bi bi-check"></i></button>
                                     <button class="btn btn-sm btn-danger btn-reject-profile" data-user-id="<?= $user['id'] ?>"><i class="bi bi-x"></i></button>
                                 <?php endif; ?>
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-eye"></i></a>
+                                <a href="view-profile.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -255,7 +255,7 @@ $adminPage = 'dashboard';
                             <td><?= htmlspecialchars($report['reason']) ?></td>
                             <td><?= date('d M Y', strtotime($report['created_at'])) ?></td>
                             <td>
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $report['reported_id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank">View Profile</a>
+                                <a href="view-profile.php?id=<?= $report['reported_id'] ?>" class="btn btn-sm btn-outline-primary">View Profile</a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
