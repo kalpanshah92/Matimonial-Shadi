@@ -371,8 +371,22 @@ function getMatchedProfiles($userId, $limit = 12, $offset = 0) {
             $params = array_merge($params, $states);
         }
     }
-    
-    $query .= " ORDER BY u.is_premium DESC, u.created_at DESC LIMIT ? OFFSET ?";
+
+    // Tier-based sorting:
+    // Tier 1: Verified + Premium + Photo
+    // Tier 2: Verified + Premium (no photo)
+    // Tier 3: Premium (not verified or no photo)
+    // Tier 4: All other profiles
+    // Within each tier, sort by age descending
+    $query .= " ORDER BY
+        CASE
+            WHEN u.is_verified = 1 AND u.is_premium = 1 AND u.profile_pic IS NOT NULL AND u.profile_pic != '' THEN 1
+            WHEN u.is_verified = 1 AND u.is_premium = 1 THEN 2
+            WHEN u.is_premium = 1 THEN 3
+            ELSE 4
+        END ASC,
+        TIMESTAMPDIFF(YEAR, u.dob, CURDATE()) DESC
+        LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
     

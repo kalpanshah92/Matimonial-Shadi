@@ -67,11 +67,24 @@ try {
     $totalResults = $stmt->fetch()['total'];
 
     // Fetch results
+    // Tier-based sorting:
+    // Tier 1: Verified + Premium + Photo
+    // Tier 2: Verified + Premium (no photo)
+    // Tier 3: Premium (not verified or no photo)
+    // Tier 4: All other profiles
+    // Within each tier, sort by age descending
     $query = "SELECT u.*, pd.height, pd.education, pd.occupation, pd.annual_income 
               FROM users u 
               LEFT JOIN profile_details pd ON u.id = pd.user_id 
               WHERE $whereClause 
-              ORDER BY u.is_premium DESC, u.is_verified DESC, u.created_at DESC 
+              ORDER BY
+                CASE
+                    WHEN u.is_verified = 1 AND u.is_premium = 1 AND u.profile_pic IS NOT NULL AND u.profile_pic != '' THEN 1
+                    WHEN u.is_verified = 1 AND u.is_premium = 1 THEN 2
+                    WHEN u.is_premium = 1 THEN 3
+                    ELSE 4
+                END ASC,
+                TIMESTAMPDIFF(YEAR, u.dob, CURDATE()) DESC
               LIMIT " . RESULTS_PER_PAGE . " OFFSET $offset";
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
