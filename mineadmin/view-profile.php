@@ -33,6 +33,9 @@ if (!$user) {
     exit;
 }
 
+// Check premium status (use is_premium flag from users table for consistency with profiles.php)
+$isPremium = $user['is_premium'] ? true : false;
+
 // Get partner preferences
 $stmt = $pdo->prepare("SELECT * FROM partner_preferences WHERE user_id = ?");
 $stmt->execute([$userId]);
@@ -43,11 +46,14 @@ $stmt = $pdo->prepare("SELECT * FROM privacy_settings WHERE user_id = ?");
 $stmt->execute([$userId]);
 $privacy = $stmt->fetch() ?: [];
 
-// Check premium status
-$stmt = $pdo->prepare("SELECT * FROM subscriptions WHERE user_id = ? AND status = 'active' AND end_date >= CURDATE() ORDER BY end_date DESC LIMIT 1");
-$stmt->execute([$userId]);
-$subscription = $stmt->fetch();
-$isPremium = $subscription ? true : false;
+// Get subscription info (if premium)
+if ($isPremium) {
+    $stmt = $pdo->prepare("SELECT * FROM subscriptions WHERE user_id = ? ORDER BY end_date DESC LIMIT 1");
+    $stmt->execute([$userId]);
+    $subscription = $stmt->fetch();
+} else {
+    $subscription = null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
