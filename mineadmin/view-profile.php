@@ -260,12 +260,13 @@ if ($isPremium) {
             </div>
 
             <!-- Subscription Info (if premium) -->
-            <?php if ($subscription): ?>
+            <?php if ($isPremium): ?>
             <div class="card mb-4 border-warning">
                 <div class="card-header bg-warning">
                     <h5 class="mb-0">Premium Subscription</h5>
                 </div>
                 <div class="card-body">
+                    <?php if ($subscription): ?>
                     <div class="row g-3">
                         <div class="col-md-4"><strong>Plan:</strong> <?= htmlspecialchars($subscription['plan_id']) ?></div>
                         <div class="col-md-4"><strong>Start Date:</strong> <?= date('d M Y', strtotime($subscription['start_date'])) ?></div>
@@ -274,6 +275,9 @@ if ($isPremium) {
                         <div class="col-md-4"><strong>Payment Method:</strong> <?= ucfirst($subscription['payment_method'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Amount:</strong> ₹<?= number_format($subscription['amount']) ?></div>
                     </div>
+                    <?php else: ?>
+                    <p class="text-muted mb-0">No subscription record found. Premium status is set via database flag.</p>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>
