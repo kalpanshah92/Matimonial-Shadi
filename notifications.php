@@ -54,8 +54,15 @@ require_once __DIR__ . '/includes/header.php';
                                     <p class="mb-1 text-muted"><?= sanitize($notif['message']) ?></p>
                                     <small class="text-muted"><?= timeAgo($notif['created_at']) ?></small>
                                 </div>
-                                <?php if ($notif['link']): ?>
-                                    <a href="<?= SITE_URL . '/' . $notif['link'] ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                <?php if ($notif['link'] || $notif['type'] === 'interest'): ?>
+                                    <?php
+                                    $viewLink = $notif['link'];
+                                    // Override link for interest type to go to dashboard
+                                    if ($notif['type'] === 'interest') {
+                                        $viewLink = 'dashboard.php';
+                                    }
+                                    ?>
+                                    <a href="<?= SITE_URL . '/' . $viewLink ?>" class="btn btn-sm btn-outline-primary">View</a>
                                 <?php endif; ?>
                             </div>
                         </div>
