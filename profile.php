@@ -330,27 +330,74 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Similar Profiles -->
                 <div class="dashboard-card">
                     <h5><i class="bi bi-people me-2 text-primary"></i>Similar Profiles</h5>
-                    <?php
-                    $stmt = $pdo->prepare(
-                        "SELECT id, name, profile_id, profile_pic, gender, dob, city FROM users 
-                         WHERE gender = ? AND religion = ? AND id != ? AND is_active = 1 AND status = 'approved'
-                         ORDER BY RAND() LIMIT 3"
-                    );
-                    $stmt->execute([$profile['gender'], $profile['religion'], $profile['id']]);
-                    $similar = $stmt->fetchAll();
-                    ?>
-                    <?php foreach ($similar as $sim): ?>
-                        <div class="d-flex align-items-center gap-3 mb-3 mt-3">
-                            <img src="<?= getProfilePic($sim['profile_pic'], $sim['gender']) ?>" 
-                                 class="rounded-circle" width="50" height="50" style="object-fit: cover;">
-                            <div>
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $sim['id'] ?>" class="fw-semibold text-dark d-block">
-                                    <?= sanitize($sim['name']) ?>
-                                </a>
-                                <small class="text-muted"><?= calculateAge($sim['dob']) ?> yrs | <?= sanitize($sim['city'] ?? '') ?></small>
-                            </div>
+                    <?php if (!$viewerIsPremium && !$viewerIsSuperAdmin): ?>
+                        <div class="text-center py-4">
+                            <i class="bi bi-lock-fill" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+                            <p class="text-muted mt-2 mb-3">Upgrade to Premium to view similar profiles</p>
+                            <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-warning btn-sm">
+                                <i class="bi bi-star-fill me-1"></i>Upgrade Your Profile
+                            </a>
                         </div>
-                    <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php
+                        // Determine viewer's gender and dob to filter similar profiles
+                        $viewerGender = null;
+                        $viewerDob = null;
+                        if (isLoggedIn() && isset($currentUserId)) {
+                            $stmt = $pdo->prepare("SELECT gender, dob FROM users WHERE id = ?");
+                            $stmt->execute([$currentUserId]);
+                            $viewerData = $stmt->fetch();
+                            $viewerGender = $viewerData['gender'] ?? null;
+                            $viewerDob = $viewerData['dob'] ?? null;
+                        }
+
+                        $similar = [];
+                        if ($viewerGender && $viewerDob) {
+                            $oppositeGender = ($viewerGender === 'Male') ? 'Female' : 'Male';
+
+                            // Try to find younger opposite-gender profiles first
+                            $stmt = $pdo->prepare(
+                                "SELECT id, name, profile_id, profile_pic, gender, dob, city FROM users 
+                                 WHERE gender = ? AND id != ? AND is_active = 1 AND status = 'approved'
+                                 AND dob IS NOT NULL AND dob > ?
+                                 ORDER BY dob DESC LIMIT 3"
+                            );
+                            $stmt->execute([$oppositeGender, $currentUserId, $viewerDob]);
+                            $similar = $stmt->fetchAll();
+
+                            // Fallback: if no younger, get youngest opposite-gender profile
+                            if (empty($similar)) {
+                                $stmt = $pdo->prepare(
+                                    "SELECT id, name, profile_id, profile_pic, gender, dob, city FROM users 
+                                     WHERE gender = ? AND id != ? AND is_active = 1 AND status = 'approved'
+                                     AND dob IS NOT NULL
+                                     ORDER BY dob DESC LIMIT 1"
+                                );
+                                $stmt->execute([$oppositeGender, $currentUserId]);
+                                $similar = $stmt->fetchAll();
+                            }
+                        }
+                        ?>
+                        <?php if (!empty($similar)): ?>
+                            <?php foreach ($similar as $sim): ?>
+                                <div class="d-flex align-items-center gap-3 mb-3 mt-3">
+                                    <img src="<?= getProfilePic($sim['profile_pic'], $sim['gender']) ?>" 
+                                         class="rounded-circle" width="50" height="50" style="object-fit: cover;">
+                                    <div>
+                                        <a href="<?= SITE_URL ?>/profile.php?id=<?= $sim['id'] ?>" class="fw-semibold text-dark d-block">
+                                            <?= sanitize($sim['name']) ?>
+                                        </a>
+                                        <small class="text-muted"><?= calculateAge($sim['dob']) ?> yrs | <?= sanitize($sim['city'] ?? '') ?></small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="text-center py-3">
+                                <i class="bi bi-search" style="font-size: 2rem; color: var(--text-muted);"></i>
+                                <p class="text-muted mt-2 mb-0">No similar profiles found</p>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
