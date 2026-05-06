@@ -58,7 +58,7 @@ switch ($action) {
         
         // Get sender name
         $sender = getCurrentUser();
-        createNotification($profileId, 'interest', 'New Interest Received', sanitize($sender['name']) . ' has sent you an interest!', 'profile.php?id=' . $userId);
+        createNotification($profileId, 'interest', 'New Interest Received', 'Please accept to connect with ' . sanitize($sender['name']), 'dashboard.php');
         
         echo json_encode(['success' => true, 'message' => 'Interest sent successfully']);
         break;
