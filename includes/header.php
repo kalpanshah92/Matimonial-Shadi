@@ -3,6 +3,7 @@ require_once __DIR__ . '/functions.php';
 
 $currentUser = getCurrentUser();
 $notifCount = $currentUser ? getUnreadNotificationCount($currentUser['id']) : 0;
+$topNotifications = $currentUser ? getTopNotifications($currentUser['id'], 3) : [];
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 ?>
 <!DOCTYPE html>
@@ -113,7 +114,28 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
                             <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <li><a class="dropdown-item" href="<?= SITE_URL ?>/notifications.php">View All Notifications</a></li>
+                            <?php if (!empty($topNotifications)): ?>
+                                <?php foreach ($topNotifications as $notif): ?>
+                                    <li>
+                                        <a class="dropdown-item <?= $notif['is_read'] ? 'text-muted' : '' ?>" href="<?= $notif['link'] ?? SITE_URL ?>/notifications.php">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold"><?= htmlspecialchars($notif['title']) ?></div>
+                                                    <div class="small text-muted"><?= htmlspecialchars(substr($notif['message'], 0, 50)) ?><?= strlen($notif['message']) > 50 ? '...' : '' ?></div>
+                                                    <div class="small text-muted" style="font-size: 11px;"><?= timeAgo($notif['created_at']) ?></div>
+                                                </div>
+                                                <?php if (!$notif['is_read']): ?>
+                                                    <span class="badge bg-primary ms-2" style="font-size: 10px;">New</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                                <li><hr class="dropdown-divider"></li>
+                            <?php else: ?>
+                                <li><a class="dropdown-item text-muted" href="<?= SITE_URL ?>/notifications.php">No notifications yet</a></li>
+                            <?php endif; ?>
+                            <li><a class="dropdown-item text-primary fw-semibold" href="<?= SITE_URL ?>/notifications.php">View All Notifications</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

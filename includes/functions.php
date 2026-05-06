@@ -258,6 +258,13 @@ function getUnreadNotificationCount($userId) {
     return $result['count'];
 }
 
+function getTopNotifications($userId, $limit = 3) {
+    $pdo = getDBConnection();
+    $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?");
+    $stmt->execute([$userId, $limit]);
+    return $stmt->fetchAll();
+}
+
 /**
  * Create a notification
  */
