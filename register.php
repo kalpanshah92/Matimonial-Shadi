@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'religion'   => sanitize($_POST['religion'] ?? ''),
         'caste'      => sanitize($_POST['caste'] ?? ''),
         'mother_tongue' => sanitize($_POST['mother_tongue'] ?? ''),
+        'country'    => sanitize($_POST['country'] ?? ''),
         'state'      => sanitize($_POST['state'] ?? ''),
         'city'       => sanitize($_POST['city'] ?? ''),
         'profile_for' => sanitize($_POST['profile_for'] ?? ''),
@@ -232,14 +233,19 @@ require_once __DIR__ . '/includes/header.php';
                                 </select>
                             </div>
                             
+                            <!-- Country -->
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <select class="form-select" id="country" name="country" data-selected="<?= htmlspecialchars($formData['country'] ?? 'IN') ?>">
+                                    <option value="">Loading countries...</option>
+                                </select>
+                            </div>
+                            
                             <!-- State -->
                             <div class="col-md-6">
                                 <label for="state" class="form-label">State</label>
-                                <select class="form-select" id="state" name="state">
-                                    <option value="">Select State</option>
-                                    <?php foreach ($INDIAN_STATES as $state): ?>
-                                        <option value="<?= $state ?>" <?= ($formData['state'] ?? '') === $state ? 'selected' : '' ?>><?= $state ?></option>
-                                    <?php endforeach; ?>
+                                <select class="form-select" id="state" name="state" data-selected="<?= htmlspecialchars($formData['state'] ?? '') ?>" disabled>
+                                    <option value="">Select Country First</option>
                                 </select>
                             </div>
                             
@@ -307,6 +313,70 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
         dobInput.max = maxDate.toISOString().split('T')[0];
     });
 });
+
+// Country/State cascading dropdown
+(function() {
+    var countrySelect = document.getElementById('country');
+    var stateSelect = document.getElementById('state');
+    var selectedCountry = countrySelect.dataset.selected || 'IN';
+    var selectedState = stateSelect.dataset.selected || '';
+    var countriesData = {};
+
+    function populateStates(countryCode) {
+        stateSelect.innerHTML = '';
+        if (!countryCode || !countriesData[countryCode]) {
+            stateSelect.innerHTML = '<option value="">Select Country First</option>';
+            stateSelect.disabled = true;
+            return;
+        }
+        var divisions = countriesData[countryCode].divisions || {};
+        var keys = Object.keys(divisions).sort(function(a, b) {
+            return divisions[a].localeCompare(divisions[b]);
+        });
+        var defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Select State';
+        stateSelect.appendChild(defaultOpt);
+        keys.forEach(function(k) {
+            var opt = document.createElement('option');
+            opt.value = divisions[k];
+            opt.textContent = divisions[k];
+            if (divisions[k] === selectedState) opt.selected = true;
+            stateSelect.appendChild(opt);
+        });
+        stateSelect.disabled = false;
+    }
+
+    fetch('<?= SITE_URL ?>/assets/data/iso-3166-2.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            countriesData = data;
+            // Populate countries sorted by name
+            var codes = Object.keys(data).sort(function(a, b) {
+                return data[a].name.localeCompare(data[b].name);
+            });
+            countrySelect.innerHTML = '<option value="">Select Country</option>';
+            codes.forEach(function(code) {
+                var opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = data[code].name;
+                if (code === selectedCountry) opt.selected = true;
+                countrySelect.appendChild(opt);
+            });
+            // Auto-populate state if a country is preselected
+            if (selectedCountry) {
+                populateStates(selectedCountry);
+            }
+        })
+        .catch(function() {
+            countrySelect.innerHTML = '<option value="">Failed to load countries</option>';
+        });
+
+    countrySelect.addEventListener('change', function() {
+        selectedState = '';
+        populateStates(this.value);
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
