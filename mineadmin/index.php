@@ -101,13 +101,15 @@ $adminPage = 'dashboard';
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="admin-stat-card">
-                <div class="stat-icon stat-warning"><i class="bi bi-clock-history"></i></div>
-                <div>
-                    <h4 class="mb-0"><?= $stats['pending_profiles'] ?></h4>
-                    <small class="text-muted">Pending Approvals</small>
+            <a href="profiles.php" class="text-decoration-none">
+                <div class="admin-stat-card">
+                    <div class="stat-icon stat-warning"><i class="bi bi-clock-history"></i></div>
+                    <div>
+                        <h4 class="mb-0"><?= $stats['pending_profiles'] ?></h4>
+                        <small class="text-muted">Pending Approvals</small>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6">
             <div class="admin-stat-card">

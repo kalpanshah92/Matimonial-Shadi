@@ -45,7 +45,7 @@ $totalPages = ceil($totalUsers / ADMIN_RESULTS_PER_PAGE);
 $stmt = $pdo->prepare(
     "SELECT u.*, pd.education, pd.occupation FROM users u 
      LEFT JOIN profile_details pd ON u.id = pd.user_id 
-     WHERE $whereClause ORDER BY u.created_at DESC 
+     WHERE $whereClause ORDER BY u.status = 'pending' DESC, u.created_at DESC 
      LIMIT " . ADMIN_RESULTS_PER_PAGE . " OFFSET $offset"
 );
 $stmt->execute($params);
