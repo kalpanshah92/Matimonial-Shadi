@@ -116,8 +116,15 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                             <li><h6 class="dropdown-header">Notifications</h6></li>
                             <?php if (!empty($topNotifications)): ?>
                                 <?php foreach ($topNotifications as $notif): ?>
+                                    <?php
+                                    $viewLink = $notif['link'] ?? 'notifications.php';
+                                    // Override link for interest type to go to dashboard
+                                    if ($notif['type'] === 'interest') {
+                                        $viewLink = 'dashboard.php';
+                                    }
+                                    ?>
                                     <li>
-                                        <a class="dropdown-item <?= $notif['is_read'] ? 'text-muted' : '' ?>" href="<?= $notif['link'] ?? SITE_URL ?>/notifications.php">
+                                        <a class="dropdown-item <?= $notif['is_read'] ? 'text-muted' : '' ?>" href="<?= SITE_URL ?>/<?= $viewLink ?>">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold"><?= htmlspecialchars($notif['title']) ?></div>
