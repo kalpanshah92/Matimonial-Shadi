@@ -69,26 +69,15 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
         
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item">
-                    <a class="nav-link <?= $currentPage === 'index' ? 'active' : '' ?>" href="<?= SITE_URL ?>">
-                        <i class="bi bi-house me-1"></i>Home
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= $currentPage === 'search' ? 'active' : '' ?>" href="<?= SITE_URL ?>/search.php">
-                        <i class="bi bi-search me-1"></i>Search
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= $currentPage === 'success-stories' ? 'active' : '' ?>" href="<?= SITE_URL ?>/success-stories.php">
-                        <i class="bi bi-heart me-1"></i>Success Story
-                    </a>
-                </li>
-                
                 <?php if ($currentUser): ?>
                     <li class="nav-item">
                         <a class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>" href="<?= SITE_URL ?>/dashboard.php">
                             <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'search' ? 'active' : '' ?>" href="<?= SITE_URL ?>/search.php">
+                            <i class="bi bi-search me-1"></i>Search Partner
                         </a>
                     </li>
                     <li class="nav-item">
@@ -101,6 +90,30 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                             <i class="bi bi-chat-dots me-1"></i>Chat
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'success-stories' ? 'active' : '' ?>" href="<?= SITE_URL ?>/success-stories.php">
+                            <i class="bi bi-heart me-1"></i>Success Story
+                        </a>
+                    </li>
+                <?php else: ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'index' ? 'active' : '' ?>" href="<?= SITE_URL ?>">
+                            <i class="bi bi-house me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'search' ? 'active' : '' ?>" href="<?= SITE_URL ?>/search.php">
+                            <i class="bi bi-search me-1"></i>Search Partner
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'success-stories' ? 'active' : '' ?>" href="<?= SITE_URL ?>/success-stories.php">
+                            <i class="bi bi-heart me-1"></i>Success Story
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <?php if ($currentUser): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <span class="position-relative">
