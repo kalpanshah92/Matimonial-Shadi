@@ -45,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($formData['password'] !== $formData['confirm_password']) $errors[] = 'Passwords do not match.';
     if (empty($formData['gender'])) $errors[] = 'Gender is required.';
     if (empty($formData['dob'])) $errors[] = 'Date of birth is required.';
+    if (($_POST['mother_tongue'] ?? '') === 'Others' && empty(trim($_POST['mother_tongue_other'] ?? ''))) {
+        $errors[] = 'Please specify your mother tongue.';
+    }
     
     // Age validation based on gender (Female: 18+, Male: 21+)
     if (!empty($formData['dob']) && !empty($formData['gender'])) {
