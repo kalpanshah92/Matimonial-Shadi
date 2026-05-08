@@ -126,7 +126,9 @@ if ($isPremium) {
                         <div class="col-md-4"><strong>Samaj:</strong> <?= htmlspecialchars($user['caste'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Sub Samaj:</strong> <?= htmlspecialchars($user['sub_caste'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Mother Tongue:</strong> <?= htmlspecialchars($user['mother_tongue'] ?? '-') ?></div>
-                        <div class="col-md-4"><strong>Location:</strong> <?= htmlspecialchars(($user['city'] ? $user['city'] . ', ' : '') . ($user['state'] ?? '')) ?></div>
+                        <div class="col-md-4"><strong>City:</strong> <?= htmlspecialchars($user['city'] ?? '-') ?: '-' ?></div>
+                        <div class="col-md-4"><strong>State:</strong> <?= htmlspecialchars($user['state'] ?? '-') ?: '-' ?></div>
+                        <div class="col-md-4"><strong>Country:</strong> <?= htmlspecialchars($user['country'] ?? '-') ?: '-' ?></div>
                     </div>
                 </div>
             </div>
