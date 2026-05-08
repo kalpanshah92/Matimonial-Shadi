@@ -503,7 +503,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Address</label>
                                 <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
                             </div>
-                            <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
+                            <div class="col-md-4" id="address_type_wrapper">
                                 <label class="form-label">Property Status</label>
                                 <select name="address_type" id="address_type" class="form-select">
                                     <option value="">Select</option>
@@ -772,7 +772,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Parents Address</label>
                                 <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
                             </div>
-                            <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
+                            <div class="col-md-4" id="parents_address_type_wrapper">
                                 <label class="form-label">Property Status</label>
                                 <select name="parents_address_type" id="parents_address_type" class="form-select">
                                     <option value="">Select</option>
@@ -1321,53 +1321,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Address -> Property Status toggle
-(function() {
-    var addressInput = document.getElementById('address');
-    var addressTypeWrapper = document.getElementById('address_type_wrapper');
-    var addressTypeSelect = document.getElementById('address_type');
-    if (!addressInput || !addressTypeWrapper) return;
-
-    function toggle() {
-        if (addressInput.value.trim() !== '') {
-            addressTypeWrapper.style.display = 'block';
-        } else {
-            addressTypeWrapper.style.display = 'none';
-            if (addressTypeSelect) addressTypeSelect.value = '';
-        }
-    }
-    addressInput.addEventListener('input', toggle);
-})();
-
-// Parents Address -> Property Status toggle + "Same as Above"
+// Parents Address "Same as Above" checkbox
 (function() {
     var parentsInput = document.getElementById('parents_address');
-    var parentsWrapper = document.getElementById('parents_address_type_wrapper');
     var parentsSelect = document.getElementById('parents_address_type');
     var sameCheckbox = document.getElementById('parents_address_same');
     var basicAddressInput = document.getElementById('address');
     var basicAddressType = document.getElementById('address_type');
-    if (!parentsInput || !parentsWrapper) return;
-
-    function toggleWrapper() {
-        if (parentsInput.value.trim() !== '') {
-            parentsWrapper.style.display = 'block';
-        } else {
-            parentsWrapper.style.display = 'none';
-            if (parentsSelect) parentsSelect.value = '';
-        }
-    }
+    if (!parentsInput || !sameCheckbox) return;
 
     function applySameAsBasic() {
-        var addr = basicAddressInput ? basicAddressInput.value : '';
-        var type = basicAddressType ? basicAddressType.value : '';
-        parentsInput.value = addr;
+        parentsInput.value = basicAddressInput ? basicAddressInput.value : '';
         parentsInput.readOnly = true;
         if (parentsSelect) {
-            parentsSelect.value = type;
+            parentsSelect.value = basicAddressType ? basicAddressType.value : '';
             parentsSelect.disabled = true;
         }
-        toggleWrapper();
     }
 
     function releaseSame() {
@@ -1375,18 +1344,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (parentsSelect) parentsSelect.disabled = false;
     }
 
-    parentsInput.addEventListener('input', toggleWrapper);
-
-    if (sameCheckbox) {
-        if (sameCheckbox.checked) applySameAsBasic();
-        sameCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                applySameAsBasic();
-            } else {
-                releaseSame();
-            }
-        });
-    }
+    if (sameCheckbox.checked) applySameAsBasic();
+    sameCheckbox.addEventListener('change', function() {
+        if (this.checked) applySameAsBasic(); else releaseSame();
+    });
 })();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
