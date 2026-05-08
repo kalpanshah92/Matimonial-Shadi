@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'dob'        => sanitize($_POST['dob'] ?? ''),
         'religion'   => sanitize($_POST['religion'] ?? ''),
         'caste'      => sanitize($_POST['caste'] ?? ''),
-        'mother_tongue' => sanitize($_POST['mother_tongue'] ?? ''),
+        'mother_tongue' => sanitize(($_POST['mother_tongue'] ?? '') === 'Others' ? ($_POST['mother_tongue_other'] ?? '') : ($_POST['mother_tongue'] ?? '')),
         'country'    => sanitize($_POST['country'] ?? ''),
         'state'      => sanitize($_POST['state'] ?? ''),
         'city'       => sanitize($_POST['city'] ?? ''),
@@ -226,12 +226,21 @@ require_once __DIR__ . '/includes/header.php';
                             <!-- Mother Tongue -->
                             <div class="col-md-6">
                                 <label for="mother_tongue" class="form-label">Mother Tongue</label>
+                                <?php
+                                $currentMT = $formData['mother_tongue'] ?? '';
+                                $isPresetMT = in_array($currentMT, $MOTHER_TONGUES, true);
+                                $customMT = (!$isPresetMT && $currentMT !== '') ? $currentMT : '';
+                                $selectValue = (!$isPresetMT && $currentMT !== '') ? 'Others' : $currentMT;
+                                ?>
                                 <select class="form-select" id="mother_tongue" name="mother_tongue">
                                     <option value="">Select Language</option>
                                     <?php foreach ($MOTHER_TONGUES as $lang): ?>
-                                        <option value="<?= $lang ?>" <?= ($formData['mother_tongue'] ?? '') === $lang ? 'selected' : '' ?>><?= $lang ?></option>
+                                        <option value="<?= $lang ?>" <?= $selectValue === $lang ? 'selected' : '' ?>><?= $lang ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <input type="text" class="form-control mt-2" id="mother_tongue_other" name="mother_tongue_other"
+                                       value="<?= htmlspecialchars($customMT) ?>" placeholder="Please specify your language"
+                                       style="display: <?= $selectValue === 'Others' ? 'block' : 'none' ?>;">
                             </div>
                             
                             <!-- Country -->
@@ -306,6 +315,23 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 
 <script>
+// Mother tongue "Others" toggle
+(function() {
+    var mtSelect = document.getElementById('mother_tongue');
+    var mtOther = document.getElementById('mother_tongue_other');
+    if (mtSelect && mtOther) {
+        mtSelect.addEventListener('change', function() {
+            if (this.value === 'Others') {
+                mtOther.style.display = 'block';
+                mtOther.focus();
+            } else {
+                mtOther.style.display = 'none';
+                mtOther.value = '';
+            }
+        });
+    }
+})();
+
 document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
     radio.addEventListener('change', function() {
         var dobInput = document.getElementById('dob');
