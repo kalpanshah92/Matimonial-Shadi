@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
     country VARCHAR(100) DEFAULT 'India',
     state VARCHAR(50),
     city VARCHAR(100),
+    address TEXT,
+    address_type ENUM('Own', 'Rent') DEFAULT NULL,
     profile_pic VARCHAR(255),
     about_me TEXT,
     is_verified TINYINT(1) DEFAULT 0,

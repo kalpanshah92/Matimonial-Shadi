@@ -45,8 +45,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'marital_status' => $currentUser['marital_status'],
                         'state' => $currentUser['state'],
                         'city' => $currentUser['city'],
+                        'address' => $currentUser['address'] ?? '',
+                        'address_type' => $currentUser['address_type'] ?? '',
                         'about_me' => $currentUser['about_me'],
                     ];
+                    $submittedAddress = sanitize($_POST['address'] ?? '');
+                    $submittedAddressType = sanitize($_POST['address_type'] ?? '');
+                    // Only keep address_type if address is provided and value is valid; null otherwise (ENUM column)
+                    if (empty($submittedAddress) || !in_array($submittedAddressType, ['Own', 'Rent'], true)) {
+                        $submittedAddressType = null;
+                    }
                     $newData = [
                         'name' => sanitize($_POST['name']),
                         'religion' => sanitize($_POST['religion']),
@@ -56,6 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'marital_status' => sanitize($_POST['marital_status']),
                         'state' => sanitize($_POST['state']),
                         'city' => sanitize($_POST['city']),
+                        'address' => $submittedAddress,
+                        'address_type' => $submittedAddressType,
                         'about_me' => sanitize($_POST['about_me']),
                     ];
                     $activeTab = 'basic';
@@ -473,6 +483,18 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4">
                                 <label class="form-label">City</label>
                                 <input type="text" class="form-control" name="city" value="<?= sanitize($currentUser['city'] ?? '') ?>">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
+                            </div>
+                            <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
+                                <label class="form-label">Property Status</label>
+                                <select name="address_type" id="address_type" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="Own" <?= ($currentUser['address_type'] ?? '') === 'Own' ? 'selected' : '' ?>>Own</option>
+                                    <option value="Rent" <?= ($currentUser['address_type'] ?? '') === 'Rent' ? 'selected' : '' ?>>Rent</option>
+                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">About Me</label>
@@ -1253,5 +1275,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Address -> Property Status toggle
+(function() {
+    var addressInput = document.getElementById('address');
+    var addressTypeWrapper = document.getElementById('address_type_wrapper');
+    var addressTypeSelect = document.getElementById('address_type');
+    if (!addressInput || !addressTypeWrapper) return;
+
+    function toggle() {
+        if (addressInput.value.trim() !== '') {
+            addressTypeWrapper.style.display = 'block';
+        } else {
+            addressTypeWrapper.style.display = 'none';
+            if (addressTypeSelect) addressTypeSelect.value = '';
+        }
+    }
+    addressInput.addEventListener('input', toggle);
+})();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
