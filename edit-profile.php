@@ -1326,6 +1326,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var parentsInput = document.getElementById('parents_address');
     var parentsSelect = document.getElementById('parents_address_type');
     var sameCheckbox = document.getElementById('parents_address_same');
+    var sameHint = sameCheckbox ? sameCheckbox.parentElement.querySelector('small') : null;
     var basicAddressInput = document.getElementById('address');
     var basicAddressType = document.getElementById('address_type');
     if (!parentsInput || !sameCheckbox) return;
@@ -1344,10 +1345,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (parentsSelect) parentsSelect.disabled = false;
     }
 
+    function refreshCheckboxState() {
+        var hasBasic = basicAddressInput && basicAddressInput.value.trim() !== '';
+        sameCheckbox.disabled = !hasBasic;
+        if (sameHint) sameHint.style.display = hasBasic ? 'none' : '';
+        if (!hasBasic && sameCheckbox.checked) {
+            sameCheckbox.checked = false;
+            releaseSame();
+        }
+        // If checkbox stays checked, keep parents fields synced with basic input changes
+        if (sameCheckbox.checked) applySameAsBasic();
+    }
+
     if (sameCheckbox.checked) applySameAsBasic();
     sameCheckbox.addEventListener('change', function() {
         if (this.checked) applySameAsBasic(); else releaseSame();
     });
+    if (basicAddressInput) basicAddressInput.addEventListener('input', refreshCheckboxState);
+    if (basicAddressType) basicAddressType.addEventListener('change', refreshCheckboxState);
+
+    // Initial state
+    refreshCheckboxState();
 })();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
