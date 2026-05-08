@@ -133,8 +133,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'family_status' => $family['family_status'] ?? '',
                         'family_values' => $family['family_values'] ?? '',
                         'gotra' => $family['gotra'] ?? '',
+                        'parents_address' => $family['parents_address'] ?? '',
+                        'parents_address_type' => $family['parents_address_type'] ?? '',
                         'about_family' => $family['about_family'] ?? '',
                     ];
+                    // Handle "Same as Above" - use current user's basic address
+                    if (!empty($_POST['parents_address_same'])) {
+                        $parentsAddress = $currentUser['address'] ?? '';
+                        $parentsAddressType = $currentUser['address_type'] ?? null;
+                    } else {
+                        $parentsAddress = sanitize($_POST['parents_address'] ?? '');
+                        $parentsAddressType = sanitize($_POST['parents_address_type'] ?? '');
+                    }
+                    if (empty($parentsAddress) || !in_array($parentsAddressType, ['Own', 'Rent'], true)) {
+                        $parentsAddressType = null;
+                    }
                     $newData = [
                         'father_name' => sanitize($_POST['father_name'] ?? ''),
                         'father_occupation' => sanitize($_POST['father_occupation'] ?? ''),
@@ -148,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'family_status' => sanitize($_POST['family_status'] ?? ''),
                         'family_values' => sanitize($_POST['family_values'] ?? ''),
                         'gotra' => sanitize($_POST['gotra'] ?? ''),
+                        'parents_address' => $parentsAddress,
+                        'parents_address_type' => $parentsAddressType,
                         'about_family' => sanitize($_POST['about_family'] ?? ''),
                     ];
                     $activeTab = 'family';
@@ -735,6 +750,36 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Gotra</label>
                                 <input type="text" class="form-control" name="gotra" value="<?= sanitize($family['gotra'] ?? '') ?>">
                             </div>
+                            <?php
+                            $basicAddress = $currentUser['address'] ?? '';
+                            $basicAddressType = $currentUser['address_type'] ?? '';
+                            $parentsAddr = $family['parents_address'] ?? '';
+                            $parentsAddrType = $family['parents_address_type'] ?? '';
+                            $sameAsBasic = !empty($basicAddress) && $parentsAddr === $basicAddress && $parentsAddrType === $basicAddressType;
+                            ?>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="parents_address_same" name="parents_address_same" value="1" <?= $sameAsBasic ? 'checked' : '' ?> <?= empty($basicAddress) ? 'disabled' : '' ?>>
+                                    <label class="form-check-label" for="parents_address_same">
+                                        Same as Above (use address from Basic Info)
+                                        <?php if (empty($basicAddress)): ?>
+                                            <small class="text-muted">— please add address in Basic Info first</small>
+                                        <?php endif; ?>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Parents Address</label>
+                                <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
+                            </div>
+                            <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
+                                <label class="form-label">Property Status</label>
+                                <select name="parents_address_type" id="parents_address_type" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="Own" <?= $parentsAddrType === 'Own' ? 'selected' : '' ?>>Own</option>
+                                    <option value="Rent" <?= $parentsAddrType === 'Rent' ? 'selected' : '' ?>>Rent</option>
+                                </select>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label">About Family</label>
                                 <textarea name="about_family" class="form-control" rows="3"><?= sanitize($family['about_family'] ?? '') ?></textarea>
@@ -1292,6 +1337,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     addressInput.addEventListener('input', toggle);
+})();
+
+// Parents Address -> Property Status toggle + "Same as Above"
+(function() {
+    var parentsInput = document.getElementById('parents_address');
+    var parentsWrapper = document.getElementById('parents_address_type_wrapper');
+    var parentsSelect = document.getElementById('parents_address_type');
+    var sameCheckbox = document.getElementById('parents_address_same');
+    var basicAddressInput = document.getElementById('address');
+    var basicAddressType = document.getElementById('address_type');
+    if (!parentsInput || !parentsWrapper) return;
+
+    function toggleWrapper() {
+        if (parentsInput.value.trim() !== '') {
+            parentsWrapper.style.display = 'block';
+        } else {
+            parentsWrapper.style.display = 'none';
+            if (parentsSelect) parentsSelect.value = '';
+        }
+    }
+
+    function applySameAsBasic() {
+        var addr = basicAddressInput ? basicAddressInput.value : '';
+        var type = basicAddressType ? basicAddressType.value : '';
+        parentsInput.value = addr;
+        parentsInput.readOnly = true;
+        if (parentsSelect) {
+            parentsSelect.value = type;
+            parentsSelect.disabled = true;
+        }
+        toggleWrapper();
+    }
+
+    function releaseSame() {
+        parentsInput.readOnly = false;
+        if (parentsSelect) parentsSelect.disabled = false;
+    }
+
+    parentsInput.addEventListener('input', toggleWrapper);
+
+    if (sameCheckbox) {
+        if (sameCheckbox.checked) applySameAsBasic();
+        sameCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                applySameAsBasic();
+            } else {
+                releaseSame();
+            }
+        });
+    }
 })();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

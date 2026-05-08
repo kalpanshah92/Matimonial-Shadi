@@ -262,6 +262,14 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="col-md-4"><small class="text-muted">Gotra</small><br><?= !empty($family['gotra']) ? sanitize($family['gotra']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                         <div class="col-md-4"><small class="text-muted">Family Income</small><br><?= !empty($family['family_income']) ? sanitize($family['family_income']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                         <div class="col-md-4"><small class="text-muted">Family Location</small><br><?= !empty($family['family_location']) ? sanitize($family['family_location']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                        <?php if ($isOwner || $isConnected || $viewerIsSuperAdmin): ?>
+                            <div class="col-md-8"><small class="text-muted">Parents Address</small><br><?= !empty($family['parents_address']) ? sanitize($family['parents_address']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                            <?php if (!empty($family['parents_address'])): ?>
+                                <div class="col-md-4"><small class="text-muted">Property Status</small><br><?= !empty($family['parents_address_type']) ? sanitize($family['parents_address_type']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
+                            <?php endif; ?>
+                        <?php elseif (!empty($family['parents_address'])): ?>
+                            <div class="col-md-8"><small class="text-muted">Parents Address</small><br><span class="text-muted"><i class="bi bi-lock-fill me-1"></i>Visible to connections only</span></div>
+                        <?php endif; ?>
                         <div class="col-12"><small class="text-muted">About Family</small><br><?= !empty($family['about_family']) ? nl2br(sanitize($family['about_family'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>

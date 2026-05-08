@@ -138,7 +138,7 @@ switch ($action) {
             }
 
             // Apply changes to family_details table
-            $familyFields = ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'family_values', 'gotra', 'about_family'];
+            $familyFields = ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'family_values', 'gotra', 'parents_address', 'parents_address_type', 'about_family'];
             $familyUpdates = [];
             $familyParams = [];
             foreach ($familyFields as $field) {

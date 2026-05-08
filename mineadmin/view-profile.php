@@ -206,6 +206,8 @@ if ($isPremium) {
                         <div class="col-md-4"><strong>Gotra:</strong> <?= htmlspecialchars($user['gotra'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Family Income:</strong> <?= htmlspecialchars($user['family_income'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Family Location:</strong> <?= htmlspecialchars($user['family_location'] ?? '-') ?></div>
+                        <div class="col-md-8"><strong>Parents Address:</strong> <?= htmlspecialchars($user['parents_address'] ?? '') ?: '-' ?></div>
+                        <div class="col-md-4"><strong>Property Status:</strong> <?= htmlspecialchars($user['parents_address_type'] ?? '') ?: '-' ?></div>
                         <div class="col-12"><strong>About Family:</strong> <?= nl2br(htmlspecialchars($user['about_family'] ?? 'Not provided')) ?></div>
                     </div>
                 </div>

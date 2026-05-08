@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS family_details (
     family_income VARCHAR(50),
     gotra VARCHAR(100),
     family_location VARCHAR(150),
+    parents_address TEXT,
+    parents_address_type ENUM('Own', 'Rent') DEFAULT NULL,
     about_family TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
