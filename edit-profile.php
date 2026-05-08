@@ -499,7 +499,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Address</label>
                                 <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
                             </div>
-                            <div class="col-md-4" id="address_type_wrapper">
+                            <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
                                 <label class="form-label">Property Status</label>
                                 <select name="address_type" id="address_type" class="form-select">
                                     <option value="">Select</option>
@@ -754,7 +754,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Parents Address</label>
                                 <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
                                 <label class="form-label">Property Status</label>
                                 <select name="parents_address_type" id="parents_address_type" class="form-select">
                                     <option value="">Select</option>
@@ -1303,5 +1303,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Toggle Property Status visibility based on Address input
+(function() {
+    function bindToggle(addressId, wrapperId, selectId) {
+        var input = document.getElementById(addressId);
+        var wrapper = document.getElementById(wrapperId);
+        var select = document.getElementById(selectId);
+        if (!input || !wrapper) return;
+        input.addEventListener('input', function() {
+            if (input.value.trim() !== '') {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+                if (select) select.value = '';
+            }
+        });
+    }
+    bindToggle('address', 'address_type_wrapper', 'address_type');
+    bindToggle('parents_address', 'parents_address_type_wrapper', 'parents_address_type');
+})();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
