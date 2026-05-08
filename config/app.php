@@ -106,7 +106,7 @@ $RELIGIONS = [
 ];
 
 $MOTHER_TONGUES = [
-    'Gujarati', 'Hindi', 'Marvadi', 'English'
+    'Gujarati', 'Hindi', 'English', 'Others'
 ];
 
 $INDIAN_STATES = [
