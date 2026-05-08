@@ -137,14 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'parents_address_type' => $family['parents_address_type'] ?? '',
                         'about_family' => $family['about_family'] ?? '',
                     ];
-                    // Handle "Same as Above" - use current user's basic address
-                    if (!empty($_POST['parents_address_same'])) {
-                        $parentsAddress = $currentUser['address'] ?? '';
-                        $parentsAddressType = $currentUser['address_type'] ?? null;
-                    } else {
-                        $parentsAddress = sanitize($_POST['parents_address'] ?? '');
-                        $parentsAddressType = sanitize($_POST['parents_address_type'] ?? '');
-                    }
+                    // Handle "Same as Above" - JS keeps parents fields synced with live basic input,
+                    // so simply use the submitted values regardless.
+                    $parentsAddress = sanitize($_POST['parents_address'] ?? '');
+                    $parentsAddressType = sanitize($_POST['parents_address_type'] ?? '');
                     if (empty($parentsAddress) || !in_array($parentsAddressType, ['Own', 'Rent'], true)) {
                         $parentsAddressType = null;
                     }
@@ -1363,6 +1359,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (basicAddressInput) basicAddressInput.addEventListener('input', refreshCheckboxState);
     if (basicAddressType) basicAddressType.addEventListener('change', refreshCheckboxState);
+
+    // Re-enable parents_address_type before submit so its value is included in POST
+    // (disabled selects are not submitted by browsers)
+    var familyForm = parentsInput.closest('form');
+    if (familyForm) {
+        familyForm.addEventListener('submit', function() {
+            if (parentsSelect && parentsSelect.disabled) parentsSelect.disabled = false;
+        });
+    }
 
     // Initial state
     refreshCheckboxState();
