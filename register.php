@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashedPassword = password_hash($formData['password'], PASSWORD_DEFAULT);
             
             $stmt = $pdo->prepare(
-                "INSERT INTO users (profile_id, name, email, phone, password, gender, dob, religion, caste, mother_tongue, state, city, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
+                "INSERT INTO users (profile_id, name, email, phone, password, gender, dob, religion, caste, mother_tongue, country, state, city, status) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
             );
             
             $stmt->execute([
@@ -88,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $formData['religion'],
                 $formData['caste'],
                 $formData['mother_tongue'],
+                $formData['country'],
                 $formData['state'],
                 $formData['city']
             ]);
@@ -236,9 +237,10 @@ require_once __DIR__ . '/includes/header.php';
                             <!-- Country -->
                             <div class="col-md-6">
                                 <label for="country" class="form-label">Country</label>
-                                <select class="form-select" id="country" name="country" data-selected="<?= htmlspecialchars($formData['country'] ?? 'IN') ?>">
+                                <select class="form-select" id="country_select" data-selected-name="<?= htmlspecialchars($formData['country'] ?? 'India') ?>">
                                     <option value="">Loading countries...</option>
                                 </select>
+                                <input type="hidden" name="country" id="country" value="<?= htmlspecialchars($formData['country'] ?? 'India') ?>">
                             </div>
                             
                             <!-- State -->
@@ -316,9 +318,10 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
 
 // Country/State cascading dropdown
 (function() {
-    var countrySelect = document.getElementById('country');
+    var countrySelect = document.getElementById('country_select');
+    var countryHidden = document.getElementById('country');
     var stateSelect = document.getElementById('state');
-    var selectedCountry = countrySelect.dataset.selected || 'IN';
+    var selectedCountryName = countrySelect.dataset.selectedName || 'India';
     var selectedState = stateSelect.dataset.selected || '';
     var countriesData = {};
 
@@ -356,16 +359,21 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
                 return data[a].name.localeCompare(data[b].name);
             });
             countrySelect.innerHTML = '<option value="">Select Country</option>';
+            var matchedCode = '';
             codes.forEach(function(code) {
                 var opt = document.createElement('option');
                 opt.value = code;
                 opt.textContent = data[code].name;
-                if (code === selectedCountry) opt.selected = true;
+                if (data[code].name === selectedCountryName) {
+                    opt.selected = true;
+                    matchedCode = code;
+                }
                 countrySelect.appendChild(opt);
             });
             // Auto-populate state if a country is preselected
-            if (selectedCountry) {
-                populateStates(selectedCountry);
+            if (matchedCode) {
+                countryHidden.value = data[matchedCode].name;
+                populateStates(matchedCode);
             }
         })
         .catch(function() {
@@ -374,7 +382,9 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
 
     countrySelect.addEventListener('change', function() {
         selectedState = '';
-        populateStates(this.value);
+        var code = this.value;
+        countryHidden.value = (code && countriesData[code]) ? countriesData[code].name : '';
+        populateStates(code);
     });
 })();
 </script>
