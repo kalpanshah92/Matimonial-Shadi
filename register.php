@@ -264,7 +264,7 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             
                             <!-- City -->
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label for="city" class="form-label">City</label>
                                 <input type="text" class="form-control" id="city" name="city" 
                                        value="<?= $formData['city'] ?? '' ?>" placeholder="Enter city">
