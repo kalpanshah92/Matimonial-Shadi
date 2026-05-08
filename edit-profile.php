@@ -747,28 +747,14 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="gotra" value="<?= sanitize($family['gotra'] ?? '') ?>">
                             </div>
                             <?php
-                            $basicAddress = $currentUser['address'] ?? '';
-                            $basicAddressType = $currentUser['address_type'] ?? '';
                             $parentsAddr = $family['parents_address'] ?? '';
                             $parentsAddrType = $family['parents_address_type'] ?? '';
-                            $sameAsBasic = !empty($basicAddress) && $parentsAddr === $basicAddress && $parentsAddrType === $basicAddressType;
                             ?>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="parents_address_same" name="parents_address_same" value="1" <?= $sameAsBasic ? 'checked' : '' ?> <?= empty($basicAddress) ? 'disabled' : '' ?>>
-                                    <label class="form-check-label" for="parents_address_same">
-                                        Same as Above (use address from Basic Info)
-                                        <?php if (empty($basicAddress)): ?>
-                                            <small class="text-muted">— please add address in Basic Info first</small>
-                                        <?php endif; ?>
-                                    </label>
-                                </div>
-                            </div>
                             <div class="col-md-8">
                                 <label class="form-label">Parents Address</label>
                                 <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
                             </div>
-                            <div class="col-md-4" id="parents_address_type_wrapper">
+                            <div class="col-md-4">
                                 <label class="form-label">Property Status</label>
                                 <select name="parents_address_type" id="parents_address_type" class="form-select">
                                     <option value="">Select</option>
@@ -1317,64 +1303,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Parents Address "Same as Above" checkbox
-(function() {
-    var parentsInput = document.getElementById('parents_address');
-    var parentsSelect = document.getElementById('parents_address_type');
-    var sameCheckbox = document.getElementById('parents_address_same');
-    var sameHint = sameCheckbox ? sameCheckbox.parentElement.querySelector('small') : null;
-    var basicAddressInput = document.getElementById('address');
-    var basicAddressType = document.getElementById('address_type');
-    if (!parentsInput || !sameCheckbox) return;
-
-    function applySameAsBasic() {
-        parentsInput.value = basicAddressInput ? basicAddressInput.value : '';
-        parentsInput.readOnly = true;
-        if (parentsSelect) {
-            parentsSelect.value = basicAddressType ? basicAddressType.value : '';
-            parentsSelect.disabled = true;
-        }
-    }
-
-    function releaseSame() {
-        parentsInput.readOnly = false;
-        if (parentsSelect) parentsSelect.disabled = false;
-    }
-
-    function refreshCheckboxState() {
-        var hasBasic = basicAddressInput && basicAddressInput.value.trim() !== '';
-        var hasParents = parentsInput.value.trim() !== '';
-        // Disable when basic is empty OR (parents has its own value AND checkbox is currently unchecked)
-        var shouldDisable = !hasBasic || (hasParents && !sameCheckbox.checked);
-        sameCheckbox.disabled = shouldDisable;
-        if (sameHint) sameHint.style.display = hasBasic ? 'none' : '';
-        if (!hasBasic && sameCheckbox.checked) {
-            sameCheckbox.checked = false;
-            releaseSame();
-        }
-        // If checkbox stays checked, keep parents fields synced with basic input changes
-        if (sameCheckbox.checked) applySameAsBasic();
-    }
-
-    if (sameCheckbox.checked) applySameAsBasic();
-    sameCheckbox.addEventListener('change', function() {
-        if (this.checked) applySameAsBasic(); else releaseSame();
-    });
-    if (basicAddressInput) basicAddressInput.addEventListener('input', refreshCheckboxState);
-    if (basicAddressType) basicAddressType.addEventListener('change', refreshCheckboxState);
-    parentsInput.addEventListener('input', refreshCheckboxState);
-
-    // Re-enable parents_address_type before submit so its value is included in POST
-    // (disabled selects are not submitted by browsers)
-    var familyForm = parentsInput.closest('form');
-    if (familyForm) {
-        familyForm.addEventListener('submit', function() {
-            if (parentsSelect && parentsSelect.disabled) parentsSelect.disabled = false;
-        });
-    }
-
-    // Initial state
-    refreshCheckboxState();
-})();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
