@@ -129,6 +129,8 @@ if ($isPremium) {
                         <div class="col-md-4"><strong>City:</strong> <?= htmlspecialchars($user['city'] ?? '-') ?: '-' ?></div>
                         <div class="col-md-4"><strong>State:</strong> <?= htmlspecialchars($user['state'] ?? '-') ?: '-' ?></div>
                         <div class="col-md-4"><strong>Country:</strong> <?= htmlspecialchars($user['country'] ?? '-') ?: '-' ?></div>
+                        <div class="col-md-8"><strong>Address:</strong> <?= htmlspecialchars($user['address'] ?? '') ?: '-' ?></div>
+                        <div class="col-md-4"><strong>Property Status:</strong> <?= htmlspecialchars($user['address_type'] ?? '') ?: '-' ?></div>
                     </div>
                 </div>
             </div>

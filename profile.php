@@ -169,7 +169,17 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="col-6"><small class="text-muted">Samaj Name:</small><br><strong><?= !empty($profile['caste']) ? sanitize($profile['caste']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Sub Samaj:</small><br><strong><?= !empty($profile['sub_caste']) ? sanitize($profile['sub_caste']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
                                 <div class="col-6"><small class="text-muted">Mother Tongue:</small><br><strong><?= !empty($profile['mother_tongue']) ? sanitize($profile['mother_tongue']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
-                                <div class="col-6"><small class="text-muted">Location:</small><br><strong><?= !empty($profile['city']) || !empty($profile['state']) ? sanitize(($profile['city'] ? $profile['city'] . ', ' : '') . ($profile['state'] ?? '')) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">City:</small><br><strong><?= !empty($profile['city']) ? sanitize($profile['city']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">State:</small><br><strong><?= !empty($profile['state']) ? sanitize($profile['state']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <div class="col-6"><small class="text-muted">Country:</small><br><strong><?= !empty($profile['country']) ? sanitize($profile['country']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                <?php if ($isOwner || $isConnected || $viewerIsSuperAdmin): ?>
+                                    <div class="col-6"><small class="text-muted">Address:</small><br><strong><?= !empty($profile['address']) ? sanitize($profile['address']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                    <?php if (!empty($profile['address'])): ?>
+                                        <div class="col-6"><small class="text-muted">Property Status:</small><br><strong><?= !empty($profile['address_type']) ? sanitize($profile['address_type']) : '<span class="text-muted fst-italic">Not Provided</span>' ?></strong></div>
+                                    <?php endif; ?>
+                                <?php elseif (!empty($profile['address'])): ?>
+                                    <div class="col-6"><small class="text-muted">Address:</small><br><span class="text-muted"><i class="bi bi-lock-fill me-1"></i>Visible to connections only</span></div>
+                                <?php endif; ?>
                             </div>
 
                             <?php if (isLoggedIn() && !$isOwner): ?>
