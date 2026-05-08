@@ -1343,7 +1343,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function refreshCheckboxState() {
         var hasBasic = basicAddressInput && basicAddressInput.value.trim() !== '';
-        sameCheckbox.disabled = !hasBasic;
+        var hasParents = parentsInput.value.trim() !== '';
+        // Disable when basic is empty OR (parents has its own value AND checkbox is currently unchecked)
+        var shouldDisable = !hasBasic || (hasParents && !sameCheckbox.checked);
+        sameCheckbox.disabled = shouldDisable;
         if (sameHint) sameHint.style.display = hasBasic ? 'none' : '';
         if (!hasBasic && sameCheckbox.checked) {
             sameCheckbox.checked = false;
@@ -1359,6 +1362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (basicAddressInput) basicAddressInput.addEventListener('input', refreshCheckboxState);
     if (basicAddressType) basicAddressType.addEventListener('change', refreshCheckboxState);
+    parentsInput.addEventListener('input', refreshCheckboxState);
 
     // Re-enable parents_address_type before submit so its value is included in POST
     // (disabled selects are not submitted by browsers)
