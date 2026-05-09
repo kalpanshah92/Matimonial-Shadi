@@ -1301,12 +1301,6 @@ require_once __DIR__ . '/includes/header.php';
                     hasDraft = true; break;
                 }
             }
-            if (hasDraft) {
-                var notice = document.createElement('div');
-                notice.className = 'alert alert-info py-2 px-3 mb-3 small';
-                notice.innerHTML = '<i class="bi bi-info-circle me-1"></i>Unsaved draft restored. Click <strong>Save</strong> to submit your changes for review.';
-                form.insertBefore(notice, form.firstChild.nextSibling);
-            }
         });
     });
 })();
