@@ -470,6 +470,9 @@ require_once __DIR__ . '/includes/header.php';
             .section-form .btn {
                 display: none;
             }
+            .section-form #saveContact {
+                display: inline-block;
+            }
         </style>
 
         <div class="accordion" id="profileAccordion">
