@@ -25,8 +25,8 @@ $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM profile_visits WHERE visite
 $stmt->execute([$userId]);
 $recentVisits = $stmt->fetch()['count'];
 
-// Shortlisted by others
-$stmt = $pdo->prepare("SELECT COUNT(*) as count FROM shortlisted WHERE shortlisted_id = ?");
+// My shortlisted profiles
+$stmt = $pdo->prepare("SELECT COUNT(*) as count FROM shortlisted WHERE user_id = ?");
 $stmt->execute([$userId]);
 $shortlistedByCount = $stmt->fetch()['count'];
 
@@ -112,7 +112,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="dashboard-card dashboard-stat" style="cursor: pointer;" onclick="window.location.href='<?= SITE_URL ?>/shortlist.php'">
                     <div class="stat-icon stat-info"><i class="bi bi-bookmark-heart"></i></div>
                     <h3><?= $shortlistedByCount ?></h3>
-                    <p>Shortlisted By</p>
+                    <p>My Shortlist</p>
                 </div>
             </div>
         </div>
