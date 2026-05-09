@@ -218,12 +218,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
 
                 case 'contact':
-                    $newData = [
-                        'phone' => sanitize($_POST['phone'] ?? ''),
-                    ];
+                    $countryCode = sanitize($_POST['country_code'] ?? '+91');
+                    $cleanCountryCode = preg_replace('/-.*$/', '', $countryCode);
+                    $rawPhone = sanitize($_POST['phone'] ?? '');
+
+                    if (empty($rawPhone) || !preg_match('/^[0-9]+$/', $rawPhone)) {
+                        $errors[] = 'Valid mobile number is required.';
+                        $activeTab = 'contact';
+                        break;
+                    }
+
+                    $fullPhone = $cleanCountryCode . ' ' . $rawPhone;
 
                     // Update phone directly (no admin approval needed for contact info)
-                    $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?")->execute([$newData['phone'], $userId]);
+                    $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?")->execute([$fullPhone, $userId]);
 
                     setFlash('success', 'Contact details updated successfully.');
                     redirect(SITE_URL . '/edit-profile.php?tab=contact');
@@ -907,9 +915,82 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="hidden" name="section" value="contact">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" name="phone" value="<?= sanitize($currentUser['phone'] ?? '') ?>" pattern="[0-9]{10}" title="Enter 10-digit phone number">
-                                <small class="text-muted">10-digit phone number</small>
+                                <label class="form-label">Mobile Number</label>
+                                <?php
+                                $contactCountryCodes = [
+                                    '+91' => 'India (+91)',
+                                    '+1-us' => 'USA (+1)',
+                                    '+1-ca' => 'Canada (+1)',
+                                    '+61' => 'Australia (+61)',
+                                    '+64' => 'New Zealand (+64)',
+                                    '+44' => 'UK (+44)',
+                                    '+355' => 'Albania (+355)',
+                                    '+376' => 'Andorra (+376)',
+                                    '+43' => 'Austria (+43)',
+                                    '+375' => 'Belarus (+375)',
+                                    '+32' => 'Belgium (+32)',
+                                    '+387' => 'Bosnia and Herzegovina (+387)',
+                                    '+359' => 'Bulgaria (+359)',
+                                    '+385' => 'Croatia (+385)',
+                                    '+357' => 'Cyprus (+357)',
+                                    '+420' => 'Czech Republic (+420)',
+                                    '+45' => 'Denmark (+45)',
+                                    '+372' => 'Estonia (+372)',
+                                    '+358' => 'Finland (+358)',
+                                    '+33' => 'France (+33)',
+                                    '+49' => 'Germany (+49)',
+                                    '+30' => 'Greece (+30)',
+                                    '+36' => 'Hungary (+36)',
+                                    '+354' => 'Iceland (+354)',
+                                    '+353' => 'Ireland (+353)',
+                                    '+39' => 'Italy (+39)',
+                                    '+383' => 'Kosovo (+383)',
+                                    '+371' => 'Latvia (+371)',
+                                    '+423' => 'Liechtenstein (+423)',
+                                    '+370' => 'Lithuania (+370)',
+                                    '+352' => 'Luxembourg (+352)',
+                                    '+356' => 'Malta (+356)',
+                                    '+373' => 'Moldova (+373)',
+                                    '+377' => 'Monaco (+377)',
+                                    '+382' => 'Montenegro (+382)',
+                                    '+31' => 'Netherlands (+31)',
+                                    '+389' => 'North Macedonia (+389)',
+                                    '+47' => 'Norway (+47)',
+                                    '+48' => 'Poland (+48)',
+                                    '+351' => 'Portugal (+351)',
+                                    '+40' => 'Romania (+40)',
+                                    '+7' => 'Russia (+7)',
+                                    '+378' => 'San Marino (+378)',
+                                    '+381' => 'Serbia (+381)',
+                                    '+421' => 'Slovakia (+421)',
+                                    '+386' => 'Slovenia (+386)',
+                                    '+34' => 'Spain (+34)',
+                                    '+46' => 'Sweden (+46)',
+                                    '+41' => 'Switzerland (+41)',
+                                    '+90' => 'Turkey (+90)',
+                                    '+380' => 'Ukraine (+380)',
+                                    '+379' => 'Vatican City (+379)',
+                                ];
+                                // Parse stored phone (format: "+CC NNNNNN")
+                                $storedPhone = $currentUser['phone'] ?? '';
+                                $existingCode = '+91';
+                                $existingNumber = $storedPhone;
+                                if (preg_match('/^(\+\d+)\s+(.+)$/', $storedPhone, $m)) {
+                                    $existingCode = $m[1];
+                                    $existingNumber = $m[2];
+                                } else {
+                                    // Legacy: no country code prefix
+                                    $existingNumber = preg_replace('/[^0-9]/', '', $storedPhone);
+                                }
+                                ?>
+                                <div class="input-group">
+                                    <select name="country_code" class="form-select" style="max-width: 150px;">
+                                        <?php foreach ($contactCountryCodes as $val => $label): $codeOnly = preg_replace('/-.*$/', '', $val); ?>
+                                            <option value="<?= $val ?>" <?= $codeOnly === $existingCode ? 'selected' : '' ?>><?= $label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <input type="tel" class="form-control" name="phone" value="<?= htmlspecialchars($existingNumber) ?>" placeholder="Mobile number" required>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3" id="saveContact"><i class="bi bi-check-lg me-1"></i>Save Contact Details</button>
