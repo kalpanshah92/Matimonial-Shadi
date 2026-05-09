@@ -499,15 +499,15 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Country</label>
-                                <input type="text" class="form-control" name="country" value="<?= sanitize($currentUser['country'] ?? '') ?>">
+                                <select class="form-select" id="country_select" data-selected-name="<?= htmlspecialchars($currentUser['country'] ?? 'India') ?>">
+                                    <option value="">Loading countries...</option>
+                                </select>
+                                <input type="hidden" name="country" id="country" value="<?= htmlspecialchars($currentUser['country'] ?? 'India') ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">State</label>
-                                <select name="state" class="form-select">
-                                    <option value="">Select</option>
-                                    <?php foreach ($INDIAN_STATES as $state): ?>
-                                        <option value="<?= $state ?>" <?= ($currentUser['state'] ?? '') === $state ? 'selected' : '' ?>><?= $state ?></option>
-                                    <?php endforeach; ?>
+                                <select class="form-select" id="state" name="state" data-selected="<?= htmlspecialchars($currentUser['state'] ?? '') ?>" disabled>
+                                    <option value="">Select Country First</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -1328,6 +1328,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     bindToggle('address', 'address_type_wrapper', 'address_type');
     bindToggle('parents_address', 'parents_address_type_wrapper', 'parents_address_type');
+})();
+
+// Country/State cascading dropdown
+(function() {
+    var countrySelect = document.getElementById('country_select');
+    var countryHidden = document.getElementById('country');
+    var stateSelect = document.getElementById('state');
+    var selectedCountryName = countrySelect.dataset.selectedName || 'India';
+    var selectedState = stateSelect.dataset.selected || '';
+    var countriesData = {};
+
+    function populateStates(countryCode) {
+        stateSelect.innerHTML = '';
+        if (!countryCode || !countriesData[countryCode]) {
+            stateSelect.innerHTML = '<option value="">Select Country First</option>';
+            stateSelect.disabled = true;
+            return;
+        }
+        var divisions = countriesData[countryCode].divisions || {};
+        var keys = Object.keys(divisions).sort(function(a, b) {
+            return divisions[a].localeCompare(divisions[b]);
+        });
+        var defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Select State';
+        stateSelect.appendChild(defaultOpt);
+        keys.forEach(function(k) {
+            var opt = document.createElement('option');
+            opt.value = divisions[k];
+            opt.textContent = divisions[k];
+            if (divisions[k] === selectedState) opt.selected = true;
+            stateSelect.appendChild(opt);
+        });
+        stateSelect.disabled = false;
+    }
+
+    fetch('<?= SITE_URL ?>/assets/data/iso-3166-2.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            countriesData = data;
+            // Populate countries sorted by name
+            var codes = Object.keys(data).sort(function(a, b) {
+                return data[a].name.localeCompare(data[b].name);
+            });
+            countrySelect.innerHTML = '<option value="">Select Country</option>';
+            var matchedCode = '';
+            codes.forEach(function(code) {
+                var opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = data[code].name;
+                if (data[code].name === selectedCountryName) {
+                    opt.selected = true;
+                    matchedCode = code;
+                }
+                countrySelect.appendChild(opt);
+            });
+            // Auto-populate state if a country is preselected
+            if (matchedCode) {
+                countryHidden.value = data[matchedCode].name;
+                populateStates(matchedCode);
+            }
+        })
+        .catch(function() {
+            countrySelect.innerHTML = '<option value="">Failed to load countries</option>';
+        });
+
+    countrySelect.addEventListener('change', function() {
+        selectedState = '';
+        var code = this.value;
+        countryHidden.value = (code && countriesData[code]) ? countriesData[code].name : '';
+        populateStates(code);
+    });
 })();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
