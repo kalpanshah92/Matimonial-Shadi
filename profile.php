@@ -462,13 +462,13 @@ require_once __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <!-- Lightbox Modal -->
-<div class="modal fade" id="lightboxModal" tabindex="-1">
+<div class="modal fade" id="lightboxModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 py-2">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center">
+            <div class="modal-body text-center p-2">
                 <img id="lightboxImage" src="" class="img-fluid rounded" style="max-height: 80vh;">
             </div>
         </div>
