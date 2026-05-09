@@ -897,6 +897,22 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Diet</label>
                                 <input type="text" class="form-control" name="pref_diet" value="<?= sanitize($partnerPrefs['diet'] ?? '') ?>">
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Smoking</label>
+                                <select name="pref_smoking" class="form-select">
+                                    <option value="No" <?= ($partnerPrefs['smoking'] ?? "Doesn't Matter") === 'No' ? 'selected' : '' ?>>No</option>
+                                    <option value="Yes" <?= ($partnerPrefs['smoking'] ?? "Doesn't Matter") === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="Doesn't Matter" <?= ($partnerPrefs['smoking'] ?? "Doesn't Matter") === "Doesn't Matter" ? 'selected' : '' ?>>Doesn't Matter</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Drinking</label>
+                                <select name="pref_drinking" class="form-select">
+                                    <option value="No" <?= ($partnerPrefs['drinking'] ?? "Doesn't Matter") === 'No' ? 'selected' : '' ?>>No</option>
+                                    <option value="Yes" <?= ($partnerPrefs['drinking'] ?? "Doesn't Matter") === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="Doesn't Matter" <?= ($partnerPrefs['drinking'] ?? "Doesn't Matter") === "Doesn't Matter" ? 'selected' : '' ?>>Doesn't Matter</option>
+                                </select>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label">About Desired Partner</label>
                                 <textarea name="pref_about_partner" class="form-control" rows="3"><?= sanitize($partnerPrefs['about_partner'] ?? '') ?></textarea>
