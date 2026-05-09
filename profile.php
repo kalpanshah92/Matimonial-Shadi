@@ -131,7 +131,8 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap">
                                     <?php foreach (array_slice($photos, 0, 4) as $photo): ?>
                                         <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" 
-                                             class="rounded" width="50" height="50" style="object-fit: cover;">
+                                             class="rounded" width="50" height="50" style="object-fit: cover; cursor: pointer;"
+                                             onclick="openLightbox('<?= SITE_URL . '/' . $photo['photo_path'] ?>')">
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
@@ -459,5 +460,27 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 <?php endif; ?>
+
+<!-- Lightbox Modal -->
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="lightboxImage" src="" class="img-fluid rounded" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openLightbox(imageSrc) {
+    document.getElementById('lightboxImage').src = imageSrc;
+    var lightboxModal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+    lightboxModal.show();
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
