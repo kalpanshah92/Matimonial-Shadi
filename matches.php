@@ -8,12 +8,39 @@ $userId = $currentUser['id'];
 $page = max(1, intval($_GET['page'] ?? 1));
 $offset = ($page - 1) * RESULTS_PER_PAGE;
 
-$matches = getMatchedProfiles($userId, RESULTS_PER_PAGE, $offset);
+// Get connected profiles only
+$stmt = $pdo->prepare("
+    SELECT u.*, pd.height, pd.education, pd.occupation, pd.annual_income
+    FROM users u
+    LEFT JOIN profile_details pd ON u.id = pd.user_id
+    INNER JOIN connection_requests cr ON (
+        (cr.sender_id = u.id AND cr.receiver_id = ?) OR
+        (cr.receiver_id = u.id AND cr.sender_id = ?)
+    )
+    WHERE cr.status = 'accepted'
+    AND u.id != ?
+    AND u.is_active = 1
+    AND u.status = 'approved'
+    ORDER BY cr.updated_at DESC
+    LIMIT ? OFFSET ?
+");
+$stmt->execute([$userId, $userId, $userId, RESULTS_PER_PAGE, $offset]);
+$matches = $stmt->fetchAll();
 
-// Count total matches
-$oppositeGender = ($currentUser['gender'] === 'Male') ? 'Female' : 'Male';
-$stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE gender = ? AND id != ? AND is_active = 1 AND status = 'approved'");
-$stmt->execute([$oppositeGender, $userId]);
+// Count total connected profiles
+$stmt = $pdo->prepare("
+    SELECT COUNT(*) as count
+    FROM users u
+    INNER JOIN connection_requests cr ON (
+        (cr.sender_id = u.id AND cr.receiver_id = ?) OR
+        (cr.receiver_id = u.id AND cr.sender_id = ?)
+    )
+    WHERE cr.status = 'accepted'
+    AND u.id != ?
+    AND u.is_active = 1
+    AND u.status = 'approved'
+");
+$stmt->execute([$userId, $userId, $userId]);
 $totalMatches = $stmt->fetch()['count'];
 $totalPages = ceil($totalMatches / RESULTS_PER_PAGE);
 
@@ -23,7 +50,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-4 bg-warm">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="bi bi-heart me-2 text-danger"></i>Your Matches (<?= $totalMatches ?>)</h3>
+            <h3><i class="bi bi-heart me-2 text-danger"></i>Your Connections (<?= $totalMatches ?>)</h3>
             <a href="<?= SITE_URL ?>/search.php" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-funnel me-1"></i>Advanced Search
             </a>
@@ -44,7 +71,6 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="d-flex justify-content-between">
                                     <div>
                                         <h6 class="mb-1"><?= sanitize($match['name']) ?></h6>
-                                        <small class="text-muted"><?= $match['profile_id'] ?? '' ?></small>
                                     </div>
                                     <button class="btn btn-sm btn-outline-danger btn-shortlist" data-profile-id="<?= $match['id'] ?>">
                                         <i class="bi bi-heart"></i>
@@ -55,7 +81,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <?php if (!empty($match['height'])): ?>
                                         <span><i class="bi bi-rulers"></i> <?= formatHeight($match['height']) ?></span>
                                     <?php endif; ?>
-                                    <span><i class="bi bi-geo-alt"></i> <?= sanitize($match['city'] ?? $match['state'] ?? 'India') ?></span>
+                                    <span><i class="bi bi-geo-alt"></i> <?= sanitize($match['country'] ?? '') ?>, <?= sanitize($match['state'] ?? '') ?>, <?= sanitize($match['city'] ?? '') ?></span>
                                 </div>
                                 <div class="d-flex gap-2 mt-3">
                                     <a href="<?= SITE_URL ?>/profile.php?id=<?= $match['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View</a>
