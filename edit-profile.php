@@ -276,7 +276,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
                         $result = uploadPhoto($_FILES['profile_photo'], $userId);
                         if ($result['success']) {
-                            $setAsPrimary = isset($_POST['set_primary']) ? 1 : 0;
+                            // Check if this is the user's first photo
+                            $photoCountStmt = $pdo->prepare("SELECT COUNT(*) as count FROM photos WHERE user_id = ?");
+                            $photoCountStmt->execute([$userId]);
+                            $photoCount = $photoCountStmt->fetch()['count'];
+                            
+                            // First photo is always set as primary
+                            $setAsPrimary = ($photoCount === 0) ? 1 : (isset($_POST['set_primary']) ? 1 : 0);
                             
                             $stmt = $pdo->prepare("INSERT INTO photos (user_id, photo_path, is_primary, is_approved) VALUES (?, ?, ?, 0)");
                             $stmt->execute([$userId, $result['path'], $setAsPrimary]);
