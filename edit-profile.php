@@ -204,8 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'max_income' => sanitize($_POST['pref_max_income'] ?? ''),
                         'state' => sanitize($_POST['pref_state'] ?? ''),
                         'diet' => sanitize($_POST['pref_diet'] ?? ''),
-                        'smoking' => sanitize($_POST['pref_smoking'] ?? "Doesn't Matter"),
-                        'drinking' => sanitize($_POST['pref_drinking'] ?? "Doesn't Matter"),
+                        'smoking' => trim($_POST['pref_smoking'] ?? "Doesn't Matter"),
+                        'drinking' => trim($_POST['pref_drinking'] ?? "Doesn't Matter"),
                         'about_partner' => sanitize($_POST['pref_about_partner'] ?? ''),
                     ]);
                     setFlash('success', 'Partner preferences updated successfully.');
