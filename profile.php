@@ -461,26 +461,42 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Lightbox Modal -->
-<div class="modal fade" id="lightboxModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark border-0">
-            <div class="modal-header border-0 py-2">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center p-2">
-                <img id="lightboxImage" src="" class="img-fluid rounded" style="max-height: 80vh;">
-            </div>
-        </div>
-    </div>
+<!-- Lightbox Overlay -->
+<div id="lightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; cursor:pointer;">
+    <button type="button" id="lightboxClose" aria-label="Close"
+            style="position:absolute; top:20px; right:30px; background:transparent; border:none; color:#fff; font-size:2.5rem; line-height:1; cursor:pointer; z-index:10000;">&times;</button>
+    <img id="lightboxImage" src="" style="max-width:90%; max-height:90vh; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.5);">
 </div>
 
 <script>
 function openLightbox(imageSrc) {
     document.getElementById('lightboxImage').src = imageSrc;
-    var lightboxModal = new bootstrap.Modal(document.getElementById('lightboxModal'));
-    lightboxModal.show();
+    document.getElementById('lightboxOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
+function closeLightbox() {
+    document.getElementById('lightboxOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('lightboxOverlay');
+    var closeBtn = document.getElementById('lightboxClose');
+    var img = document.getElementById('lightboxImage');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeLightbox();
+        });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeLightbox);
+    }
+    if (img) {
+        img.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
