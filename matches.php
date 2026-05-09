@@ -85,9 +85,6 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                                 <div class="d-flex gap-2 mt-3">
                                     <a href="<?= SITE_URL ?>/profile.php?id=<?= $match['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View</a>
-                                    <button class="btn btn-primary btn-sm btn-connect" data-profile-id="<?= $match['id'] ?>">
-                                        <i class="bi bi-person-plus"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
