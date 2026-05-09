@@ -4,12 +4,31 @@ require_once __DIR__ . '/includes/functions.php';
 
 $pdo = getDBConnection();
 
-// Fetch active plans
+// Check if logged-in user has an active premium subscription
+$activeSubscription = null;
+$loggedInUser = getCurrentUser();
+if ($loggedInUser) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT s.*, p.name AS plan_name
+             FROM subscriptions s
+             JOIN plans p ON p.id = s.plan_id
+             WHERE s.user_id = ? AND s.status = 'active' AND s.end_date >= CURDATE()
+             ORDER BY s.end_date DESC LIMIT 1"
+        );
+        $stmt->execute([$loggedInUser['id']]);
+        $activeSubscription = $stmt->fetch() ?: null;
+    } catch (Exception $e) {}
+}
+
+// Fetch active plans (only needed if user is not premium)
 $plans = [];
-try {
-    $stmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
-    $plans = $stmt->fetchAll();
-} catch (Exception $e) {}
+if (!$activeSubscription) {
+    try {
+        $stmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
+        $plans = $stmt->fetchAll();
+    } catch (Exception $e) {}
+}
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,6 +36,40 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Plans Section -->
 <section class="py-5 bg-warm">
     <div class="container">
+        <?php if ($activeSubscription): ?>
+            <?php
+                $endDate = $activeSubscription['end_date'];
+                $startDate = $activeSubscription['start_date'];
+                $daysLeft = max(0, (int) ceil((strtotime($endDate) - time()) / 86400));
+            ?>
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">You're a Premium Member</h2>
+                <p class="section-subtitle">Thank you for subscribing to <?= sanitize($activeSubscription['plan_name']) ?></p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-7 col-md-9">
+                    <div class="plan-card text-center">
+                        <i class="bi bi-star-fill text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="plan-name mt-3"><?= sanitize($activeSubscription['plan_name']) ?></h4>
+                        <p class="text-muted mb-4">Your premium plan is currently active.</p>
+                        <div class="row text-center g-3">
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Start Date</small>
+                                <strong><?= date('d M Y', strtotime($startDate)) ?></strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">End Date</small>
+                                <strong class="text-primary"><?= date('d M Y', strtotime($endDate)) ?></strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Days Remaining</small>
+                                <strong><?= $daysLeft ?> days</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
         <div class="section-header text-center mb-5">
             <h2 class="section-title">Choose Your Plan</h2>
             <p class="section-subtitle">Upgrade to premium for better matchmaking experience</p>
@@ -61,6 +114,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
         <!-- FAQ -->
         <div class="row justify-content-center mt-5">
