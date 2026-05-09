@@ -131,8 +131,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap">
                                     <?php foreach (array_slice($photos, 0, 4) as $photo): ?>
                                         <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" 
-                                             class="rounded" width="50" height="50" style="object-fit: cover; cursor: pointer;" 
-                                             onclick="document.querySelector('.rounded-circle').src=this.src">
+                                             class="rounded" width="50" height="50" style="object-fit: cover;">
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
