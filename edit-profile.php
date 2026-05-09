@@ -373,7 +373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strpos($e->getMessage(), 'profile_change_requests') !== false) {
                 $errors[] = 'Profile change tracking table is missing. Please contact the administrator to run the database migration.';
             } else {
-                $errors[] = 'Failed to update profile. Please try again.';
+                $errors[] = 'Failed to update profile. Error: ' . $e->getMessage();
             }
         }
     }
