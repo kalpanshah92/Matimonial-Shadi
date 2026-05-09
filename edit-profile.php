@@ -417,7 +417,12 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-4 bg-warm">
     <div class="container">
         <h3 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Profile</h3>
-        
+
+        <div class="alert alert-info sticky-note" style="position: sticky; top: 10px; z-index: 1000;">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Note:</strong> Make sure to save all your edits. Change of Name and Phone number would require admin permission.
+        </div>
+
         <?php if (!empty($pendingChanges)): ?>
             <div class="alert alert-warning">
                 <i class="bi bi-clock-history me-2"></i>
