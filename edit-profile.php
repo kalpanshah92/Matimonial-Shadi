@@ -229,6 +229,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($fullPhone !== ($currentUser['phone'] ?? '')) {
                         $oldData = ['phone' => $currentUser['phone'] ?? ''];
                         $newData = ['phone' => $fullPhone];
+                    } else {
+                        setFlash('info', 'No changes detected.');
+                        redirect(SITE_URL . '/edit-profile.php?tab=contact');
                     }
                     $activeTab = 'contact';
                     break;
