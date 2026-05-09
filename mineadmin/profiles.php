@@ -277,17 +277,17 @@ $(document).ready(function() {
             var planName = $(this).text().toLowerCase();
             var isFemalePlan = planName.indexOf('female') !== -1;
             var isMalePlan = !isFemalePlan && planName.indexOf('male') !== -1;
+            var show = true;
             if (userGender === 'female') {
-                $(this).toggle(isFemalePlan);
+                show = isFemalePlan;
             } else if (userGender === 'male') {
-                $(this).toggle(isMalePlan);
-            } else {
-                $(this).show();
+                show = isMalePlan;
             }
+            $(this).prop('hidden', !show).prop('disabled', !show);
         });
 
         // Select first visible option
-        var firstVisible = $('#premiumPlanId option:not(:hidden)').first();
+        var firstVisible = $('#premiumPlanId option:not([hidden]):not(:disabled)').first();
         if (firstVisible.length) {
             $('#premiumPlanId').val(firstVisible.val());
         }
