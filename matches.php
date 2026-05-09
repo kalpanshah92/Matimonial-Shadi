@@ -59,9 +59,6 @@ require_once __DIR__ . '/includes/header.php';
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><i class="bi bi-heart me-2 text-danger"></i>Your Connections (<?= $totalMatches ?>)</h3>
-            <a href="<?= SITE_URL ?>/search.php" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-funnel me-1"></i>Advanced Search
-            </a>
         </div>
 
         <?php if (!empty($matches)): ?>
