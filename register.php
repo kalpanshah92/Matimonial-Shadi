@@ -16,10 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Collect and sanitize input
+    $countryCode = sanitize($_POST['country_code'] ?? '+91');
+    // Normalize country code (strip "-us", "-ca" suffixes for storage)
+    $cleanCountryCode = preg_replace('/-.*$/', '', $countryCode);
+    $rawPhone = sanitize($_POST['phone'] ?? '');
     $formData = [
         'name'       => sanitize($_POST['name'] ?? ''),
         'email'      => sanitize($_POST['email'] ?? ''),
-        'phone'      => sanitize($_POST['phone'] ?? ''),
+        'country_code' => $countryCode,
+        'phone'      => $rawPhone ? $cleanCountryCode . ' ' . $rawPhone : '',
         'password'   => $_POST['password'] ?? '',
         'confirm_password' => $_POST['confirm_password'] ?? '',
         'gender'     => sanitize($_POST['gender'] ?? ''),
@@ -36,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validation
     if (empty($formData['name'])) $errors[] = 'Name is required.';
     if (empty($formData['email']) || !filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
-    if (empty($formData['phone']) || !preg_match('/^[6-9]\d{9}$/', $formData['phone'])) $errors[] = 'Valid Indian mobile number is required.';
+    if (empty($rawPhone) || !preg_match('/^[0-9]+$/', $rawPhone)) $errors[] = 'Valid mobile number is required.';
     if (strlen($formData['password']) < 8) $errors[] = 'Password must be at least 8 characters long.';
     if (!preg_match('/[0-9]/', $formData['password'])) $errors[] = 'Password must contain at least 1 number.';
     if (!preg_match('/[a-zA-Z]/', $formData['password'])) $errors[] = 'Password must contain at least 1 letter.';
@@ -68,48 +73,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Phone number can be shared across profiles (family registrations)
     }
     
-    // Register user
+    // Send OTP and redirect to verification screen
     if (empty($errors)) {
-        try {
-            $pdo = getDBConnection();
-            $profileId = generateProfileId($formData['gender']);
-            $hashedPassword = password_hash($formData['password'], PASSWORD_DEFAULT);
-            
-            $stmt = $pdo->prepare(
-                "INSERT INTO users (profile_id, name, email, phone, password, gender, dob, religion, caste, mother_tongue, country, state, city, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
-            );
-            
-            $stmt->execute([
-                $profileId,
-                $formData['name'],
-                $formData['email'],
-                $formData['phone'],
-                $hashedPassword,
-                $formData['gender'],
-                $formData['dob'],
-                $formData['religion'],
-                $formData['caste'],
-                $formData['mother_tongue'],
-                $formData['country'],
-                $formData['state'],
-                $formData['city']
-            ]);
-            
-            $userId = $pdo->lastInsertId();
-            
-            // Create empty profile records
-            $pdo->prepare("INSERT INTO profile_details (user_id) VALUES (?)")->execute([$userId]);
-            $pdo->prepare("INSERT INTO family_details (user_id) VALUES (?)")->execute([$userId]);
-            $pdo->prepare("INSERT INTO partner_preferences (user_id) VALUES (?)")->execute([$userId]);
-            $pdo->prepare("INSERT INTO privacy_settings (user_id) VALUES (?)")->execute([$userId]);
-            
-            setFlash('success', 'Registration successful! Your account is pending approval by admin. You will be able to login once approved.');
-            redirect(SITE_URL . '/login.php');
-            
-        } catch (PDOException $e) {
-            error_log("Registration Error: " . $e->getMessage());
-            $errors[] = 'Registration failed. Please try again.';
+        $otp = generateOTP();
+        if (saveOTP($formData['email'], $otp, 'registration')) {
+            $subject = 'Email Verification OTP - ' . SITE_NAME;
+            $body = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #C0392B; color: #fff; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
+                        .otp { font-size: 32px; font-weight: bold; color: #C0392B; text-align: center; margin: 20px 0; letter-spacing: 5px; }
+                        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'><h2>Verify Your Email</h2></div>
+                        <div class='content'>
+                            <p>Dear {$formData['name']},</p>
+                            <p>Thank you for registering at " . SITE_NAME . ". Please use the following OTP to verify your email address:</p>
+                            <div class='otp'>$otp</div>
+                            <p><strong>This OTP is valid for " . OTP_EXPIRY_MINUTES . " minutes.</strong></p>
+                            <p>If you did not register, please ignore this email.</p>
+                        </div>
+                        <div class='footer'><p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p></div>
+                    </div>
+                </body>
+                </html>
+            ";
+
+            if (sendEmail($formData['email'], $subject, $body)) {
+                // Store form data in session for verification step
+                $pendingData = $formData;
+                $pendingData['password'] = password_hash($formData['password'], PASSWORD_DEFAULT);
+                unset($pendingData['confirm_password']);
+                $_SESSION['pending_registration'] = $pendingData;
+                redirect(SITE_URL . '/verify-otp.php');
+            } else {
+                $errors[] = 'Failed to send verification email. Please try again later.';
+            }
+        } else {
+            $errors[] = 'Failed to generate OTP. Please try again.';
         }
     }
 }
@@ -194,9 +202,70 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Mobile Number <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">+91</span>
+                                    <?php
+                                    $countryCodes = [
+                                        '+91' => 'India (+91)',
+                                        '+1-us' => 'USA (+1)',
+                                        '+1-ca' => 'Canada (+1)',
+                                        '+61' => 'Australia (+61)',
+                                        '+64' => 'New Zealand (+64)',
+                                        '+44' => 'UK (+44)',
+                                        '+355' => 'Albania (+355)',
+                                        '+376' => 'Andorra (+376)',
+                                        '+43' => 'Austria (+43)',
+                                        '+375' => 'Belarus (+375)',
+                                        '+32' => 'Belgium (+32)',
+                                        '+387' => 'Bosnia and Herzegovina (+387)',
+                                        '+359' => 'Bulgaria (+359)',
+                                        '+385' => 'Croatia (+385)',
+                                        '+357' => 'Cyprus (+357)',
+                                        '+420' => 'Czech Republic (+420)',
+                                        '+45' => 'Denmark (+45)',
+                                        '+372' => 'Estonia (+372)',
+                                        '+358' => 'Finland (+358)',
+                                        '+33' => 'France (+33)',
+                                        '+49' => 'Germany (+49)',
+                                        '+30' => 'Greece (+30)',
+                                        '+36' => 'Hungary (+36)',
+                                        '+354' => 'Iceland (+354)',
+                                        '+353' => 'Ireland (+353)',
+                                        '+39' => 'Italy (+39)',
+                                        '+383' => 'Kosovo (+383)',
+                                        '+371' => 'Latvia (+371)',
+                                        '+423' => 'Liechtenstein (+423)',
+                                        '+370' => 'Lithuania (+370)',
+                                        '+352' => 'Luxembourg (+352)',
+                                        '+356' => 'Malta (+356)',
+                                        '+373' => 'Moldova (+373)',
+                                        '+377' => 'Monaco (+377)',
+                                        '+382' => 'Montenegro (+382)',
+                                        '+31' => 'Netherlands (+31)',
+                                        '+389' => 'North Macedonia (+389)',
+                                        '+47' => 'Norway (+47)',
+                                        '+48' => 'Poland (+48)',
+                                        '+351' => 'Portugal (+351)',
+                                        '+40' => 'Romania (+40)',
+                                        '+7' => 'Russia (+7)',
+                                        '+378' => 'San Marino (+378)',
+                                        '+381' => 'Serbia (+381)',
+                                        '+421' => 'Slovakia (+421)',
+                                        '+386' => 'Slovenia (+386)',
+                                        '+34' => 'Spain (+34)',
+                                        '+46' => 'Sweden (+46)',
+                                        '+41' => 'Switzerland (+41)',
+                                        '+90' => 'Turkey (+90)',
+                                        '+380' => 'Ukraine (+380)',
+                                        '+379' => 'Vatican City (+379)',
+                                    ];
+                                    $selectedCode = $formData['country_code'] ?? '+91';
+                                    ?>
+                                    <select name="country_code" class="form-select" style="max-width: 150px;">
+                                        <?php foreach ($countryCodes as $val => $label): ?>
+                                            <option value="<?= $val ?>" <?= $selectedCode === $val ? 'selected' : '' ?>><?= $label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                     <input type="tel" class="form-control" id="phone" name="phone" 
-                                           value="<?= $formData['phone'] ?? '' ?>" required placeholder="10-digit number" maxlength="10">
+                                           value="<?= htmlspecialchars(preg_replace('/^\+?\d+\s*/', '', $formData['phone'] ?? '')) ?>" required placeholder="Mobile number">
                                 </div>
                             </div>
                             
