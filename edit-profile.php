@@ -5,6 +5,51 @@ require_once __DIR__ . '/includes/auth.php';
 $pdo = getDBConnection();
 $userId = $currentUser['id'];
 
+// Helpers: direct UPSERT-style updates for child tables
+function applyTableUpdate(PDO $pdo, $table, $userId, array $data) {
+    if (empty($data)) return;
+    // Check if row exists
+    $stmt = $pdo->prepare("SELECT 1 FROM $table WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $exists = (bool) $stmt->fetchColumn();
+
+    if ($exists) {
+        $sets = [];
+        $params = [];
+        foreach ($data as $f => $v) {
+            $sets[] = "$f = ?";
+            $params[] = $v;
+        }
+        $sets[] = 'updated_at = NOW()';
+        $params[] = $userId;
+        $sql = "UPDATE $table SET " . implode(', ', $sets) . " WHERE user_id = ?";
+        $pdo->prepare($sql)->execute($params);
+    } else {
+        $cols = ['user_id'];
+        $placeholders = ['?'];
+        $params = [$userId];
+        foreach ($data as $f => $v) {
+            $cols[] = $f;
+            $placeholders[] = '?';
+            $params[] = $v;
+        }
+        $sql = "INSERT INTO $table (" . implode(', ', $cols) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $pdo->prepare($sql)->execute($params);
+    }
+}
+
+function applyProfileDetailsUpdate(PDO $pdo, $userId, array $data) {
+    applyTableUpdate($pdo, 'profile_details', $userId, $data);
+}
+
+function applyFamilyDetailsUpdate(PDO $pdo, $userId, array $data) {
+    applyTableUpdate($pdo, 'family_details', $userId, $data);
+}
+
+function applyPartnerPrefsUpdate(PDO $pdo, $userId, array $data) {
+    applyTableUpdate($pdo, 'partner_preferences', $userId, $data);
+}
+
 // Fetch all profile data
 $stmt = $pdo->prepare("SELECT * FROM profile_details WHERE user_id = ?");
 $stmt->execute([$userId]);
@@ -40,33 +85,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             switch ($section) {
                 case 'basic':
-                    $oldData = [
-                        'name' => $currentUser['name'],
-                        'religion' => $currentUser['religion'],
-                        'caste' => $currentUser['caste'],
-                        'sub_caste' => $currentUser['sub_caste'],
-                        'mother_tongue' => $currentUser['mother_tongue'],
-                        'marital_status' => $currentUser['marital_status'],
-                        'address' => $currentUser['address'] ?? '',
-                        'address_type' => $currentUser['address_type'] ?? '',
-                        'country' => $currentUser['country'] ?? '',
-                        'state' => $currentUser['state'],
-                        'city' => $currentUser['city'],
-                        'about_me' => $currentUser['about_me'],
-                    ];
                     $submittedAddress = sanitize($_POST['address'] ?? '');
                     $submittedAddressType = sanitize($_POST['address_type'] ?? '');
-                    // Only keep address_type if address is provided and value is valid; null otherwise (ENUM column)
                     if (empty($submittedAddress) || !in_array($submittedAddressType, ['Own', 'Rent'], true)) {
                         $submittedAddressType = null;
                     }
                     $submittedMaritalStatus = sanitize($_POST['marital_status'] ?? '');
-                    // If marital_status is empty, keep the original value
                     if (empty($submittedMaritalStatus)) {
                         $submittedMaritalStatus = $currentUser['marital_status'] ?? '';
                     }
-                    $newData = [
-                        'name' => sanitize($_POST['name']),
+                    $submittedName = sanitize($_POST['name']);
+
+                    // Auto-update everything except name directly on users table
+                    $autoFields = [
                         'religion' => sanitize($_POST['religion']),
                         'caste' => sanitize($_POST['caste']),
                         'sub_caste' => sanitize($_POST['sub_caste'] ?? ''),
@@ -79,22 +110,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'city' => sanitize($_POST['city']),
                         'about_me' => sanitize($_POST['about_me']),
                     ];
+                    $sets = [];
+                    $params = [];
+                    foreach ($autoFields as $f => $v) {
+                        $sets[] = "$f = ?";
+                        $params[] = $v;
+                    }
+                    $sets[] = 'updated_at = NOW()';
+                    $params[] = $userId;
+                    $pdo->prepare("UPDATE users SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+
+                    // Name change requires admin approval
+                    if ($submittedName !== ($currentUser['name'] ?? '')) {
+                        $oldData = ['name' => $currentUser['name'] ?? ''];
+                        $newData = ['name' => $submittedName];
+                    } else {
+                        setFlash('success', 'Basic details updated successfully.');
+                        redirect(SITE_URL . '/edit-profile.php?tab=basic');
+                    }
                     $activeTab = 'basic';
                     break;
 
                 case 'personal':
-                    $oldData = [
-                        'height' => $details['height'] ?? '',
-                        'weight' => $details['weight'] ?? '',
-                        'complexion' => $details['complexion'] ?? '',
-                        'body_type' => $details['body_type'] ?? '',
-                        'blood_group' => $details['blood_group'] ?? '',
-                        'diet' => $details['diet'] ?? '',
-                        'smoking' => $details['smoking'] ?? 'No',
-                        'drinking' => $details['drinking'] ?? 'No',
-                        'hobbies' => $details['hobbies'] ?? '',
-                    ];
-                    $newData = [
+                    applyProfileDetailsUpdate($pdo, $userId, [
                         'height' => intval($_POST['height']),
                         'weight' => intval($_POST['weight'] ?? 0),
                         'complexion' => sanitize($_POST['complexion'] ?? ''),
@@ -104,21 +142,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'smoking' => sanitize($_POST['smoking'] ?? 'No'),
                         'drinking' => sanitize($_POST['drinking'] ?? 'No'),
                         'hobbies' => sanitize($_POST['hobbies'] ?? ''),
-                    ];
-                    $activeTab = 'personal';
+                    ]);
+                    setFlash('success', 'Personal details updated successfully.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=personal');
                     break;
 
                 case 'professional':
-                    $oldData = [
-                        'education' => $details['education'] ?? '',
-                        'education_detail' => $details['education_detail'] ?? '',
-                        'occupation' => $details['occupation'] ?? '',
-                        'occupation_detail' => $details['occupation_detail'] ?? '',
-                        'company' => $details['company'] ?? '',
-                        'annual_income' => $details['annual_income'] ?? '',
-                        'working_city' => $details['working_city'] ?? '',
-                    ];
-                    $newData = [
+                    applyProfileDetailsUpdate($pdo, $userId, [
                         'education' => sanitize($_POST['education']),
                         'education_detail' => sanitize($_POST['education_detail'] ?? ''),
                         'occupation' => sanitize($_POST['occupation']),
@@ -126,36 +156,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'company' => sanitize($_POST['company'] ?? ''),
                         'annual_income' => sanitize($_POST['annual_income'] ?? ''),
                         'working_city' => sanitize($_POST['working_city'] ?? ''),
-                    ];
-                    $activeTab = 'professional';
+                    ]);
+                    setFlash('success', 'Professional details updated successfully.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=professional');
                     break;
 
                 case 'family':
-                    $oldData = [
-                        'father_name' => $family['father_name'] ?? '',
-                        'father_occupation' => $family['father_occupation'] ?? '',
-                        'mother_name' => $family['mother_name'] ?? '',
-                        'mother_occupation' => $family['mother_occupation'] ?? '',
-                        'brothers' => $family['brothers'] ?? 0,
-                        'brothers_married' => $family['brothers_married'] ?? 0,
-                        'sisters' => $family['sisters'] ?? 0,
-                        'sisters_married' => $family['sisters_married'] ?? 0,
-                        'family_type' => $family['family_type'] ?? '',
-                        'family_status' => $family['family_status'] ?? '',
-                        'family_values' => $family['family_values'] ?? '',
-                        'gotra' => $family['gotra'] ?? '',
-                        'parents_address' => $family['parents_address'] ?? '',
-                        'parents_address_type' => $family['parents_address_type'] ?? '',
-                        'about_family' => $family['about_family'] ?? '',
-                    ];
-                    // Handle "Same as Above" - JS keeps parents fields synced with live basic input,
-                    // so simply use the submitted values regardless.
                     $parentsAddress = sanitize($_POST['parents_address'] ?? '');
                     $parentsAddressType = sanitize($_POST['parents_address_type'] ?? '');
                     if (empty($parentsAddress) || !in_array($parentsAddressType, ['Own', 'Rent'], true)) {
                         $parentsAddressType = null;
                     }
-                    $newData = [
+                    applyFamilyDetailsUpdate($pdo, $userId, [
                         'father_name' => sanitize($_POST['father_name'] ?? ''),
                         'father_occupation' => sanitize($_POST['father_occupation'] ?? ''),
                         'mother_name' => sanitize($_POST['mother_name'] ?? ''),
@@ -171,31 +183,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'parents_address' => $parentsAddress,
                         'parents_address_type' => $parentsAddressType,
                         'about_family' => sanitize($_POST['about_family'] ?? ''),
-                    ];
-                    $activeTab = 'family';
+                    ]);
+                    setFlash('success', 'Family details updated successfully.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=family');
                     break;
 
                 case 'partner':
-                    $oldData = [
-                        'min_age' => $partnerPrefs['min_age'] ?? 18,
-                        'max_age' => $partnerPrefs['max_age'] ?? 60,
-                        'min_height' => $partnerPrefs['min_height'] ?? 0,
-                        'max_height' => $partnerPrefs['max_height'] ?? 0,
-                        'marital_status' => $partnerPrefs['marital_status'] ?? '',
-                        'religion' => $partnerPrefs['religion'] ?? '',
-                        'caste' => $partnerPrefs['caste'] ?? '',
-                        'mother_tongue' => $partnerPrefs['mother_tongue'] ?? '',
-                        'education' => $partnerPrefs['education'] ?? '',
-                        'occupation' => $partnerPrefs['occupation'] ?? '',
-                        'min_income' => $partnerPrefs['min_income'] ?? '',
-                        'max_income' => $partnerPrefs['max_income'] ?? '',
-                        'state' => $partnerPrefs['state'] ?? '',
-                        'diet' => $partnerPrefs['diet'] ?? '',
-                        'smoking' => $partnerPrefs['smoking'] ?? "Doesn't Matter",
-                        'drinking' => $partnerPrefs['drinking'] ?? "Doesn't Matter",
-                        'about_partner' => $partnerPrefs['about_partner'] ?? '',
-                    ];
-                    $newData = [
+                    applyPartnerPrefsUpdate($pdo, $userId, [
                         'min_age' => intval($_POST['pref_min_age'] ?? 18),
                         'max_age' => intval($_POST['pref_max_age'] ?? 60),
                         'min_height' => intval($_POST['pref_min_height'] ?? 0),
@@ -213,8 +207,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'smoking' => sanitize($_POST['pref_smoking'] ?? "Doesn't Matter"),
                         'drinking' => sanitize($_POST['pref_drinking'] ?? "Doesn't Matter"),
                         'about_partner' => sanitize($_POST['pref_about_partner'] ?? ''),
-                    ];
-                    $activeTab = 'partner';
+                    ]);
+                    setFlash('success', 'Partner preferences updated successfully.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=partner');
                     break;
 
                 case 'contact':
@@ -230,11 +225,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $fullPhone = $cleanCountryCode . ' ' . $rawPhone;
 
-                    // Update phone directly (no admin approval needed for contact info)
-                    $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?")->execute([$fullPhone, $userId]);
-
-                    setFlash('success', 'Contact details updated successfully.');
-                    redirect(SITE_URL . '/edit-profile.php?tab=contact');
+                    // Contact details require admin approval
+                    if ($fullPhone !== ($currentUser['phone'] ?? '')) {
+                        $oldData = ['phone' => $currentUser['phone'] ?? ''];
+                        $newData = ['phone' => $fullPhone];
+                    }
+                    $activeTab = 'contact';
                     break;
 
                 case 'delete_photo':

@@ -104,7 +104,7 @@ switch ($action) {
             $pdo->beginTransaction();
 
             // Apply changes to users table (basic fields)
-            $basicFields = ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city', 'about_me'];
+            $basicFields = ['name', 'phone', 'email', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city', 'about_me'];
             $basicUpdates = [];
             $basicParams = [];
             foreach ($basicFields as $field) {
