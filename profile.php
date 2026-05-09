@@ -2,6 +2,11 @@
 $pageTitle = 'View Profile';
 require_once __DIR__ . '/includes/functions.php';
 
+// Check if user is logged in (either admin or regular user)
+if (!isset($_SESSION['admin_id']) && !isset($_SESSION['user_id'])) {
+    redirect(SITE_URL . '/index.php');
+}
+
 $profileId = intval($_GET['id'] ?? 0);
 if (!$profileId) {
     setFlash('error', 'Invalid profile.');
