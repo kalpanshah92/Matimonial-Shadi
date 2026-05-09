@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     caste VARCHAR(100),
     sub_caste VARCHAR(100),
     mother_tongue VARCHAR(50),
-    marital_status VARCHAR(30) DEFAULT 'Never Married',
+    marital_status VARCHAR(30) DEFAULT NULL,
     country VARCHAR(100) DEFAULT 'India',
     state VARCHAR(50),
     city VARCHAR(100),
