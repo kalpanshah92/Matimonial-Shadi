@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $oldData = ['name' => $currentUser['name'] ?? ''];
                         $newData = ['name' => $submittedName];
                     } else {
-                        setFlash('success', 'Basic details updated successfully.');
+                        setFlash('success', 'Profile Updated Successfully');
                         redirect(SITE_URL . '/edit-profile.php?tab=basic');
                     }
                     $activeTab = 'basic';
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'drinking' => sanitize($_POST['drinking'] ?? 'No'),
                         'hobbies' => sanitize($_POST['hobbies'] ?? ''),
                     ]);
-                    setFlash('success', 'Personal details updated successfully.');
+                    setFlash('success', 'Profile Updated Successfully');
                     redirect(SITE_URL . '/edit-profile.php?tab=personal');
                     break;
 
@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'annual_income' => sanitize($_POST['annual_income'] ?? ''),
                         'working_city' => sanitize($_POST['working_city'] ?? ''),
                     ]);
-                    setFlash('success', 'Professional details updated successfully.');
+                    setFlash('success', 'Profile Updated Successfully');
                     redirect(SITE_URL . '/edit-profile.php?tab=professional');
                     break;
 
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'parents_address_type' => $parentsAddressType,
                         'about_family' => sanitize($_POST['about_family'] ?? ''),
                     ]);
-                    setFlash('success', 'Family details updated successfully.');
+                    setFlash('success', 'Profile Updated Successfully');
                     redirect(SITE_URL . '/edit-profile.php?tab=family');
                     break;
 
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'drinking' => trim($_POST['pref_drinking'] ?? "Doesn't Matter"),
                         'about_partner' => sanitize($_POST['pref_about_partner'] ?? ''),
                     ]);
-                    setFlash('success', 'Partner preferences updated successfully.');
+                    setFlash('success', 'Profile Updated Successfully');
                     redirect(SITE_URL . '/edit-profile.php?tab=partner');
                     break;
 
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                             
                             $pdo->prepare("DELETE FROM photos WHERE id = ?")->execute([$photoId]);
-                            setFlash('success', 'Photo deleted successfully.');
+                            setFlash('success', 'Profile Updated Successfully');
                         } else {
                             $errors[] = 'Photo not found.';
                         }
@@ -284,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // Update users.profile_pic to this photo
                             $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?")->execute([$photo['photo_path'], $userId]);
                             
-                            setFlash('success', 'Primary photo updated successfully.');
+                            setFlash('success', 'Profile Updated Successfully');
                         } else {
                             $errors[] = 'Photo not found or not approved.';
                         }
