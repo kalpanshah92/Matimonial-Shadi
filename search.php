@@ -101,7 +101,8 @@ if (isLoggedIn()) {
         $stmt = $pdo->prepare("
             SELECT id, status FROM connection_requests
             WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
-            ORDER BY created_at DESC LIMIT 1
+            ORDER BY FIELD(status, 'accepted', 'pending', 'rejected'), created_at DESC
+            LIMIT 1
         ");
         $stmt->execute([$currentUserId, $profile['id'], $profile['id'], $currentUserId]);
         $request = $stmt->fetch();
