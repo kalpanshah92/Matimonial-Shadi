@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'My Shortlist';
+$pageTitle = 'Shortlisted By';
 require_once __DIR__ . '/includes/auth.php';
 
 $pdo = getDBConnection();
@@ -8,13 +8,13 @@ $userId = $currentUser['id'];
 $page = max(1, intval($_GET['page'] ?? 1));
 $offset = ($page - 1) * RESULTS_PER_PAGE;
 
-// Get shortlisted profiles
+// Get profiles that have shortlisted the current user
 $stmt = $pdo->prepare("
-    SELECT u.*, pd.height, pd.education, pd.occupation, pd.annual_income
+    SELECT u.*, pd.height, pd.education, pd.occupation, pd.annual_income, s.created_at as shortlisted_at
     FROM users u
     LEFT JOIN profile_details pd ON u.id = pd.user_id
-    INNER JOIN shortlisted s ON s.shortlisted_id = u.id
-    WHERE s.user_id = ?
+    INNER JOIN shortlisted s ON s.user_id = u.id
+    WHERE s.shortlisted_id = ?
     AND u.is_active = 1
     AND u.status = 'approved'
     ORDER BY s.created_at DESC
@@ -23,12 +23,12 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId, RESULTS_PER_PAGE, $offset]);
 $shortlisted = $stmt->fetchAll();
 
-// Count total shortlisted profiles
+// Count total profiles that have shortlisted the current user
 $stmt = $pdo->prepare("
     SELECT COUNT(*) as count
     FROM users u
-    INNER JOIN shortlisted s ON s.shortlisted_id = u.id
-    WHERE s.user_id = ?
+    INNER JOIN shortlisted s ON s.user_id = u.id
+    WHERE s.shortlisted_id = ?
     AND u.is_active = 1
     AND u.status = 'approved'
 ");
@@ -42,7 +42,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-4 bg-warm">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="bi bi-heart me-2 text-danger"></i>My Shortlist (<?= $totalShortlisted ?>)</h3>
+            <h3><i class="bi bi-heart me-2 text-danger"></i>Shortlisted By (<?= $totalShortlisted ?>)</h3>
             <a href="<?= SITE_URL ?>/search.php" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-funnel me-1"></i>Advanced Search
             </a>
@@ -107,9 +107,9 @@ require_once __DIR__ . '/includes/header.php';
         <?php else: ?>
             <div class="text-center py-5">
                 <i class="bi bi-heart" style="font-size: 4rem; color: var(--text-muted);"></i>
-                <h5 class="mt-3">No shortlisted profiles</h5>
-                <p class="text-muted">Click the heart icon on any profile to add it to your shortlist.</p>
-                <a href="<?= SITE_URL ?>/search.php" class="btn btn-primary">Search Profiles</a>
+                <h5 class="mt-3">No one has shortlisted you yet</h5>
+                <p class="text-muted">Complete your profile to get noticed by other members.</p>
+                <a href="<?= SITE_URL ?>/edit-profile.php" class="btn btn-primary">Complete Profile</a>
             </div>
         <?php endif; ?>
     </div>
