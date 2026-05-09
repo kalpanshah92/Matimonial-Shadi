@@ -171,7 +171,7 @@ $users = $stmt->fetchAll();
                                     <a href="view-profile.php?id=<?= $user['id'] ?>" class="btn btn-outline-primary" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+                                    <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin' && !$user['is_premium']): ?>
                                         <button class="btn btn-warning btn-upgrade-premium" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars($user['name']) ?>" data-user-gender="<?= htmlspecialchars($user['gender'] ?? '') ?>" title="Upgrade to Premium">
                                             <i class="bi bi-star"></i>
                                         </button>
