@@ -18,6 +18,20 @@ if (!$profileId || $profileId === $userId) {
 
 $pdo = getDBConnection();
 
+// Check if user is connected to the profile
+$stmt = $pdo->prepare("
+    SELECT id FROM connection_requests
+    WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+    AND status = 'accepted'
+");
+$stmt->execute([$userId, $profileId, $profileId, $userId]);
+$connection = $stmt->fetch();
+
+if (!$connection) {
+    echo json_encode(['success' => false, 'message' => 'You can only shortlist profiles you are connected to']);
+    exit;
+}
+
 // Check if already shortlisted
 $stmt = $pdo->prepare("SELECT id FROM shortlisted WHERE user_id = ? AND shortlisted_id = ?");
 $stmt->execute([$userId, $profileId]);
