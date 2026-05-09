@@ -86,6 +86,11 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= $currentPage === 'shortlist' ? 'active' : '' ?>" href="<?= SITE_URL ?>/shortlist.php">
+                            <i class="bi bi-bookmark-heart me-1"></i>Shortlist
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= $currentPage === 'chat' ? 'active' : '' ?>" href="<?= SITE_URL ?>/chat.php">
                             <i class="bi bi-chat-dots me-1"></i>Chat
                         </a>

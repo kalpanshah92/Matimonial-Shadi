@@ -211,16 +211,11 @@ require_once __DIR__ . '/includes/header.php';
                                             <div>
                                                 <h6 class="mb-1"><?= sanitize($profile['name']) ?></h6>
                                             </div>
-                                            <?php if (isLoggedIn()): ?>
-                                                <button class="btn btn-sm btn-outline-danger btn-shortlist" data-profile-id="<?= $profile['id'] ?>" title="Shortlist">
-                                                    <i class="bi bi-heart"></i>
-                                                </button>
-                                            <?php endif; ?>
                                         </div>
                                         <div class="profile-details-mini mt-2">
                                             <span><i class="bi bi-calendar3"></i> <?= calculateAge($profile['dob']) ?> yrs</span>
                                             <span><i class="bi bi-book"></i> <?= sanitize($profile['religion'] ?? 'Not specified') ?></span>
-                                            <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['state'] ?? 'India') ?></span>
+                                            <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['country'] ?? '') ?>, <?= sanitize($profile['state'] ?? '') ?>, <?= sanitize($profile['city'] ?? '') ?></span>
                                             <span><i class="bi bi-translate"></i> <?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></span>
                                         </div>
                                         <div class="d-flex gap-2 mt-3">
