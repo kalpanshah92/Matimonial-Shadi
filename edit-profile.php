@@ -218,32 +218,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
 
                 case 'contact':
-                    $oldData = [
-                        'phone' => $currentUser['phone'] ?? '',
-                        'show_phone' => $privacy['show_phone'] ?? 'connected',
-                        'show_email' => $privacy['show_email'] ?? 'connected',
-                    ];
                     $newData = [
                         'phone' => sanitize($_POST['phone'] ?? ''),
-                        'show_phone' => sanitize($_POST['show_phone'] ?? 'connected'),
-                        'show_email' => sanitize($_POST['show_email'] ?? 'connected'),
                     ];
 
                     // Update phone directly (no admin approval needed for contact info)
                     $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?")->execute([$newData['phone'], $userId]);
-
-                    // Update privacy settings directly
-                    $stmt = $pdo->prepare("SELECT id FROM privacy_settings WHERE user_id = ?");
-                    $stmt->execute([$userId]);
-                    $existingPrivacy = $stmt->fetch();
-
-                    if ($existingPrivacy) {
-                        $pdo->prepare("UPDATE privacy_settings SET show_phone = ?, show_email = ? WHERE user_id = ?")
-                            ->execute([$newData['show_phone'], $newData['show_email'], $userId]);
-                    } else {
-                        $pdo->prepare("INSERT INTO privacy_settings (user_id, show_phone, show_email) VALUES (?, ?, ?)")
-                            ->execute([$userId, $newData['show_phone'], $newData['show_email']]);
-                    }
 
                     setFlash('success', 'Contact details updated successfully.');
                     redirect(SITE_URL . '/edit-profile.php?tab=contact');
@@ -930,28 +910,6 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Phone Number</label>
                                 <input type="tel" class="form-control" name="phone" value="<?= sanitize($currentUser['phone'] ?? '') ?>" pattern="[0-9]{10}" title="Enter 10-digit phone number">
                                 <small class="text-muted">10-digit phone number</small>
-                            </div>
-                        </div>
-                        <hr class="my-4">
-                        <h5 class="mb-3">Privacy Settings</h5>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Show Phone To</label>
-                                <select name="show_phone" class="form-select">
-                                    <option value="nobody" <?= ($privacy['show_phone'] ?? '') === 'nobody' ? 'selected' : '' ?>>Nobody</option>
-                                    <option value="connected" <?= ($privacy['show_phone'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
-                                    <option value="premium" <?= ($privacy['show_phone'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Members</option>
-                                    <option value="everyone" <?= ($privacy['show_phone'] ?? '') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Show Email To</label>
-                                <select name="show_email" class="form-select">
-                                    <option value="nobody" <?= ($privacy['show_email'] ?? '') === 'nobody' ? 'selected' : '' ?>>Nobody</option>
-                                    <option value="connected" <?= ($privacy['show_email'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
-                                    <option value="premium" <?= ($privacy['show_email'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Members</option>
-                                    <option value="everyone" <?= ($privacy['show_email'] ?? '') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
-                                </select>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3" id="saveContact"><i class="bi bi-check-lg me-1"></i>Save Contact Details</button>
