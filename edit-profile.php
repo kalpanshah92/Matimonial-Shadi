@@ -56,13 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($submittedAddress) || !in_array($submittedAddressType, ['Own', 'Rent'], true)) {
                         $submittedAddressType = null;
                     }
+                    $submittedMaritalStatus = sanitize($_POST['marital_status'] ?? '');
+                    // If marital_status is empty, keep the original value
+                    if (empty($submittedMaritalStatus)) {
+                        $submittedMaritalStatus = $currentUser['marital_status'] ?? '';
+                    }
                     $newData = [
                         'name' => sanitize($_POST['name']),
                         'religion' => sanitize($_POST['religion']),
                         'caste' => sanitize($_POST['caste']),
                         'sub_caste' => sanitize($_POST['sub_caste'] ?? ''),
                         'mother_tongue' => sanitize($_POST['mother_tongue']),
-                        'marital_status' => sanitize($_POST['marital_status']),
+                        'marital_status' => $submittedMaritalStatus,
                         'address' => $submittedAddress,
                         'address_type' => $submittedAddressType,
                         'country' => sanitize($_POST['country'] ?? ''),
