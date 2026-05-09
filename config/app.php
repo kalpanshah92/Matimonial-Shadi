@@ -119,7 +119,7 @@ $INDIAN_STATES = [
     'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
 ];
 
-$MARITAL_STATUS = ['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce', 'Annulled'];
+$MARITAL_STATUS = ['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce'];
 
 $EDUCATION_LEVELS = [
     'High School', 'Diploma', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate/PhD',

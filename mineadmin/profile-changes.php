@@ -53,6 +53,9 @@ $fieldLabels = [
     'sub_caste' => 'Sub Samaj',
     'mother_tongue' => 'Mother Tongue',
     'marital_status' => 'Marital Status',
+    'address' => 'Address',
+    'address_type' => 'Property Status',
+    'country' => 'Country',
     'state' => 'State',
     'city' => 'City',
     'about_me' => 'About Me',
@@ -242,7 +245,7 @@ $sectionLabels = [
                                     $sectionsWithChanges = [];
                                     foreach ($newData as $key => $val) {
                                         // Map field to section based on field labels
-                                        if (in_array($key, ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'state', 'city', 'address', 'address_type'])) {
+                                        if (in_array($key, ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city'])) {
                                             $sectionsWithChanges['basic'] = true;
                                         } elseif (in_array($key, ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'about_me'])) {
                                             $sectionsWithChanges['personal'] = true;

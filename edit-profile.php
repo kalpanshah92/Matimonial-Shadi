@@ -43,10 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'sub_caste' => $currentUser['sub_caste'],
                         'mother_tongue' => $currentUser['mother_tongue'],
                         'marital_status' => $currentUser['marital_status'],
-                        'state' => $currentUser['state'],
-                        'city' => $currentUser['city'],
                         'address' => $currentUser['address'] ?? '',
                         'address_type' => $currentUser['address_type'] ?? '',
+                        'country' => $currentUser['country'] ?? '',
+                        'state' => $currentUser['state'],
+                        'city' => $currentUser['city'],
                         'about_me' => $currentUser['about_me'],
                     ];
                     $submittedAddress = sanitize($_POST['address'] ?? '');
@@ -62,10 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'sub_caste' => sanitize($_POST['sub_caste'] ?? ''),
                         'mother_tongue' => sanitize($_POST['mother_tongue']),
                         'marital_status' => sanitize($_POST['marital_status']),
-                        'state' => sanitize($_POST['state']),
-                        'city' => sanitize($_POST['city']),
                         'address' => $submittedAddress,
                         'address_type' => $submittedAddressType,
+                        'country' => sanitize($_POST['country'] ?? ''),
+                        'state' => sanitize($_POST['state']),
+                        'city' => sanitize($_POST['city']),
                         'about_me' => sanitize($_POST['about_me']),
                     ];
                     $activeTab = 'basic';
@@ -477,10 +479,27 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4">
                                 <label class="form-label">Marital Status</label>
                                 <select name="marital_status" class="form-select">
+                                    <option value="">Select</option>
                                     <?php foreach ($MARITAL_STATUS as $ms): ?>
                                         <option value="<?= $ms ?>" <?= ($currentUser['marital_status'] ?? '') === $ms ? 'selected' : '' ?>><?= $ms ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
+                            </div>
+                            <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
+                                <label class="form-label">Property Status</label>
+                                <select name="address_type" id="address_type" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="Own" <?= ($currentUser['address_type'] ?? '') === 'Own' ? 'selected' : '' ?>>Own</option>
+                                    <option value="Rent" <?= ($currentUser['address_type'] ?? '') === 'Rent' ? 'selected' : '' ?>>Rent</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-control" name="country" value="<?= sanitize($currentUser['country'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">State</label>
@@ -494,18 +513,6 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4">
                                 <label class="form-label">City</label>
                                 <input type="text" class="form-control" name="city" value="<?= sanitize($currentUser['city'] ?? '') ?>">
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Address</label>
-                                <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
-                            </div>
-                            <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
-                                <label class="form-label">Property Status</label>
-                                <select name="address_type" id="address_type" class="form-select">
-                                    <option value="">Select</option>
-                                    <option value="Own" <?= ($currentUser['address_type'] ?? '') === 'Own' ? 'selected' : '' ?>>Own</option>
-                                    <option value="Rent" <?= ($currentUser['address_type'] ?? '') === 'Rent' ? 'selected' : '' ?>>Rent</option>
-                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">About Me</label>
