@@ -166,8 +166,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <img src="<?= getProfilePic($currentUser['profile_pic'], $currentUser['gender']) ?>" 
-                                 class="rounded-circle me-1" width="28" height="28" alt="Profile">
-                            <?= sanitize($currentUser['name']) ?>
+                                 class="rounded-circle" width="28" height="28" alt="Profile">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="<?= SITE_URL ?>/my-profile.php"><i class="bi bi-person me-2"></i>My Profile</a></li>
