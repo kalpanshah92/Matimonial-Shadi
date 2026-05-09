@@ -22,6 +22,10 @@ $stmt = $pdo->prepare("SELECT * FROM photos WHERE user_id = ? ORDER BY is_primar
 $stmt->execute([$userId]);
 $photos = $stmt->fetchAll();
 
+$stmt = $pdo->prepare("SELECT * FROM privacy_settings WHERE user_id = ?");
+$stmt->execute([$userId]);
+$privacy = $stmt->fetch() ?: ['show_phone' => 'connected', 'show_email' => 'connected', 'show_photo' => 'everyone', 'show_income' => 'premium', 'profile_visibility' => 'everyone'];
+
 $errors = [];
 $activeTab = $_GET['tab'] ?? 'basic';
 
@@ -213,6 +217,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $activeTab = 'partner';
                     break;
 
+                case 'contact':
+                    $oldData = [
+                        'phone' => $currentUser['phone'] ?? '',
+                        'show_phone' => $privacy['show_phone'] ?? 'connected',
+                        'show_email' => $privacy['show_email'] ?? 'connected',
+                    ];
+                    $newData = [
+                        'phone' => sanitize($_POST['phone'] ?? ''),
+                        'show_phone' => sanitize($_POST['show_phone'] ?? 'connected'),
+                        'show_email' => sanitize($_POST['show_email'] ?? 'connected'),
+                    ];
+
+                    // Update phone directly (no admin approval needed for contact info)
+                    $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?")->execute([$newData['phone'], $userId]);
+
+                    // Update privacy settings directly
+                    $stmt = $pdo->prepare("SELECT id FROM privacy_settings WHERE user_id = ?");
+                    $stmt->execute([$userId]);
+                    $existingPrivacy = $stmt->fetch();
+
+                    if ($existingPrivacy) {
+                        $pdo->prepare("UPDATE privacy_settings SET show_phone = ?, show_email = ? WHERE user_id = ?")
+                            ->execute([$newData['show_phone'], $newData['show_email'], $userId]);
+                    } else {
+                        $pdo->prepare("INSERT INTO privacy_settings (user_id, show_phone, show_email) VALUES (?, ?, ?)")
+                            ->execute([$userId, $newData['show_phone'], $newData['show_email']]);
+                    }
+
+                    setFlash('success', 'Contact details updated successfully.');
+                    redirect(SITE_URL . '/edit-profile.php?tab=contact');
+                    break;
+
                 case 'delete_photo':
                     $photoId = intval($_POST['photo_id'] ?? 0);
                     if ($photoId) {
@@ -376,6 +412,10 @@ $partnerPrefs = $stmt->fetch() ?: [];
 $stmt = $pdo->prepare("SELECT * FROM photos WHERE user_id = ? ORDER BY is_primary DESC");
 $stmt->execute([$userId]);
 $photos = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT * FROM privacy_settings WHERE user_id = ?");
+$stmt->execute([$userId]);
+$privacy = $stmt->fetch() ?: ['show_phone' => 'connected', 'show_email' => 'connected', 'show_photo' => 'everyone', 'show_income' => 'premium', 'profile_visibility' => 'everyone'];
 
 // Fetch pending change requests for this user
 $pendingChanges = [];
@@ -868,6 +908,53 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3" id="savePartner" disabled><i class="bi bi-check-lg me-1"></i>Save Preferences</button>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Details Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContact" aria-expanded="false" aria-controls="collapseContact">
+                        <i class="bi bi-telephone-fill me-2"></i>Contact Details
+                    </button>
+                </h2>
+                <div id="collapseContact" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="contact">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="contact">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" value="<?= sanitize($currentUser['phone'] ?? '') ?>" pattern="[0-9]{10}" title="Enter 10-digit phone number">
+                                <small class="text-muted">10-digit phone number</small>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <h5 class="mb-3">Privacy Settings</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Show Phone To</label>
+                                <select name="show_phone" class="form-select">
+                                    <option value="nobody" <?= ($privacy['show_phone'] ?? '') === 'nobody' ? 'selected' : '' ?>>Nobody</option>
+                                    <option value="connected" <?= ($privacy['show_phone'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
+                                    <option value="premium" <?= ($privacy['show_phone'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Members</option>
+                                    <option value="everyone" <?= ($privacy['show_phone'] ?? '') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Show Email To</label>
+                                <select name="show_email" class="form-select">
+                                    <option value="nobody" <?= ($privacy['show_email'] ?? '') === 'nobody' ? 'selected' : '' ?>>Nobody</option>
+                                    <option value="connected" <?= ($privacy['show_email'] ?? '') === 'connected' ? 'selected' : '' ?>>Connected Only</option>
+                                    <option value="premium" <?= ($privacy['show_email'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium Members</option>
+                                    <option value="everyone" <?= ($privacy['show_email'] ?? '') === 'everyone' ? 'selected' : '' ?>>Everyone</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3" id="saveContact"><i class="bi bi-check-lg me-1"></i>Save Contact Details</button>
                     </form>
                     </div>
                 </div>
