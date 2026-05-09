@@ -491,7 +491,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </select>
                             </div>
                             <div class="col-md-8">
-                                <label class="form-label">Address</label>
+                                <label class="form-label">Residential Address</label>
                                 <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
                             </div>
                             <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
