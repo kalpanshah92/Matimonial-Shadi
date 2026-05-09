@@ -98,8 +98,12 @@ $pendingRequests = [];
 if (isLoggedIn()) {
     $currentUserId = $_SESSION['user_id'];
     foreach ($results as $profile) {
-        $stmt = $pdo->prepare("SELECT id, status FROM connection_requests WHERE sender_id = ? AND receiver_id = ?");
-        $stmt->execute([$currentUserId, $profile['id']]);
+        $stmt = $pdo->prepare("
+            SELECT id, status FROM connection_requests
+            WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+            ORDER BY created_at DESC LIMIT 1
+        ");
+        $stmt->execute([$currentUserId, $profile['id'], $profile['id'], $currentUserId]);
         $request = $stmt->fetch();
         $pendingRequests[$profile['id']] = $request;
     }
