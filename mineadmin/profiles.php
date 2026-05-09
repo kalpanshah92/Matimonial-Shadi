@@ -172,7 +172,7 @@ $users = $stmt->fetchAll();
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
-                                        <button class="btn btn-warning btn-upgrade-premium" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars($user['name']) ?>" title="Upgrade to Premium">
+                                        <button class="btn btn-warning btn-upgrade-premium" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars($user['name']) ?>" data-user-gender="<?= htmlspecialchars($user['gender'] ?? '') ?>" title="Upgrade to Premium">
                                             <i class="bi bi-star"></i>
                                         </button>
                                         <a href="edit-user.php?id=<?= $user['id'] ?>" class="btn btn-outline-dark" title="Edit user">
@@ -267,15 +267,36 @@ $(document).ready(function() {
     $('.btn-upgrade-premium').click(function() {
         var userId = $(this).data('user-id');
         var userName = $(this).data('user-name');
-        
+        var userGender = $(this).data('user-gender') ? $(this).data('user-gender').toLowerCase() : '';
+
         $('#premiumUserId').val(userId);
         $('#premiumUserName').val(userName);
-        
+
+        // Filter plans by user's gender
+        $('#premiumPlanId option').each(function() {
+            var planName = $(this).text().toLowerCase();
+            var isFemalePlan = planName.indexOf('female') !== -1;
+            var isMalePlan = !isFemalePlan && planName.indexOf('male') !== -1;
+            if (userGender === 'female') {
+                $(this).toggle(isFemalePlan);
+            } else if (userGender === 'male') {
+                $(this).toggle(isMalePlan);
+            } else {
+                $(this).show();
+            }
+        });
+
+        // Select first visible option
+        var firstVisible = $('#premiumPlanId option:not(:hidden)').first();
+        if (firstVisible.length) {
+            $('#premiumPlanId').val(firstVisible.val());
+        }
+
         // Set default end date to 2 years from now
         var defaultDate = new Date();
         defaultDate.setFullYear(defaultDate.getFullYear() + 2);
         $('#premiumEndDate').val(defaultDate.toISOString().split('T')[0]);
-        
+
         premiumModal.show();
     });
     

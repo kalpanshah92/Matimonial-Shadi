@@ -374,6 +374,15 @@ if ($isPremium) {
                             <?php
                             $planStmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
                             $plans = $planStmt->fetchAll();
+                            // Filter plans by this user's gender
+                            $userGender = strtolower($user['gender'] ?? '');
+                            $plans = array_values(array_filter($plans, function ($plan) use ($userGender) {
+                                $isFemalePlan = stripos($plan['name'], 'Female') !== false;
+                                $isMalePlan = !$isFemalePlan && stripos($plan['name'], 'Male') !== false;
+                                if ($userGender === 'female') return $isFemalePlan;
+                                if ($userGender === 'male') return $isMalePlan;
+                                return true;
+                            }));
                             foreach ($plans as $plan):
                             ?>
                                 <option value="<?= $plan['id'] ?>" data-duration="<?= $plan['duration_days'] ?>">
