@@ -109,11 +109,11 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <a href="<?= SITE_URL ?>/shortlist.php" class="dashboard-card dashboard-stat" style="text-decoration: none; color: inherit;">
+                <div class="dashboard-card dashboard-stat" style="cursor: pointer;" onclick="window.location.href='<?= SITE_URL ?>/shortlist.php'">
                     <div class="stat-icon stat-info"><i class="bi bi-bookmark-heart"></i></div>
                     <h3><?= $shortlistedByCount ?></h3>
                     <p>Shortlisted By</p>
-                </a>
+                </div>
             </div>
         </div>
 
