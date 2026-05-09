@@ -235,7 +235,11 @@ require_once __DIR__ . '/includes/header.php';
                                             <?php if (isLoggedIn()): ?>
                                                 <?php
                                                 $request = $pendingRequests[$profile['id']] ?? null;
-                                                if ($request && $request['status'] === 'pending'): ?>
+                                                if ($request && $request['status'] === 'accepted'): ?>
+                                                    <a href="<?= SITE_URL ?>/matches.php" class="btn btn-success btn-sm">
+                                                        <i class="bi bi-heart"></i> Matched
+                                                    </a>
+                                                <?php elseif ($request && $request['status'] === 'pending'): ?>
                                                     <button class="btn btn-secondary btn-sm" disabled>
                                                         <i class="bi bi-clock"></i> Request Sent
                                                     </button>
