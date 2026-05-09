@@ -109,18 +109,11 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card dashboard-stat">
+                <a href="<?= SITE_URL ?>/shortlist.php" class="dashboard-card dashboard-stat" style="text-decoration: none; color: inherit;">
                     <div class="stat-icon stat-info"><i class="bi bi-bookmark-heart"></i></div>
-                    <?php if ($isPremiumUser): ?>
-                        <h3><?= $shortlistedByCount ?></h3>
-                    <?php else: ?>
-                        <h3><i class="bi bi-lock-fill text-muted"></i></h3>
-                    <?php endif; ?>
+                    <h3><?= $shortlistedByCount ?></h3>
                     <p>Shortlisted By</p>
-                    <?php if (!$isPremiumUser): ?>
-                        <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-accent btn-sm mt-1"><i class="bi bi-star me-1"></i>Upgrade</a>
-                    <?php endif; ?>
-                </div>
+                </a>
             </div>
         </div>
 
