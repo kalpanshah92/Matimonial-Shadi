@@ -93,6 +93,18 @@ try {
     error_log("Search Error: " . $e->getMessage());
 }
 
+// Check for pending connection requests if logged in
+$pendingRequests = [];
+if (isLoggedIn()) {
+    $currentUserId = $_SESSION['user_id'];
+    foreach ($results as $profile) {
+        $stmt = $pdo->prepare("SELECT id, status FROM connection_requests WHERE sender_id = ? AND receiver_id = ?");
+        $stmt->execute([$currentUserId, $profile['id']]);
+        $request = $stmt->fetch();
+        $pendingRequests[$profile['id']] = $request;
+    }
+}
+
 $totalPages = ceil($totalResults / RESULTS_PER_PAGE);
 
 require_once __DIR__ . '/includes/header.php';
@@ -221,9 +233,17 @@ require_once __DIR__ . '/includes/header.php';
                                         <div class="d-flex gap-2 mt-3">
                                             <a href="<?= SITE_URL ?>/profile.php?id=<?= $profile['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View Profile</a>
                                             <?php if (isLoggedIn()): ?>
-                                                <button class="btn btn-primary btn-sm btn-connect" data-profile-id="<?= $profile['id'] ?>">
-                                                    <i class="bi bi-person-plus"></i>
-                                                </button>
+                                                <?php
+                                                $request = $pendingRequests[$profile['id']] ?? null;
+                                                if ($request && $request['status'] === 'pending'): ?>
+                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                        <i class="bi bi-clock"></i> Request Sent
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button class="btn btn-primary btn-sm btn-connect" data-profile-id="<?= $profile['id'] ?>">
+                                                        <i class="bi bi-person-plus"></i>
+                                                    </button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
