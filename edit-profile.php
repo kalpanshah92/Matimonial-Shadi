@@ -499,7 +499,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="caste" value="<?= sanitize($currentUser['caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Sub Samaj</label>
+                                <label class="form-label">Samaj Village</label>
                                 <input type="text" class="form-control" name="sub_caste" value="<?= sanitize($currentUser['sub_caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
