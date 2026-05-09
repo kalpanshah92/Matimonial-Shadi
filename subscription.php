@@ -28,6 +28,18 @@ if (!$activeSubscription) {
         $stmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
         $plans = $stmt->fetchAll();
     } catch (Exception $e) {}
+
+    // Filter plans by logged-in user's gender (Female first since "Female" contains "male")
+    if ($loggedInUser && !empty($loggedInUser['gender'])) {
+        $userGender = strtolower($loggedInUser['gender']);
+        $plans = array_values(array_filter($plans, function ($plan) use ($userGender) {
+            $isFemalePlan = stripos($plan['name'], 'Female') !== false;
+            $isMalePlan = !$isFemalePlan && stripos($plan['name'], 'Male') !== false;
+            if ($userGender === 'female') return $isFemalePlan;
+            if ($userGender === 'male') return $isMalePlan;
+            return true;
+        }));
+    }
 }
 
 require_once __DIR__ . '/includes/header.php';
