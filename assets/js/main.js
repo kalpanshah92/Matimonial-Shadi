@@ -245,8 +245,7 @@ $(document).ready(function () {
                 dataType: 'json',
                 success: function (response) {
                     if (response.success) {
-                        btn.closest('tr').find('.status-badge').text(action + 'd')
-                            .removeClass('bg-warning').addClass(action === 'approve' ? 'bg-success' : 'bg-danger');
+                        location.reload();
                     }
                 }
             });
