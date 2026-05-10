@@ -442,7 +442,7 @@ require_once __DIR__ . '/includes/header.php';
                             </label>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4" id="registerBtn">
                             <i class="bi bi-person-plus me-2"></i>Register Free
                         </button>
                         
@@ -450,6 +450,14 @@ require_once __DIR__ . '/includes/header.php';
                             <p>Already have an account? <a href="<?= SITE_URL ?>/login.php" class="fw-semibold">Login here</a></p>
                         </div>
                     </form>
+
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="loading-overlay d-none">
+                        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-light mt-3">Processing your registration...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -555,6 +563,44 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
         populateStates(code);
     });
 })();
+</script>
+
+<!-- Loading Overlay CSS -->
+<style>
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+</style>
+
+<!-- Loading Overlay Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('registerForm');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var registerBtn = document.getElementById('registerBtn');
+
+    if (form && loadingOverlay && registerBtn) {
+        form.addEventListener('submit', function(e) {
+            // Check if we're using the cropped blob submission (already handled by cropper JS)
+            if (window.croppedBlob) {
+                return; // Let the cropper handler deal with it
+            }
+            // Show loading overlay for normal form submission
+            loadingOverlay.classList.remove('d-none');
+            registerBtn.disabled = true;
+        });
+    }
+});
 </script>
 
 <!-- Cropper.js for photo cropping -->
@@ -709,12 +755,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Override form submission to include cropped blob
     var form = document.getElementById('registerForm');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var registerBtn = document.getElementById('registerBtn');
     form.addEventListener('submit', function(e) {
         if (!croppedBlob) {
-            // No crop performed, submit normally
+            // No crop performed, submit normally (handled by the loading overlay script)
             return;
         }
         e.preventDefault();
+
+        // Show loading overlay
+        if (loadingOverlay) loadingOverlay.classList.remove('d-none');
+        if (registerBtn) registerBtn.disabled = true;
 
         var formData = new FormData(form);
         formData.set('profile_photo', croppedBlob, 'cropped.jpg');
@@ -735,6 +787,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }).catch(function(err) {
             console.error('Submit error:', err);
             alert('Submission failed. Please try again.');
+            if (loadingOverlay) loadingOverlay.classList.add('d-none');
+            if (registerBtn) registerBtn.disabled = false;
         });
     });
 });
