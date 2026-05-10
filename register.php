@@ -62,6 +62,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($age > 80) $errors[] = 'Please enter a valid date of birth.';
     }
     
+    // Validate profile photo (mandatory)
+    $photoUploaded = isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK;
+    if (!$photoUploaded) {
+        $errors[] = 'Profile photo is required.';
+    } else {
+        if ($_FILES['profile_photo']['size'] > MAX_PHOTO_SIZE) {
+            $errors[] = 'Profile photo must be 5MB or smaller.';
+        }
+        $photoType = $_FILES['profile_photo']['type'];
+        if (!in_array($photoType, ALLOWED_PHOTO_TYPES, true)) {
+            $errors[] = 'Profile photo must be a JPG, PNG, or WebP image.';
+        }
+    }
+
     // Check if email/phone already exists
     if (empty($errors)) {
         $pdo = getDBConnection();
@@ -72,7 +86,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Phone number can be shared across profiles (family registrations)
     }
-    
+
+    // Stash uploaded photo to a temp folder until OTP verification completes
+    $tempPhotoName = null;
+    if (empty($errors) && $photoUploaded) {
+        $tempDir = UPLOADS_PATH . 'pending_photos' . DIRECTORY_SEPARATOR;
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
+        if (empty($ext)) {
+            $ext = ($photoType === 'image/png') ? 'png' : (($photoType === 'image/webp') ? 'webp' : 'jpg');
+        }
+        $tempPhotoName = 'pending_' . bin2hex(random_bytes(8)) . '.' . strtolower($ext);
+        if (!move_uploaded_file($_FILES['profile_photo']['tmp_name'], $tempDir . $tempPhotoName)) {
+            $errors[] = 'Failed to save profile photo. Please try again.';
+            $tempPhotoName = null;
+        }
+    }
+
     // Send OTP and redirect to verification screen
     if (empty($errors)) {
         $otp = generateOTP();
@@ -111,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pendingData = $formData;
                 $pendingData['password'] = password_hash($formData['password'], PASSWORD_DEFAULT);
                 unset($pendingData['confirm_password']);
+                $pendingData['photo_temp'] = $tempPhotoName;
                 $_SESSION['pending_registration'] = $pendingData;
                 redirect(SITE_URL . '/verify-otp.php');
             } else {
@@ -146,7 +179,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <form method="POST" action="" id="registerForm" novalidate>
+                    <form method="POST" action="" id="registerForm" enctype="multipart/form-data" novalidate>
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         
                         <!-- Profile For -->
@@ -362,6 +395,43 @@ require_once __DIR__ . '/includes/header.php';
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- Profile Photo (Mandatory) -->
+                            <div class="col-12">
+                                <label for="profilePhotoInput" class="form-label">Profile Photo <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/jpeg,image/png,image/webp" required>
+                                <small class="text-danger fw-bold">Maximum file size: 5MB. Files larger than 5MB cannot be uploaded.</small>
+                                <br><small class="text-muted">Allowed formats: JPG, PNG, or WebP. You'll be able to crop before uploading. Your photo will be visible as your profile picture only after admin approval.</small>
+                                <div id="photoSizeError" class="alert alert-danger mt-2 py-1 d-none">
+                                    <small><i class="bi bi-exclamation-triangle me-1"></i>Selected file exceeds 5MB. Please choose a smaller image.</small>
+                                </div>
+                                <div id="photoPreviewWrap" class="mt-2 d-none">
+                                    <img id="photoPreview" src="" alt="Profile preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="reCropBtn"><i class="bi bi-crop me-1"></i>Re-crop</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Crop Modal -->
+                        <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title"><i class="bi bi-crop me-2"></i>Crop Your Photo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div style="max-height:500px;">
+                                            <img id="cropImage" style="max-width:100%;display:block;">
+                                        </div>
+                                        <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i>Drag to reposition, use corners to resize. Aspect ratio is locked to square for best profile display.</small>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="cropConfirmBtn"><i class="bi bi-check-lg me-1"></i>Confirm Crop</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Terms -->
@@ -485,6 +555,189 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
         populateStates(code);
     });
 })();
+</script>
+
+<!-- Cropper.js for photo cropping -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
+<style>
+#cropModal .modal-dialog {
+    z-index: 1060 !important;
+}
+#cropModal .modal-content {
+    z-index: 1061 !important;
+}
+#cropModal .modal-footer {
+    position: relative;
+    z-index: 1062 !important;
+}
+#cropModal .cropper-container {
+    z-index: 1;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('profilePhotoInput');
+    var cropImage = document.getElementById('cropImage');
+    var cropModalEl = document.getElementById('cropModal');
+    var cropConfirmBtn = document.getElementById('cropConfirmBtn');
+    var errDiv = document.getElementById('photoSizeError');
+    var previewWrap = document.getElementById('photoPreviewWrap');
+    var previewImg = document.getElementById('photoPreview');
+    var reCropBtn = document.getElementById('reCropBtn');
+    var cropper = null;
+    var cropModal = cropModalEl ? new bootstrap.Modal(cropModalEl) : null;
+    var croppedBlob = null;
+
+    if (!input || !cropModal) return;
+
+    input.addEventListener('change', function() {
+        if (!this.files.length) return;
+        var file = this.files[0];
+
+        // 5MB client-side validation
+        if (file.size > 5 * 1024 * 1024) {
+            errDiv.classList.remove('d-none');
+            this.value = '';
+            croppedBlob = null;
+            previewWrap.classList.add('d-none');
+            return;
+        }
+        errDiv.classList.add('d-none');
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            cropImage.src = e.target.result;
+            cropImage.style.display = 'block';
+            cropModal.show();
+        };
+        reader.onerror = function() {
+            alert('Failed to read the image file. Please try another file.');
+            input.value = '';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    cropModalEl.addEventListener('shown.bs.modal', function() {
+        if (cropper) cropper.destroy();
+
+        if (cropImage.complete) {
+            initCropper();
+        } else {
+            cropImage.onload = initCropper;
+            cropImage.onerror = function() {
+                console.error('Image failed to load');
+                alert('Failed to load the image. Please try another file.');
+                cropModal.hide();
+            };
+        }
+
+        function initCropper() {
+            try {
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    movable: true,
+                    zoomable: true,
+                    scalable: false,
+                    rotatable: false,
+                    background: false
+                });
+            } catch (e) {
+                console.error('Cropper initialization error:', e);
+                alert('Failed to initialize image cropper. Please try again.');
+                cropModal.hide();
+            }
+        }
+    });
+
+    cropModalEl.addEventListener('hidden.bs.modal', function() {
+        if (cropper) { cropper.destroy(); cropper = null; }
+        if (!croppedBlob) {
+            input.value = '';
+        }
+    });
+
+    cropConfirmBtn.addEventListener('click', function() {
+        if (!cropper) {
+            alert('Cropper not initialized. Please try selecting the image again.');
+            return;
+        }
+        cropConfirmBtn.disabled = true;
+        cropConfirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cropping...';
+
+        try {
+            cropper.getCroppedCanvas({
+                width: 800,
+                height: 800,
+                imageSmoothingQuality: 'high'
+            }).toBlob(function(blob) {
+                if (!blob) {
+                    alert('Failed to crop the image. Please try again.');
+                    cropConfirmBtn.disabled = false;
+                    cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
+                    return;
+                }
+                croppedBlob = blob;
+                var url = URL.createObjectURL(blob);
+                previewImg.src = url;
+                previewWrap.classList.remove('d-none');
+                cropModal.hide();
+                cropConfirmBtn.disabled = false;
+                cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
+            }, 'image/jpeg', 0.9);
+        } catch (e) {
+            console.error('Cropping error:', e);
+            alert('Failed to crop the image. Please try again.');
+            cropConfirmBtn.disabled = false;
+            cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
+        }
+    });
+
+    reCropBtn.addEventListener('click', function() {
+        if (!input.files.length) return;
+        var file = input.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            cropImage.src = e.target.result;
+            cropImage.style.display = 'block';
+            cropModal.show();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Override form submission to include cropped blob
+    var form = document.getElementById('registerForm');
+    form.addEventListener('submit', function(e) {
+        if (!croppedBlob) {
+            // No crop performed, submit normally
+            return;
+        }
+        e.preventDefault();
+
+        var formData = new FormData(form);
+        formData.set('profile_photo', croppedBlob, 'cropped.jpg');
+
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData
+        }).then(function(res) {
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else {
+                return res.text();
+            }
+        }).then(function(html) {
+            if (html) {
+                document.documentElement.innerHTML = html;
+            }
+        }).catch(function(err) {
+            console.error('Submit error:', err);
+            alert('Submission failed. Please try again.');
+        });
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

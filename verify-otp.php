@@ -77,6 +77,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("INSERT INTO partner_preferences (user_id) VALUES (?)")->execute([$userId]);
                 $pdo->prepare("INSERT INTO privacy_settings (user_id) VALUES (?)")->execute([$userId]);
 
+                // Handle profile photo if uploaded during registration
+                if (!empty($pending['photo_temp'])) {
+                    $tempPhotoPath = UPLOADS_PATH . 'pending_photos' . DIRECTORY_SEPARATOR . $pending['photo_temp'];
+                    if (file_exists($tempPhotoPath)) {
+                        // Move to user's photos folder
+                        $userPhotoDir = UPLOADS_PATH . 'photos' . DIRECTORY_SEPARATOR . $userId;
+                        if (!is_dir($userPhotoDir)) {
+                            mkdir($userPhotoDir, 0755, true);
+                        }
+                        $finalPhotoPath = 'uploads/photos/' . $userId . '/' . $pending['photo_temp'];
+                        $finalFilePath = $userPhotoDir . DIRECTORY_SEPARATOR . $pending['photo_temp'];
+                        
+                        if (rename($tempPhotoPath, $finalFilePath)) {
+                            // Insert into photos table with is_approved=0, is_primary=1
+                            $stmt = $pdo->prepare("INSERT INTO photos (user_id, photo_path, is_primary, is_approved) VALUES (?, ?, 1, 0)");
+                            $stmt->execute([$userId, $finalPhotoPath]);
+                        }
+                    }
+                }
+
                 unset($_SESSION['pending_registration']);
 
                 setFlash('success', 'Your account is pending for admin approval. You will be able to login once approved.');
