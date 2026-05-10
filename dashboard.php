@@ -95,7 +95,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card dashboard-stat <?= $isPremiumUser ? 'cursor-pointer' : '' ?>" <?= $isPremiumUser ? 'onclick="window.location.href=\'' . SITE_URL . '/profile-views.php\'"' : '' ?>>
+                <div class="dashboard-card dashboard-stat" <?= $isPremiumUser ? 'style="cursor: pointer;" onclick="window.location.href=\'' . SITE_URL . '/profile-views.php\'"' : '' ?>>
                     <div class="stat-icon stat-warning"><i class="bi bi-eye"></i></div>
                     <?php if ($isPremiumUser): ?>
                         <h3><?= $recentVisits ?></h3>
