@@ -143,7 +143,7 @@ if ($isPremium) {
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6"><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></div>
-                        <div class="col-md-6"><strong>Phone:</strong> +91 <?= htmlspecialchars($user['phone'] ?? 'Not provided') ?></div>
+                        <div class="col-md-6"><strong>Phone:</strong> <?= htmlspecialchars($user['phone'] ?? 'Not provided') ?></div>
                     </div>
                 </div>
             </div>

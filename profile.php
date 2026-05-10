@@ -312,7 +312,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <p><i class="bi bi-envelope me-2"></i><?= sanitize($profile['email']) ?></p>
                             <?php endif; ?>
                             <?php if ($canViewPhone): ?>
-                                <p><i class="bi bi-phone me-2"></i>+91 <?= sanitize($profile['phone'] ?? 'Not provided') ?></p>
+                                <p><i class="bi bi-phone me-2"></i><?= sanitize($profile['phone'] ?? 'Not provided') ?></p>
                             <?php endif; ?>
                         </div>
                     <?php elseif (isLoggedIn()): ?>
