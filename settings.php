@@ -211,7 +211,7 @@ require_once __DIR__ . '/includes/header.php';
                     <h5><i class="bi bi-info-circle me-2 text-primary"></i>Account Info</h5>
                     <div class="mt-3">
                         <p><strong>Email:</strong> <?= sanitize($currentUser['email']) ?></p>
-                        <p><strong>Phone:</strong> +91 <?= sanitize($currentUser['phone'] ?? 'Not set') ?></p>
+                        <p><strong>Phone:</strong> <?= sanitize($currentUser['phone'] ?? 'Not set') ?></p>
                         <p><strong>Member Since:</strong> <?= date('d M Y', strtotime($currentUser['created_at'])) ?></p>
                         <p><strong>Status:</strong> 
                             <span class="badge bg-<?= $currentUser['status'] === 'approved' ? 'success' : 'warning' ?>">
