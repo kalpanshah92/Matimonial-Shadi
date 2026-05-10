@@ -13,7 +13,7 @@ $userId = $currentUser['id'];
 
 // Get profile visitors with details
 $stmt = $pdo->prepare(
-    "SELECT pv.*, u.name, u.profile_id, u.profile_pic, u.gender, u.dob, u.city, u.religion, u.occupation
+    "SELECT pv.*, u.name, u.profile_id, u.profile_pic, u.gender, u.dob, u.city, u.religion
      FROM profile_visits pv
      JOIN users u ON pv.visitor_id = u.id
      WHERE pv.visited_id = ?
@@ -72,9 +72,6 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="bi bi-geo-alt me-1"></i><?= sanitize($visitor['city'] ?? 'Not specified') ?>
                                 </p>
                                 <p class="text-muted small mb-2">
-                                    <i class="bi bi-briefcase me-1"></i><?= sanitize($visitor['occupation'] ?? 'Not specified') ?>
-                                </p>
-                                <p class="text-muted small mb-3">
                                     <i class="bi bi-calendar me-1"></i>Viewed: <?= date('d M Y, g:i A', strtotime($visitor['visited_at'])) ?>
                                 </p>
                                 <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
