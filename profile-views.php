@@ -49,20 +49,20 @@ require_once __DIR__ . '/includes/header.php';
             <div class="row g-3">
                 <?php foreach ($visitors as $visitor): ?>
                     <div class="col-lg-4 col-md-6">
-                        <div class="dashboard-card profile-card">
+                        <div class="dashboard-card">
                             <div class="position-relative">
                                 <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>">
                                     <img src="<?= getProfilePic($visitor['profile_pic'], $visitor['gender']) ?>" 
-                                         class="card-img-top" 
-                                         style="height: 200px; object-fit: cover;"
+                                         class="w-100" 
+                                         style="height: 200px; object-fit: cover; border-radius: 8px;"
                                          alt="<?= sanitize($visitor['name']) ?>">
                                 </a>
                                 <span class="badge bg-primary position-absolute top-0 end-0 m-2">
                                     <?= calculateAge($visitor['dob']) ?> yrs
                                 </span>
                             </div>
-                            <div class="card-body">
-                                <h5 class="card-title mb-2">
+                            <div class="mt-3">
+                                <h5 class="mb-2">
                                     <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
                                        class="text-decoration-none text-dark">
                                         <?= sanitize($visitor['name']) ?>
@@ -77,16 +77,10 @@ require_once __DIR__ . '/includes/header.php';
                                 <p class="text-muted small mb-3">
                                     <i class="bi bi-calendar me-1"></i>Viewed: <?= date('d M Y, g:i A', strtotime($visitor['visited_at'])) ?>
                                 </p>
-                                <div class="d-flex gap-2">
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
-                                       class="btn btn-primary btn-sm flex-grow-1">
-                                        <i class="bi bi-eye me-1"></i>View Profile
-                                    </a>
-                                    <button class="btn btn-outline-danger btn-sm btn-shortlist" 
-                                            data-user-id="<?= $visitor['visitor_id'] ?>">
-                                        <i class="bi bi-bookmark-heart"></i>
-                                    </button>
-                                </div>
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
+                                   class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-eye me-1"></i>View Profile
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -95,34 +89,5 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </div>
 </section>
-
-<script>
-// Shortlist functionality
-document.querySelectorAll('.btn-shortlist').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        const userId = this.dataset.userId;
-        const btn = this;
-        
-        fetch('<?= SITE_URL ?>/api/shortlist.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'user_id=' + encodeURIComponent(userId)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                btn.classList.toggle('btn-outline-danger');
-                btn.classList.toggle('btn-danger');
-                btn.innerHTML = btn.classList.contains('btn-danger') 
-                    ? '<i class="bi bi-bookmark-heart-fill"></i>' 
-                    : '<i class="bi bi-bookmark-heart"></i>';
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-});
-</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
