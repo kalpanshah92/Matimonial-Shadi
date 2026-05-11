@@ -257,6 +257,7 @@ CREATE TABLE IF NOT EXISTS otp_verifications (
     expires_at DATETIME NOT NULL,
     is_verified TINYINT(1) DEFAULT 0,
     attempts INT DEFAULT 0,
+    resend_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_identifier (identifier, purpose)
 ) ENGINE=InnoDB;

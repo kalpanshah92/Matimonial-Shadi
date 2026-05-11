@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Failed to resend OTP. Please try again.';
             }
         } else {
-            $errors[] = 'Failed to generate OTP. Please try again.';
+            $errors[] = 'You have reached the maximum limit for OTP resend. Please try again after 30 minutes.';
         }
     } elseif (empty($errors)) {
         $otp = sanitize($_POST['otp'] ?? '');

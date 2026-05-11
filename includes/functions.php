@@ -53,14 +53,28 @@ function generateOTP() {
  */
 function saveOTP($identifier, $otp, $purpose = 'registration') {
     $pdo = getDBConnection();
-    // Delete old OTPs for this identifier
-    $stmt = $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = ? AND purpose = ?");
+
+    // Check if there's an existing OTP for this identifier and purpose
+    $stmt = $pdo->prepare("SELECT id, resend_count, expires_at FROM otp_verifications WHERE identifier = ? AND purpose = ? AND is_verified = 0 AND expires_at > NOW()");
     $stmt->execute([$identifier, $purpose]);
-    
-    // Save new OTP
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+' . OTP_EXPIRY_MINUTES . ' minutes'));
-    $stmt = $pdo->prepare("INSERT INTO otp_verifications (identifier, otp, purpose, expires_at) VALUES (?, ?, ?, ?)");
-    return $stmt->execute([$identifier, $otp, $purpose, $expiresAt]);
+    $existingOTP = $stmt->fetch();
+
+    // If existing OTP found and resend count is already 2, don't allow resend
+    if ($existingOTP && $existingOTP['resend_count'] >= 2) {
+        return false;
+    }
+
+    if ($existingOTP) {
+        // Update existing OTP with new code and increment resend count
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+' . OTP_EXPIRY_MINUTES . ' minutes'));
+        $stmt = $pdo->prepare("UPDATE otp_verifications SET otp = ?, expires_at = ?, resend_count = resend_count + 1, attempts = 0 WHERE id = ?");
+        return $stmt->execute([$otp, $expiresAt, $existingOTP['id']]);
+    } else {
+        // Save new OTP
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+' . OTP_EXPIRY_MINUTES . ' minutes'));
+        $stmt = $pdo->prepare("INSERT INTO otp_verifications (identifier, otp, purpose, expires_at, resend_count) VALUES (?, ?, ?, ?, 0)");
+        return $stmt->execute([$identifier, $otp, $purpose, $expiresAt]);
+    }
 }
 
 /**
