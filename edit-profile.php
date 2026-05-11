@@ -304,6 +304,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     break;
 
+                case 'id_document':
+                    if (isset($_FILES['id_document']) && $_FILES['id_document']['error'] === UPLOAD_ERR_OK) {
+                        $result = uploadIdDocument($_FILES['id_document'], $userId);
+                        if ($result['success']) {
+                            // Remove old physical file from previous DB record (in case folder cleanup missed it)
+                            $oldStmt = $pdo->prepare("SELECT id_document FROM users WHERE id = ?");
+                            $oldStmt->execute([$userId]);
+                            $oldDoc = $oldStmt->fetchColumn();
+                            if ($oldDoc && $oldDoc !== $result['path']) {
+                                $oldFull = __DIR__ . '/' . $oldDoc;
+                                if (file_exists($oldFull)) @unlink($oldFull);
+                            }
+                            $upd = $pdo->prepare("UPDATE users SET id_document = ?, id_document_uploaded_at = NOW() WHERE id = ?");
+                            $upd->execute([$result['path'], $userId]);
+                            setFlash('success', 'Document uploaded successfully.');
+                        } else {
+                            $errors[] = $result['message'];
+                        }
+                    } else {
+                        $errors[] = 'Please select a PDF file to upload.';
+                    }
+                    $activeTab = 'id_document';
+                    if (empty($errors)) {
+                        redirect(SITE_URL . '/edit-profile.php?tab=id_document');
+                    }
+                    break;
+
                 case 'photo':
                     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
                         $result = uploadPhoto($_FILES['profile_photo'], $userId);
@@ -1156,6 +1183,64 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
             </div>
+
+            <!-- Photo ID - Documentation Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdDoc" aria-expanded="false" aria-controls="collapseIdDoc">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>Photo ID - Documentation
+                    </button>
+                </h2>
+                <div id="collapseIdDoc" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <div class="dashboard-card">
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Upload a single PDF document (e.g., Aadhaar, Passport, Driver's License) for identity verification.
+                                Your document is private and can only be reviewed by authorized administrators.
+                            </p>
+
+                            <?php if (!empty($currentUser['id_document'])): ?>
+                                <div class="alert alert-success d-flex align-items-center" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <div>
+                                        Document uploaded
+                                        <?php if (!empty($currentUser['id_document_uploaded_at'])): ?>
+                                            on <?= date('d M Y, h:i A', strtotime($currentUser['id_document_uploaded_at'])) ?>
+                                        <?php endif; ?>.
+                                        Uploading a new file will replace the existing document.
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>No document uploaded yet.</div>
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="POST" action="" enctype="multipart/form-data" id="idDocumentUploadForm">
+                                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                <input type="hidden" name="section" value="id_document">
+                                <div class="row align-items-end g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Upload Document (PDF only)</label>
+                                        <input type="file" class="form-control" id="idDocumentInput" name="id_document" accept="application/pdf,.pdf" required>
+                                        <small class="text-muted d-block mt-1">Only PDF files are allowed. Maximum file size: 5MB.</small>
+                                        <div id="idDocError" class="alert alert-danger mt-2 py-1 d-none">
+                                            <small><i class="bi bi-exclamation-triangle me-1"></i><span id="idDocErrorMsg"></span></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn btn-primary w-100" id="idDocSubmitBtn">
+                                            <i class="bi bi-upload me-1"></i><?= !empty($currentUser['id_document']) ? 'Replace Document' : 'Upload Document' ?>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Single Save Button at Bottom -->
@@ -1592,6 +1677,62 @@ document.addEventListener('DOMContentLoaded', function() {
         var code = this.value;
         countryHidden.value = (code && countriesData[code]) ? countriesData[code].name : '';
         populateStates(code);
+    });
+})();
+
+// ID Document (PDF only) client-side validation
+(function() {
+    var input = document.getElementById('idDocumentInput');
+    var form = document.getElementById('idDocumentUploadForm');
+    var errBox = document.getElementById('idDocError');
+    var errMsg = document.getElementById('idDocErrorMsg');
+    if (!input || !form) return;
+
+    function showError(msg) {
+        if (errBox && errMsg) {
+            errMsg.textContent = msg;
+            errBox.classList.remove('d-none');
+        }
+    }
+    function hideError() {
+        if (errBox) errBox.classList.add('d-none');
+    }
+
+    input.addEventListener('change', function() {
+        hideError();
+        if (!this.files || !this.files.length) return;
+        var file = this.files[0];
+        var name = (file.name || '').toLowerCase();
+        if (!name.endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+            showError('Only PDF files are allowed.');
+            this.value = '';
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showError('File too large. Maximum 5MB allowed.');
+            this.value = '';
+            return;
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        if (!input.files || !input.files.length) {
+            e.preventDefault();
+            showError('Please select a PDF file to upload.');
+            return;
+        }
+        var file = input.files[0];
+        var name = (file.name || '').toLowerCase();
+        if (!name.endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+            e.preventDefault();
+            showError('Only PDF files are allowed.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            e.preventDefault();
+            showError('File too large. Maximum 5MB allowed.');
+            return;
+        }
     });
 })();
 </script>
