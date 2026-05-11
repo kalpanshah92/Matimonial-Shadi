@@ -808,11 +808,11 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
                             </div>
                             <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
-                                <label class="form-label">Property Status</label>
+                                <label class="form-label">Do You Own The Property</label>
                                 <select name="parents_address_type" id="parents_address_type" class="form-select">
                                     <option value="">Select</option>
-                                    <option value="Own" <?= $parentsAddrType === 'Own' ? 'selected' : '' ?>>Own</option>
-                                    <option value="Rent" <?= $parentsAddrType === 'Rent' ? 'selected' : '' ?>>Rent</option>
+                                    <option value="Yes" <?= $parentsAddrType === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="No" <?= $parentsAddrType === 'No' ? 'selected' : '' ?>>No</option>
                                 </select>
                             </div>
                             <div class="col-12">
