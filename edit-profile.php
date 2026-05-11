@@ -945,7 +945,12 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Marital Status</label>
-                                <input type="text" class="form-control" name="pref_marital_status" value="<?= sanitize($partnerPrefs['marital_status'] ?? '') ?>" placeholder="E.g., Never Married">
+                                <select name="pref_marital_status" class="form-select">
+                                    <option value="">Any</option>
+                                    <?php foreach ($MARITAL_STATUS as $ms): ?>
+                                        <option value="<?= $ms ?>" <?= ($partnerPrefs['marital_status'] ?? '') === $ms ? 'selected' : '' ?>><?= $ms ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Education</label>
