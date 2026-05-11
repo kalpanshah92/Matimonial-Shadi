@@ -53,6 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (($_POST['mother_tongue'] ?? '') === 'Others' && empty(trim($_POST['mother_tongue_other'] ?? ''))) {
         $errors[] = 'Please specify your mother tongue.';
     }
+    if (!empty($formData['city']) && preg_match('/[0-9]/', $formData['city'])) {
+        $errors[] = 'City cannot contain numbers.';
+    }
     
     // Age validation based on gender (Female: 18+, Male: 21+)
     if (!empty($formData['dob']) && !empty($formData['gender'])) {
@@ -698,6 +701,14 @@ window.validateRegisterForm = function() {
         var motherTongueOther = form.querySelector('#mother_tongue_other');
         if (!motherTongueOther || !motherTongueOther.value.trim()) {
             errors.push('Please specify your mother tongue.');
+        }
+    }
+
+    // Validate city - no numbers allowed
+    var city = form.querySelector('#city');
+    if (city && city.value.trim()) {
+        if (/[0-9]/.test(city.value)) {
+            errors.push('City cannot contain numbers.');
         }
     }
 
