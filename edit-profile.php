@@ -139,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'body_type' => sanitize($_POST['body_type'] ?? ''),
                         'blood_group' => sanitize($_POST['blood_group'] ?? ''),
                         'diet' => sanitize($_POST['diet'] ?? ''),
-                        'smoking' => sanitize($_POST['smoking'] ?? 'No'),
-                        'drinking' => sanitize($_POST['drinking'] ?? 'No'),
+                        'smoking' => sanitize($_POST['smoking'] ?? ''),
+                        'drinking' => sanitize($_POST['drinking'] ?? ''),
                         'hobbies' => sanitize($_POST['hobbies'] ?? ''),
                     ]);
                     setFlash('success', 'Profile Updated Successfully');
@@ -636,16 +636,18 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4">
                                 <label class="form-label">Smoking</label>
                                 <select name="smoking" class="form-select">
+                                    <option value="">Select</option>
                                     <?php foreach (['No','Yes','Occasionally'] as $s): ?>
-                                        <option value="<?= $s ?>" <?= ($details['smoking'] ?? 'No') === $s ? 'selected' : '' ?>><?= $s ?></option>
+                                        <option value="<?= $s ?>" <?= ($details['smoking'] ?? '') === $s ? 'selected' : '' ?>><?= $s ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Drinking</label>
                                 <select name="drinking" class="form-select">
+                                    <option value="">Select</option>
                                     <?php foreach (['No','Yes','Occasionally'] as $d): ?>
-                                        <option value="<?= $d ?>" <?= ($details['drinking'] ?? 'No') === $d ? 'selected' : '' ?>><?= $d ?></option>
+                                        <option value="<?= $d ?>" <?= ($details['drinking'] ?? '') === $d ? 'selected' : '' ?>><?= $d ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
