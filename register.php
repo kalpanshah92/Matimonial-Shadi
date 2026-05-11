@@ -397,19 +397,19 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
 
                             <!-- Profile Photo (Mandatory) -->
-                            <div class="col-12">
-                                <label for="profilePhotoInput" class="form-label">Profile Photo <span class="text-danger">*</span></label>
-                                <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/jpeg,image/png,image/webp" required>
-                                <small class="text-danger fw-bold">Maximum file size: 5MB. Files larger than 5MB cannot be uploaded.</small>
-                                <br><small class="text-muted">Allowed formats: JPG, PNG, or WebP. You'll be able to crop before uploading. Your photo will be visible as your profile picture only after admin approval.</small>
-                                <div id="photoSizeError" class="alert alert-danger mt-2 py-1 d-none">
-                                    <small><i class="bi bi-exclamation-triangle me-1"></i>Selected file exceeds 5MB. Please choose a smaller image.</small>
-                                </div>
-                                <div id="photoPreviewWrap" class="mt-2 d-none">
-                                    <img id="photoPreview" src="" alt="Profile preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="reCropBtn"><i class="bi bi-crop me-1"></i>Re-crop</button>
-                                </div>
+                            <div class="mb-3">
+                            <label for="profile_photo" class="form-label">Profile Photo <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/jpeg,image/png,image/webp" required>
+                            <input type="hidden" id="croppedImageData" name="cropped_image_data">
+                            <small class="text-muted">Upload a clear photo of yourself. Max size: 5MB.</small>
+                            <div id="photoSizeError" class="text-danger d-none mt-1">
+                                <small><i class="bi bi-exclamation-triangle me-1"></i>Selected file exceeds 5MB. Please choose a smaller image.</small>
                             </div>
+                            <div id="photoPreviewWrap" class="mt-2 d-none">
+                                <img id="photoPreview" src="" alt="Profile preview" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="reCropBtn"><i class="bi bi-crop me-1"></i>Re-crop</button>
+                            </div>
+                        </div>
                         </div>
 
                         <!-- Crop Modal -->
@@ -631,21 +631,33 @@ document.addEventListener('DOMContentLoaded', function() {
     var previewWrap = document.getElementById('photoPreviewWrap');
     var previewImg = document.getElementById('photoPreview');
     var reCropBtn = document.getElementById('reCropBtn');
+    var croppedImageData = document.getElementById('croppedImageData');
     var cropper = null;
     var cropModal = cropModalEl ? new bootstrap.Modal(cropModalEl) : null;
     var croppedBlob = null;
+    var originalFile = null;
 
     if (!input || !cropModal) return;
+
+    // Restore cropped image from hidden field if present (after validation error)
+    if (croppedImageData && croppedImageData.value) {
+        previewImg.src = croppedImageData.value;
+        previewWrap.classList.remove('d-none');
+        input.removeAttribute('required');
+        croppedBlob = null; // Will be recreated from base64 when needed
+    }
 
     input.addEventListener('change', function() {
         if (!this.files.length) return;
         var file = this.files[0];
+        originalFile = file;
 
         // 5MB client-side validation
         if (file.size > 5 * 1024 * 1024) {
             errDiv.classList.remove('d-none');
             this.value = '';
             croppedBlob = null;
+            originalFile = null;
             previewWrap.classList.add('d-none');
             return;
         }
@@ -717,40 +729,60 @@ document.addEventListener('DOMContentLoaded', function() {
             cropper.getCroppedCanvas({
                 width: 800,
                 height: 800,
+                imageSmoothingEnabled: true,
                 imageSmoothingQuality: 'high'
             }).toBlob(function(blob) {
                 if (!blob) {
-                    alert('Failed to crop the image. Please try again.');
+                    alert('Failed to crop image. Please try again.');
                     cropConfirmBtn.disabled = false;
-                    cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
+                    cropConfirmBtn.innerHTML = '<i class="bi bi-crop me-1"></i>Crop';
                     return;
                 }
+
                 croppedBlob = blob;
                 var url = URL.createObjectURL(blob);
                 previewImg.src = url;
                 previewWrap.classList.remove('d-none');
-                cropModal.hide();
+
+                // Save cropped image as base64 to hidden field for persistence across page reloads
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    if (croppedImageData) {
+                        croppedImageData.value = e.target.result;
+                    }
+                    cropModal.hide();
+                };
+                reader.readAsDataURL(blob);
+
                 cropConfirmBtn.disabled = false;
-                cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
-            }, 'image/jpeg', 0.9);
+                cropConfirmBtn.innerHTML = '<i class="bi bi-crop me-1"></i>Crop';
+            }, 'image/jpeg', 0.95);
         } catch (e) {
             console.error('Cropping error:', e);
-            alert('Failed to crop the image. Please try again.');
+            alert('Failed to crop image. Please try again.');
             cropConfirmBtn.disabled = false;
-            cropConfirmBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Confirm Crop';
+            cropConfirmBtn.innerHTML = '<i class="bi bi-crop me-1"></i>Crop';
         }
     });
 
     reCropBtn.addEventListener('click', function() {
-        if (!input.files.length) return;
-        var file = input.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            cropImage.src = e.target.result;
+        // If there's a file in the input, use it
+        if (input.files.length) {
+            var file = input.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                cropImage.src = e.target.result;
+                cropImage.style.display = 'block';
+                cropModal.show();
+            };
+            reader.readAsDataURL(file);
+        }
+        // Otherwise, use the base64 data from the hidden field (after page reload)
+        else if (croppedImageData && croppedImageData.value) {
+            cropImage.src = croppedImageData.value;
             cropImage.style.display = 'block';
             cropModal.show();
-        };
-        reader.readAsDataURL(file);
+        }
     });
 
     // Override form submission to include cropped blob
@@ -758,7 +790,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var loadingOverlay = document.getElementById('loadingOverlay');
     var registerBtn = document.getElementById('registerBtn');
     form.addEventListener('submit', function(e) {
-        if (!croppedBlob) {
+        // Check if we have a cropped blob or base64 data
+        var hasCroppedImage = croppedBlob || (croppedImageData && croppedImageData.value);
+        if (!hasCroppedImage) {
             // No crop performed, submit normally (handled by the loading overlay script)
             return;
         }
@@ -768,28 +802,50 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loadingOverlay) loadingOverlay.classList.remove('d-none');
         if (registerBtn) registerBtn.disabled = true;
 
-        var formData = new FormData(form);
-        formData.set('profile_photo', croppedBlob, 'cropped.jpg');
+        var submitForm = function(blob) {
+            var formData = new FormData(form);
+            formData.set('profile_photo', blob, 'cropped.jpg');
 
-        fetch(form.action || window.location.href, {
-            method: 'POST',
-            body: formData
-        }).then(function(res) {
-            if (res.redirected) {
-                window.location.href = res.url;
-            } else {
-                return res.text();
-            }
-        }).then(function(html) {
-            if (html) {
-                document.documentElement.innerHTML = html;
-            }
-        }).catch(function(err) {
-            console.error('Submit error:', err);
-            alert('Submission failed. Please try again.');
-            if (loadingOverlay) loadingOverlay.classList.add('d-none');
-            if (registerBtn) registerBtn.disabled = false;
-        });
+            fetch(form.action || window.location.href, {
+                method: 'POST',
+                body: formData
+            }).then(function(res) {
+                if (res.redirected) {
+                    window.location.href = res.url;
+                } else {
+                    return res.text();
+                }
+            }).then(function(html) {
+                if (html) {
+                    document.documentElement.innerHTML = html;
+                }
+            }).catch(function(err) {
+                console.error('Submit error:', err);
+                alert('Submission failed. Please try again.');
+                if (loadingOverlay) loadingOverlay.classList.add('d-none');
+                if (registerBtn) registerBtn.disabled = false;
+            });
+        };
+
+        // If we have a blob, use it directly
+        if (croppedBlob) {
+            submitForm(croppedBlob);
+        }
+        // Otherwise, convert base64 to blob
+        else if (croppedImageData && croppedImageData.value) {
+            fetch(croppedImageData.value)
+                .then(function(res) { return res.blob(); })
+                .then(function(blob) {
+                    croppedBlob = blob;
+                    submitForm(blob);
+                })
+                .catch(function(err) {
+                    console.error('Base64 to blob conversion error:', err);
+                    alert('Failed to process cropped image. Please try selecting the image again.');
+                    if (loadingOverlay) loadingOverlay.classList.add('d-none');
+                    if (registerBtn) registerBtn.disabled = false;
+                });
+        }
     });
 });
 </script>
