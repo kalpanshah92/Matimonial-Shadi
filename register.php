@@ -530,7 +530,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     fetch('<?= SITE_URL ?>/assets/data/iso-3166-2.json')
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) {
+                throw new Error('Failed to load countries file');
+            }
+            return r.json();
+        })
         .then(function(data) {
             countriesData = data;
             // Populate countries sorted by name
@@ -555,7 +560,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 populateStates(matchedCode);
             }
         })
-        .catch(function() {
+        .catch(function(error) {
+            console.error('Error loading countries:', error);
             countrySelect.innerHTML = '<option value="">Failed to load countries</option>';
         });
 
