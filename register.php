@@ -949,7 +949,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('registerForm');
     var loadingOverlay = document.getElementById('loadingOverlay');
     var registerBtn = document.getElementById('registerBtn');
+    var isSubmittingWithBlob = false;
+
     form.addEventListener('submit', function(e) {
+        // Skip if we're already in the second submit (after blob injection)
+        if (isSubmittingWithBlob) {
+            return;
+        }
+
         // Run validation first - if any errors, abort
         if (typeof window.validateRegisterForm === 'function') {
             var validationErrors = window.validateRegisterForm();
@@ -971,34 +978,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loadingOverlay) loadingOverlay.classList.remove('d-none');
         if (registerBtn) registerBtn.disabled = true;
 
-        var submitForm = function(blob) {
-            var formData = new FormData(form);
-            formData.set('profile_photo', blob, 'cropped.jpg');
+        var submitWithBlob = function(blob) {
+            try {
+                // Inject the cropped blob as a File into the file input via DataTransfer
+                var file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+                var dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
 
-            fetch(form.action || window.location.href, {
-                method: 'POST',
-                body: formData
-            }).then(function(res) {
-                if (res.redirected) {
-                    window.location.href = res.url;
-                } else {
-                    return res.text();
-                }
-            }).then(function(html) {
-                if (html) {
-                    document.documentElement.innerHTML = html;
-                }
-            }).catch(function(err) {
+                // Submit form normally so server response loads in browser (preserves all scripts)
+                isSubmittingWithBlob = true;
+                form.submit();
+            } catch (err) {
                 console.error('Submit error:', err);
                 alert('Submission failed. Please try again.');
                 if (loadingOverlay) loadingOverlay.classList.add('d-none');
                 if (registerBtn) registerBtn.disabled = false;
-            });
+            }
         };
 
         // If we have a blob, use it directly
         if (croppedBlob) {
-            submitForm(croppedBlob);
+            submitWithBlob(croppedBlob);
         }
         // Otherwise, convert base64 to blob
         else if (croppedImageData && croppedImageData.value) {
@@ -1006,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(function(res) { return res.blob(); })
                 .then(function(blob) {
                     croppedBlob = blob;
-                    submitForm(blob);
+                    submitWithBlob(blob);
                 })
                 .catch(function(err) {
                     console.error('Base64 to blob conversion error:', err);
