@@ -782,7 +782,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Father's Mobile Number</label>
                                 <input type="text" class="form-control" name="father_mobile" value="<?= sanitize($family['father_mobile'] ?? '') ?>" placeholder="+91 XXXXX XXXXX">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label">Father's Occupation</label>
                                 <input type="text" class="form-control" name="father_occupation" value="<?= sanitize($family['father_occupation'] ?? '') ?>">
                             </div>
