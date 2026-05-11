@@ -191,7 +191,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 case 'horoscope':
                     applyProfileDetailsUpdate($pdo, $userId, [
                         'birth_time' => sanitize($_POST['birth_time'] ?? ''),
-                        'birth_period' => sanitize($_POST['birth_period'] ?? ''),
                         'place_of_birth' => sanitize($_POST['place_of_birth'] ?? ''),
                     ]);
                     setFlash('success', 'Profile Updated Successfully');
@@ -854,14 +853,6 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label">Time of Birth</label>
                                 <input type="time" class="form-control" name="birth_time" value="<?= sanitize($details['birth_time'] ?? '') ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Birth Period</label>
-                                <select name="birth_period" class="form-select">
-                                    <option value="">Select</option>
-                                    <option value="AM" <?= ($details['birth_period'] ?? '') === 'AM' ? 'selected' : '' ?>>AM</option>
-                                    <option value="PM" <?= ($details['birth_period'] ?? '') === 'PM' ? 'selected' : '' ?>>PM</option>
-                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Place of Birth</label>
