@@ -188,6 +188,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     redirect(SITE_URL . '/edit-profile.php?tab=family');
                     break;
 
+                case 'horoscope':
+                    applyProfileDetailsUpdate($pdo, $userId, [
+                        'birth_time' => sanitize($_POST['birth_time'] ?? ''),
+                        'birth_period' => sanitize($_POST['birth_period'] ?? ''),
+                        'place_of_birth' => sanitize($_POST['place_of_birth'] ?? ''),
+                    ]);
+                    setFlash('success', 'Profile Updated Successfully');
+                    redirect(SITE_URL . '/edit-profile.php?tab=horoscope');
+                    break;
+
                 case 'partner':
                     applyPartnerPrefsUpdate($pdo, $userId, [
                         'min_age' => intval($_POST['pref_min_age'] ?? 18),
@@ -823,6 +833,42 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-3" id="saveFamily" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horoscope Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHoroscope" aria-expanded="false" aria-controls="collapseHoroscope">
+                        <i class="bi bi-stars me-2"></i>Horoscope
+                    </button>
+                </h2>
+                <div id="collapseHoroscope" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <form class="section-form" method="POST" action="" data-section="horoscope">
+                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                            <input type="hidden" name="section" value="horoscope">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Time of Birth</label>
+                                <input type="time" class="form-control" name="birth_time" value="<?= sanitize($details['birth_time'] ?? '') ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Birth Period</label>
+                                <select name="birth_period" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="AM" <?= ($details['birth_period'] ?? '') === 'AM' ? 'selected' : '' ?>>AM</option>
+                                    <option value="PM" <?= ($details['birth_period'] ?? '') === 'PM' ? 'selected' : '' ?>>PM</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Place of Birth</label>
+                                <input type="text" class="form-control" name="place_of_birth" value="<?= sanitize($details['place_of_birth'] ?? '') ?>" placeholder="Enter place of birth">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3" id="saveHoroscope" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
