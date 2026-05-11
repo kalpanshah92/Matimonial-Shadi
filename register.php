@@ -595,6 +595,123 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Loading Overlay Script -->
 <script>
+// Global validation function for the registration form
+window.validateRegisterForm = function() {
+    var form = document.getElementById('registerForm');
+    var profileForError = document.getElementById('profileForError');
+    var errors = [];
+
+    if (!form) return errors;
+
+    // Check if profile_for is selected
+    var profileForSelected = false;
+    var profileForInputs = form.querySelectorAll('input[name="profile_for"]');
+    profileForInputs.forEach(function(input) {
+        if (input.checked) {
+            profileForSelected = true;
+        }
+    });
+    if (!profileForSelected) {
+        errors.push('Please select who this profile is for.');
+        if (profileForError) {
+            profileForError.classList.remove('d-none');
+        }
+    } else {
+        if (profileForError) {
+            profileForError.classList.add('d-none');
+        }
+    }
+
+    // Validate name
+    var name = form.querySelector('#name');
+    if (!name || !name.value.trim()) {
+        errors.push('Name is required.');
+    }
+
+    // Validate email
+    var email = form.querySelector('#email');
+    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !email.value.trim() || !emailPattern.test(email.value)) {
+        errors.push('Valid email is required.');
+    }
+
+    // Validate phone
+    var phone = form.querySelector('#phone');
+    var phonePattern = /^[0-9]+$/;
+    if (!phone || !phone.value.trim() || !phonePattern.test(phone.value.replace(/\D/g, ''))) {
+        errors.push('Valid mobile number is required.');
+    }
+
+    // Validate password
+    var password = form.querySelector('#password');
+    var confirmPassword = form.querySelector('#confirm_password');
+    if (!password || !password.value) {
+        errors.push('Password is required.');
+    } else {
+        if (password.value.length < 8) {
+            errors.push('Password must be at least 8 characters long.');
+        }
+        if (!/[0-9]/.test(password.value)) {
+            errors.push('Password must contain at least 1 number.');
+        }
+        if (!/[a-zA-Z]/.test(password.value)) {
+            errors.push('Password must contain at least 1 letter.');
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password.value)) {
+            errors.push('Password must contain at least 1 special character.');
+        }
+    }
+
+    // Validate confirm password
+    if (!confirmPassword || !confirmPassword.value) {
+        errors.push('Please confirm your password.');
+    } else if (password && password.value !== confirmPassword.value) {
+        errors.push('Passwords do not match.');
+    }
+
+    // Validate gender
+    var genderSelected = false;
+    var genderInputs = form.querySelectorAll('input[name="gender"]');
+    genderInputs.forEach(function(input) {
+        if (input.checked) {
+            genderSelected = true;
+        }
+    });
+    if (!genderSelected) {
+        errors.push('Gender is required.');
+    }
+
+    // Validate DOB
+    var dob = form.querySelector('#dob');
+    if (!dob || !dob.value) {
+        errors.push('Date of birth is required.');
+    }
+
+    // Validate mother tongue
+    var motherTongue = form.querySelector('#mother_tongue');
+    if (motherTongue && motherTongue.value === 'Others') {
+        var motherTongueOther = form.querySelector('#mother_tongue_other');
+        if (!motherTongueOther || !motherTongueOther.value.trim()) {
+            errors.push('Please specify your mother tongue.');
+        }
+    }
+
+    // Validate terms checkbox
+    var terms = form.querySelector('#terms');
+    if (!terms || !terms.checked) {
+        errors.push('You must agree to the Terms of Service and Privacy Policy.');
+    }
+
+    // Validate profile photo
+    var photoInput = form.querySelector('#profilePhotoInput');
+    var hasCroppedData = form.querySelector('#croppedImageData') && form.querySelector('#croppedImageData').value;
+    if (!photoInput || (!photoInput.files.length && !hasCroppedData)) {
+        errors.push('Profile photo is required.');
+    }
+
+    return errors;
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('registerForm');
     var loadingOverlay = document.getElementById('loadingOverlay');
@@ -602,128 +719,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var profileForError = document.getElementById('profileForError');
 
     if (form && loadingOverlay && registerBtn) {
+        // Use capture phase to run BEFORE the cropper's submit handler
         form.addEventListener('submit', function(e) {
-            var errors = [];
-
-            // Check if profile_for is selected
-            var profileForSelected = false;
-            var profileForInputs = form.querySelectorAll('input[name="profile_for"]');
-            profileForInputs.forEach(function(input) {
-                if (input.checked) {
-                    profileForSelected = true;
-                }
-            });
-            if (!profileForSelected) {
-                errors.push('Please select who this profile is for.');
-                if (profileForError) {
-                    profileForError.classList.remove('d-none');
-                }
-            } else {
-                if (profileForError) {
-                    profileForError.classList.add('d-none');
-                }
-            }
-
-            // Validate name
-            var name = form.querySelector('#name');
-            if (!name || !name.value.trim()) {
-                errors.push('Name is required.');
-            }
-
-            // Validate email
-            var email = form.querySelector('#email');
-            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email || !email.value.trim() || !emailPattern.test(email.value)) {
-                errors.push('Valid email is required.');
-            }
-
-            // Validate phone
-            var phone = form.querySelector('#phone');
-            var phonePattern = /^[0-9]+$/;
-            if (!phone || !phone.value.trim() || !phonePattern.test(phone.value.replace(/\D/g, ''))) {
-                errors.push('Valid mobile number is required.');
-            }
-
-            // Validate password
-            var password = form.querySelector('#password');
-            var confirmPassword = form.querySelector('#confirm_password');
-            if (!password || !password.value) {
-                errors.push('Password is required.');
-            } else {
-                if (password.value.length < 8) {
-                    errors.push('Password must be at least 8 characters long.');
-                }
-                if (!/[0-9]/.test(password.value)) {
-                    errors.push('Password must contain at least 1 number.');
-                }
-                if (!/[a-zA-Z]/.test(password.value)) {
-                    errors.push('Password must contain at least 1 letter.');
-                }
-                if (!/[!@#$%^&*(),.?":{}|<>]/.test(password.value)) {
-                    errors.push('Password must contain at least 1 special character.');
-                }
-            }
-
-            // Validate confirm password
-            if (!confirmPassword || !confirmPassword.value) {
-                errors.push('Please confirm your password.');
-            } else if (password && password.value !== confirmPassword.value) {
-                errors.push('Passwords do not match.');
-            }
-
-            // Validate gender
-            var genderSelected = false;
-            var genderInputs = form.querySelectorAll('input[name="gender"]');
-            genderInputs.forEach(function(input) {
-                if (input.checked) {
-                    genderSelected = true;
-                }
-            });
-            if (!genderSelected) {
-                errors.push('Gender is required.');
-            }
-
-            // Validate DOB
-            var dob = form.querySelector('#dob');
-            if (!dob || !dob.value) {
-                errors.push('Date of birth is required.');
-            }
-
-            // Validate mother tongue
-            var motherTongue = form.querySelector('#mother_tongue');
-            if (!motherTongue || !motherTongue.value) {
-                errors.push('Mother tongue is required.');
-            } else if (motherTongue.value === 'Others') {
-                var motherTongueOther = form.querySelector('#mother_tongue_other');
-                if (!motherTongueOther || !motherTongueOther.value.trim()) {
-                    errors.push('Please specify your mother tongue.');
-                }
-            }
-
-            // Validate country
-            var country = form.querySelector('#country');
-            if (!country || !country.value) {
-                errors.push('Country is required.');
-            }
-
-            // Validate terms checkbox
-            var terms = form.querySelector('#terms');
-            if (!terms || !terms.checked) {
-                errors.push('You must agree to the Terms of Service and Privacy Policy.');
-            }
-
-            // Validate profile photo
-            var photoInput = form.querySelector('#profilePhotoInput');
-            var hasCroppedData = form.querySelector('#croppedImageData') && form.querySelector('#croppedImageData').value;
-            if (!photoInput || (!photoInput.files.length && !hasCroppedData)) {
-                errors.push('Profile photo is required.');
-            }
+            var errors = window.validateRegisterForm();
 
             // If there are errors, prevent submission and show them
             if (errors.length > 0) {
                 e.preventDefault();
+                e.stopImmediatePropagation();
                 alert('Please fix the following errors:\n\n' + errors.join('\n'));
-                return;
+                return false;
             }
 
             // Check if we're using the cropped blob submission (already handled by cropper JS)
@@ -733,7 +738,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show loading overlay for normal form submission
             loadingOverlay.classList.remove('d-none');
             registerBtn.disabled = true;
-        });
+        }, true); // Use capture phase to ensure this runs before other handlers
     }
 
     // Hide error when user selects a profile_for option
@@ -945,6 +950,15 @@ document.addEventListener('DOMContentLoaded', function() {
     var loadingOverlay = document.getElementById('loadingOverlay');
     var registerBtn = document.getElementById('registerBtn');
     form.addEventListener('submit', function(e) {
+        // Run validation first - if any errors, abort
+        if (typeof window.validateRegisterForm === 'function') {
+            var validationErrors = window.validateRegisterForm();
+            if (validationErrors.length > 0) {
+                e.preventDefault();
+                return;
+            }
+        }
+
         // Check if we have a cropped blob or base64 data
         var hasCroppedImage = croppedBlob || (croppedImageData && croppedImageData.value);
         if (!hasCroppedImage) {
