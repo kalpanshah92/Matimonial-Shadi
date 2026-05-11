@@ -766,6 +766,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Prevent typing numbers in city field
+    var cityInput = document.getElementById('city');
+    if (cityInput) {
+        cityInput.addEventListener('input', function(e) {
+            var value = this.value;
+            var newValue = value.replace(/[0-9]/g, '');
+            if (value !== newValue) {
+                this.value = newValue;
+            }
+        });
+        cityInput.addEventListener('keypress', function(e) {
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+            }
+        });
+    }
 });
 </script>
 
