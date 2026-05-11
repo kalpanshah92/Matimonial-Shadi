@@ -494,10 +494,12 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
 });
 
 // Country/State cascading dropdown
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
     var countrySelect = document.getElementById('country_select');
     var countryHidden = document.getElementById('country');
     var stateSelect = document.getElementById('state');
+    if (!countrySelect || !countryHidden || !stateSelect) return;
+
     var selectedCountryName = countrySelect.dataset.selectedName || 'India';
     var selectedState = stateSelect.dataset.selected || '';
     var countriesData = {};
@@ -563,7 +565,7 @@ document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
         countryHidden.value = (code && countriesData[code]) ? countriesData[code].name : '';
         populateStates(code);
     });
-})();
+});
 </script>
 
 <!-- Loading Overlay CSS -->
