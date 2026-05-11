@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($otp)) {
             $errors[] = 'Please enter the OTP.';
         } elseif (!verifyOTP($pending['email'], $otp, 'registration')) {
-            $errors[] = 'Invalid OTP';
+            $errors[] = 'Invalid OTP. You can resend OTP ' . (2 - getOTPResendCount($pending['email'], 'registration')) . ' more times.';
         } else {
             // OTP verified - complete registration
             try {

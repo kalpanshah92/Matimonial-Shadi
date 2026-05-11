@@ -87,18 +87,26 @@ function verifyOTP($identifier, $otp, $purpose = 'registration') {
     );
     $stmt->execute([$identifier, $otp, $purpose]);
     $record = $stmt->fetch();
-    
+
     if ($record) {
         $stmt = $pdo->prepare("UPDATE otp_verifications SET is_verified = 1 WHERE id = ?");
         $stmt->execute([$record['id']]);
         return true;
     }
-    
+
     // Increment attempts
     $stmt = $pdo->prepare("UPDATE otp_verifications SET attempts = attempts + 1 WHERE identifier = ? AND purpose = ?");
     $stmt->execute([$identifier, $purpose]);
-    
+
     return false;
+}
+
+function getOTPResendCount($identifier, $purpose = 'registration') {
+    $pdo = getDBConnection();
+    $stmt = $pdo->prepare("SELECT resend_count FROM otp_verifications WHERE identifier = ? AND purpose = ? AND expires_at > NOW() AND is_verified = 0");
+    $stmt->execute([$identifier, $purpose]);
+    $record = $stmt->fetch();
+    return $record ? $record['resend_count'] : 0;
 }
 
 /**
