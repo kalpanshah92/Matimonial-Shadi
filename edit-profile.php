@@ -510,7 +510,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="caste" value="<?= sanitize($currentUser['caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Samaj Village</label>
+                                <label class="form-label">Native Village</label>
                                 <input type="text" class="form-control" name="sub_caste" value="<?= sanitize($currentUser['sub_caste'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
@@ -536,11 +536,11 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" id="address" name="address" value="<?= sanitize($currentUser['address'] ?? '') ?>" placeholder="Enter your address">
                             </div>
                             <div class="col-md-4" id="address_type_wrapper" style="display: <?= !empty($currentUser['address']) ? 'block' : 'none' ?>;">
-                                <label class="form-label">Property Status</label>
+                                <label class="form-label">Do You Own The Property</label>
                                 <select name="address_type" id="address_type" class="form-select">
                                     <option value="">Select</option>
-                                    <option value="Own" <?= ($currentUser['address_type'] ?? '') === 'Own' ? 'selected' : '' ?>>Own</option>
-                                    <option value="Rent" <?= ($currentUser['address_type'] ?? '') === 'Rent' ? 'selected' : '' ?>>Rent</option>
+                                    <option value="Yes" <?= ($currentUser['address_type'] ?? '') === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="No" <?= ($currentUser['address_type'] ?? '') === 'No' ? 'selected' : '' ?>>No</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
