@@ -186,13 +186,13 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="mb-4">
                             <label class="form-label fw-semibold">This profile is for <span class="text-danger">*</span></label>
                             <div class="row g-2">
-                                <?php 
+                                <?php
                                 $profileTypes = ['Myself', 'Son', 'Daughter'];
-                                foreach ($profileTypes as $type): 
+                                foreach ($profileTypes as $type):
                                 ?>
                                     <div class="col-auto">
-                                        <input type="radio" class="btn-check" name="profile_for" id="pf_<?= strtolower($type) ?>" 
-                                               value="<?= $type ?>" <?= ($formData['profile_for'] ?? '') === $type ? 'checked' : '' ?>>
+                                        <input type="radio" class="btn-check" name="profile_for" id="pf_<?= strtolower($type) ?>"
+                                               value="<?= $type ?>" <?= ($formData['profile_for'] ?? '') === $type ? 'checked' : '' ?> required>
                                         <label class="btn btn-outline-primary btn-sm" for="pf_<?= strtolower($type) ?>"><?= $type ?></label>
                                     </div>
                                 <?php endforeach; ?>
