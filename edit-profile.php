@@ -153,6 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'education_detail' => sanitize($_POST['education_detail'] ?? ''),
                         'occupation' => sanitize($_POST['occupation']),
                         'occupation_detail' => sanitize($_POST['occupation_detail'] ?? ''),
+                        'employment_status' => sanitize($_POST['employment_status'] ?? ''),
+                        'job_description' => sanitize($_POST['job_description'] ?? ''),
+                        'business_description' => sanitize($_POST['business_description'] ?? ''),
                         'company' => sanitize($_POST['company'] ?? ''),
                         'annual_income' => sanitize($_POST['annual_income'] ?? ''),
                         'working_city' => sanitize($_POST['working_city'] ?? ''),
@@ -736,6 +739,36 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label">Occupation Detail</label>
                                 <input type="text" class="form-control" name="occupation_detail" value="<?= sanitize($details['occupation_detail'] ?? '') ?>" placeholder="E.g., Senior Software Engineer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Employment Status</label>
+                                <select name="employment_status" class="form-select" id="employmentStatus">
+                                    <option value="">Select Employment Status</option>
+                                    <option value="Job" <?= ($details['employment_status'] ?? '') === 'Job' ? 'selected' : '' ?>>Job</option>
+                                    <option value="Business" <?= ($details['employment_status'] ?? '') === 'Business' ? 'selected' : '' ?>>Business</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="jobDescriptionContainer" style="display: none;">
+                                <label class="form-label">Job Description</label>
+                                <select name="job_description" class="form-select">
+                                    <option value="">Select Job Description</option>
+                                    <option value="Government" <?= ($details['job_description'] ?? '') === 'Government' ? 'selected' : '' ?>>Government</option>
+                                    <option value="Private" <?= ($details['job_description'] ?? '') === 'Private' ? 'selected' : '' ?>>Private</option>
+                                    <option value="Semi Government" <?= ($details['job_description'] ?? '') === 'Semi Government' ? 'selected' : '' ?>>Semi Government</option>
+                                    <option value="Bank" <?= ($details['job_description'] ?? '') === 'Bank' ? 'selected' : '' ?>>Bank</option>
+                                    <option value="Others" <?= ($details['job_description'] ?? '') === 'Others' ? 'selected' : '' ?>>Others</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="businessDescriptionContainer" style="display: none;">
+                                <label class="form-label">Business Description</label>
+                                <select name="business_description" class="form-select">
+                                    <option value="">Select Business Description</option>
+                                    <option value="Manufacturing" <?= ($details['business_description'] ?? '') === 'Manufacturing' ? 'selected' : '' ?>>Manufacturing</option>
+                                    <option value="Agency" <?= ($details['business_description'] ?? '') === 'Agency' ? 'selected' : '' ?>>Agency</option>
+                                    <option value="Trading" <?= ($details['business_description'] ?? '') === 'Trading' ? 'selected' : '' ?>>Trading</option>
+                                    <option value="Service Business" <?= ($details['business_description'] ?? '') === 'Service Business' ? 'selected' : '' ?>>Service Business</option>
+                                    <option value="Others" <?= ($details['business_description'] ?? '') === 'Others' ? 'selected' : '' ?>>Others</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Company / Employer</label>
@@ -1437,6 +1470,36 @@ require_once __DIR__ . '/includes/header.php';
         restoreAll();
         attachAutoSave();
         attachChangeDetection();
+
+        // Employment Status dynamic dropdown behavior
+        var employmentStatus = document.getElementById('employmentStatus');
+        var jobDescriptionContainer = document.getElementById('jobDescriptionContainer');
+        var businessDescriptionContainer = document.getElementById('businessDescriptionContainer');
+        var jobDescriptionSelect = document.querySelector('select[name="job_description"]');
+        var businessDescriptionSelect = document.querySelector('select[name="business_description"]');
+
+        if (employmentStatus && jobDescriptionContainer && businessDescriptionContainer) {
+            function updateDynamicDropdowns() {
+                var status = employmentStatus.value;
+                // Hide both first
+                jobDescriptionContainer.style.display = 'none';
+                businessDescriptionContainer.style.display = 'none';
+
+                if (status === 'Job') {
+                    jobDescriptionContainer.style.display = 'block';
+                    businessDescriptionSelect.value = '';
+                } else if (status === 'Business') {
+                    businessDescriptionContainer.style.display = 'block';
+                    jobDescriptionSelect.value = '';
+                }
+            }
+
+            // Initialize on page load
+            updateDynamicDropdowns();
+
+            // Listen for changes
+            employmentStatus.addEventListener('change', updateDynamicDropdowns);
+        }
 
         // Show subtle "draft restored" indicator if any unsaved data exists
         document.querySelectorAll('.section-form').forEach(function(form) {
