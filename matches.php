@@ -118,7 +118,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="text-center py-5">
                 <i class="bi bi-search-heart" style="font-size: 4rem; color: var(--text-muted);"></i>
                 <h5 class="mt-3">No Connection Made</h5>
-                <p class="text-muted">No Connection Made. Seach for the right partner and send request</p>
+                <p class="text-muted">Seach for the right one and send request. You will see connected users here</p>
                 <a href="<?= SITE_URL ?>/search.php" class="btn btn-primary">Search Partner</a>
             </div>
         <?php endif; ?>
