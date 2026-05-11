@@ -207,8 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'max_height' => intval($_POST['pref_max_height'] ?? 0),
                         'marital_status' => sanitize($_POST['pref_marital_status'] ?? ''),
                         'religion' => sanitize($_POST['pref_religion'] ?? ''),
-                        'caste' => sanitize($_POST['pref_caste'] ?? ''),
-                        'mother_tongue' => sanitize($_POST['pref_mother_tongue'] ?? ''),
                         'education' => sanitize($_POST['pref_education'] ?? ''),
                         'occupation' => sanitize($_POST['pref_occupation'] ?? ''),
                         'min_income' => sanitize($_POST['pref_min_income'] ?? ''),
@@ -944,14 +942,6 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-4">
                                 <label class="form-label">Religion</label>
                                 <input type="text" class="form-control" name="pref_religion" value="<?= sanitize($partnerPrefs['religion'] ?? '') ?>" placeholder="E.g., Hindu, Jain">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Samaj Name</label>
-                                <input type="text" class="form-control" name="pref_caste" value="<?= sanitize($partnerPrefs['caste'] ?? '') ?>" placeholder="Any or specific">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Mother Tongue</label>
-                                <input type="text" class="form-control" name="pref_mother_tongue" value="<?= sanitize($partnerPrefs['mother_tongue'] ?? '') ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Marital Status</label>
