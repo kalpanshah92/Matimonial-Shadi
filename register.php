@@ -655,6 +655,11 @@ document.addEventListener('DOMContentLoaded', function() {
         var file = this.files[0];
         originalFile = file;
 
+        // Clear previous cropped image data when user selects a new file
+        if (croppedImageData) {
+            croppedImageData.value = '';
+        }
+
         // 5MB client-side validation
         if (file.size > 5 * 1024 * 1024) {
             errDiv.classList.remove('d-none');
