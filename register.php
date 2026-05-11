@@ -660,6 +660,11 @@ document.addEventListener('DOMContentLoaded', function() {
             croppedImageData.value = '';
         }
 
+        // Hide previous preview and reset state
+        previewWrap.classList.add('d-none');
+        previewImg.src = '';
+        croppedBlob = null;
+
         // 5MB client-side validation
         if (file.size > 5 * 1024 * 1024) {
             errDiv.classList.remove('d-none');
