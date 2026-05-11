@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $formData['password'])) $errors[] = 'Password must contain at least 1 special character.';
     if (empty($_POST['terms'])) $errors[] = 'You must agree to the Terms of Service and Privacy Policy.';
     if ($formData['password'] !== $formData['confirm_password']) $errors[] = 'Passwords do not match.';
+    if (empty($formData['profile_for'])) $errors[] = 'Please select who this profile is for.';
     if (empty($formData['gender'])) $errors[] = 'Gender is required.';
     if (empty($formData['dob'])) $errors[] = 'Date of birth is required.';
     if (($_POST['mother_tongue'] ?? '') === 'Others' && empty(trim($_POST['mother_tongue_other'] ?? ''))) {
