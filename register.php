@@ -521,13 +521,22 @@ document.addEventListener('DOMContentLoaded', function() {
         defaultOpt.value = '';
         defaultOpt.textContent = 'Select State';
         stateSelect.appendChild(defaultOpt);
+        var firstStateSelected = false;
         keys.forEach(function(k) {
             var opt = document.createElement('option');
             opt.value = divisions[k];
             opt.textContent = divisions[k];
-            if (divisions[k] === selectedState) opt.selected = true;
+            if (divisions[k] === selectedState) {
+                opt.selected = true;
+                firstStateSelected = true;
+            }
             stateSelect.appendChild(opt);
         });
+        // If no state was previously selected, select the first state by default
+        if (!selectedState && keys.length > 0) {
+            stateSelect.selectedIndex = 1; // Select first state (index 1, after the default option)
+            stateSelect.value = divisions[keys[0]]; // Set the value
+        }
         stateSelect.disabled = false;
     }
 
