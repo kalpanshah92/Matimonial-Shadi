@@ -169,8 +169,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     applyFamilyDetailsUpdate($pdo, $userId, [
                         'father_name' => sanitize($_POST['father_name'] ?? ''),
+                        'father_mobile' => sanitize($_POST['father_mobile'] ?? ''),
                         'father_occupation' => sanitize($_POST['father_occupation'] ?? ''),
                         'mother_name' => sanitize($_POST['mother_name'] ?? ''),
+                        'mother_mobile' => sanitize($_POST['mother_mobile'] ?? ''),
                         'mother_occupation' => sanitize($_POST['mother_occupation'] ?? ''),
                         'brothers' => intval($_POST['brothers'] ?? 0),
                         'brothers_married' => intval($_POST['brothers_married'] ?? 0),
@@ -779,12 +781,20 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="father_name" value="<?= sanitize($family['father_name'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Father's Mobile Number</label>
+                                <input type="text" class="form-control" name="father_mobile" value="<?= sanitize($family['father_mobile'] ?? '') ?>" placeholder="+91 XXXXX XXXXX">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Father's Occupation</label>
                                 <input type="text" class="form-control" name="father_occupation" value="<?= sanitize($family['father_occupation'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Mother's Name</label>
                                 <input type="text" class="form-control" name="mother_name" value="<?= sanitize($family['mother_name'] ?? '') ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mother's Mobile Number</label>
+                                <input type="text" class="form-control" name="mother_mobile" value="<?= sanitize($family['mother_mobile'] ?? '') ?>" placeholder="+91 XXXXX XXXXX">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Mother's Occupation</label>
@@ -933,7 +943,7 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Religion</label>
-                                <input type="text" class="form-control" name="pref_religion" value="<?= sanitize($partnerPrefs['religion'] ?? '') ?>" placeholder="E.g., Hindu, Sikh">
+                                <input type="text" class="form-control" name="pref_religion" value="<?= sanitize($partnerPrefs['religion'] ?? '') ?>" placeholder="E.g., Hindu, Jain">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Samaj Name</label>
