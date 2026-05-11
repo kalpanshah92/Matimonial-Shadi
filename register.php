@@ -192,10 +192,13 @@ require_once __DIR__ . '/includes/header.php';
                                 ?>
                                     <div class="col-auto">
                                         <input type="radio" class="btn-check" name="profile_for" id="pf_<?= strtolower($type) ?>"
-                                               value="<?= $type ?>" <?= ($formData['profile_for'] ?? '') === $type ? 'checked' : '' ?> required>
+                                               value="<?= $type ?>" <?= ($formData['profile_for'] ?? '') === $type ? 'checked' : '' ?>>
                                         <label class="btn btn-outline-primary btn-sm" for="pf_<?= strtolower($type) ?>"><?= $type ?></label>
                                     </div>
                                 <?php endforeach; ?>
+                            </div>
+                            <div id="profileForError" class="text-danger d-none mt-1">
+                                <small><i class="bi bi-exclamation-triangle me-1"></i>Please select who this profile is for.</small>
                             </div>
                         </div>
                         
@@ -596,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('registerForm');
     var loadingOverlay = document.getElementById('loadingOverlay');
     var registerBtn = document.getElementById('registerBtn');
+    var profileForError = document.getElementById('profileForError');
 
     if (form && loadingOverlay && registerBtn) {
         form.addEventListener('submit', function(e) {
@@ -610,8 +614,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!profileForSelected) {
                 e.preventDefault();
-                alert('Please select who this profile is for.');
+                if (profileForError) {
+                    profileForError.classList.remove('d-none');
+                }
                 return;
+            }
+
+            // Hide error if profile_for is selected
+            if (profileForError) {
+                profileForError.classList.add('d-none');
             }
 
             // Check if we're using the cropped blob submission (already handled by cropper JS)
@@ -623,6 +634,16 @@ document.addEventListener('DOMContentLoaded', function() {
             registerBtn.disabled = true;
         });
     }
+
+    // Hide error when user selects a profile_for option
+    var profileForInputs = document.querySelectorAll('input[name="profile_for"]');
+    profileForInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+            if (profileForError) {
+                profileForError.classList.add('d-none');
+            }
+        });
+    });
 });
 </script>
 
