@@ -21,9 +21,12 @@ if (session_status() === PHP_SESSION_NONE) {
  * Sanitize input data
  */
 function sanitize($data) {
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    if ($data === null) {
+        return '';
+    }
+    $data = trim($data ?? '');
+    $data = stripslashes($data ?? '');
+    $data = htmlspecialchars($data ?? '', ENT_QUOTES, 'UTF-8');
     return $data;
 }
 

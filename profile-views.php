@@ -61,7 +61,7 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <div class="mt-3">
                                 <p class="text-muted small mb-2">
-                                    <i class="bi bi-geo-alt me-1"></i><?= sanitize($location) ?>
+                                    <i class="bi bi-geo-alt me-1"></i><?= sanitize($visitor['country'] ?? '') ?>, <?= sanitize($visitor['state'] ?? '') ?>, <?= sanitize($visitor['city'] ?? '') ?>
                                 </p>
                                 <p class="text-muted small mb-2">
                                     <i class="bi bi-calendar me-1"></i>Viewed: <?= date('d M Y, g:i A', strtotime($visitor['visited_at'])) ?>
