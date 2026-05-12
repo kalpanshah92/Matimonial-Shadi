@@ -419,7 +419,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Report Modal -->
 <?php if (isLoggedIn() && !$isOwner): ?>
-<div class="modal fade" id="reportModal" tabindex="-1">
+<div class="modal fade" id="reportModal" tabindex="-1" style="z-index: 10001;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
