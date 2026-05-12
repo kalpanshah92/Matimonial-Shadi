@@ -421,7 +421,7 @@ require_once __DIR__ . '/includes/header.php';
 <?php if (isLoggedIn() && !$isOwner): ?>
 <div class="modal fade" id="reportModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
     <div class="modal-dialog">
-        <div class="modal-content" style="position: relative; z-index: 10002;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Report Profile</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -457,9 +457,9 @@ require_once __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <!-- Lightbox Overlay -->
-<div id="lightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; cursor:pointer;">
+<div id="lightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1050; align-items:center; justify-content:center; cursor:pointer;">
     <button type="button" id="lightboxClose" aria-label="Close"
-            style="position:absolute; top:20px; right:30px; background:transparent; border:none; color:#fff; font-size:2.5rem; line-height:1; cursor:pointer; z-index:10000;">&times;</button>
+            style="position:absolute; top:20px; right:30px; background:transparent; border:none; color:#fff; font-size:2.5rem; line-height:1; cursor:pointer; z-index:1051;">&times;</button>
     <img id="lightboxImage" src="" style="max-width:90%; max-height:90vh; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.5);">
 </div>
 
