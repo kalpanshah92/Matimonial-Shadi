@@ -419,8 +419,8 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Report Modal -->
 <?php if (isLoggedIn() && !$isOwner): ?>
-<div class="modal fade" id="reportModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Report Profile</h5>
@@ -454,6 +454,16 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </div>
+<script>
+// Move report modal to <body> to escape any parent stacking context that
+// causes the backdrop to overlay the modal content.
+(function() {
+    var rm = document.getElementById('reportModal');
+    if (rm && rm.parentNode !== document.body) {
+        document.body.appendChild(rm);
+    }
+})();
+</script>
 <?php endif; ?>
 
 <!-- Lightbox Overlay -->
