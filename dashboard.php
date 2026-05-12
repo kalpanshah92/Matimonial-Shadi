@@ -95,17 +95,10 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card dashboard-stat" <?= $isPremiumUser ? 'style="cursor: pointer;" onclick="window.location.href=\'' . SITE_URL . '/profile-views.php\'"' : '' ?>>
+                <div class="dashboard-card dashboard-stat" style="cursor: pointer;" onclick="window.location.href='<?= SITE_URL ?>/profile-views.php'">
                     <div class="stat-icon stat-warning"><i class="bi bi-eye"></i></div>
-                    <?php if ($isPremiumUser): ?>
-                        <h3><?= $recentVisits ?></h3>
-                    <?php else: ?>
-                        <h3><i class="bi bi-lock-fill text-muted"></i></h3>
-                    <?php endif; ?>
+                    <h3><?= $recentVisits ?></h3>
                     <p>Profile Views (30d)</p>
-                    <?php if (!$isPremiumUser): ?>
-                        <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-accent btn-sm mt-1" onclick="event.stopPropagation();"><i class="bi bi-star me-1"></i>Upgrade</a>
-                    <?php endif; ?>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
