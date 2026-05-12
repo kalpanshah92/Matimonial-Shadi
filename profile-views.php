@@ -2,12 +2,6 @@
 $pageTitle = 'Profile Views';
 require_once __DIR__ . '/includes/auth.php';
 
-// Check if premium user
-if (!isPremium($currentUser['id'])) {
-    setFlash('error', 'Profile Views is a premium feature. Please upgrade to view who visited your profile.');
-    redirect(SITE_URL . '/subscription.php');
-}
-
 $pdo = getDBConnection();
 $userId = $currentUser['id'];
 
