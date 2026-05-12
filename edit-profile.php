@@ -328,10 +328,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $errors[] = 'Please select a PDF file to upload.';
                     }
-                    $activeTab = 'id_document';
-                    if (empty($errors)) {
-                        redirect(SITE_URL . '/edit-profile.php?tab=id_document');
+                    redirect(SITE_URL . '/edit-profile.php?tab=id_document');
+                    break;
+
+                case 'address_proof':
+                    if (isset($_FILES['address_proof_document']) && $_FILES['address_proof_document']['error'] === UPLOAD_ERR_OK) {
+                        $result = uploadAddressProof($_FILES['address_proof_document'], $userId);
+                        if ($result['success']) {
+                            // Remove old physical file from previous DB record (in case folder cleanup missed it)
+                            $oldStmt = $pdo->prepare("SELECT address_proof_document FROM users WHERE id = ?");
+                            $oldStmt->execute([$userId]);
+                            $oldDoc = $oldStmt->fetchColumn();
+                            if ($oldDoc && $oldDoc !== $result['path']) {
+                                $oldFull = __DIR__ . '/' . $oldDoc;
+                                if (file_exists($oldFull)) @unlink($oldFull);
+                            }
+                            $upd = $pdo->prepare("UPDATE users SET address_proof_document = ?, address_proof_uploaded_at = NOW() WHERE id = ?");
+                            $upd->execute([$result['path'], $userId]);
+                            setFlash('success', 'Document uploaded successfully.');
+                        } else {
+                            $errors[] = $result['message'];
+                        }
+                    } else {
+                        $errors[] = 'Please select a PDF file to upload.';
                     }
+                    redirect(SITE_URL . '/edit-profile.php?tab=address_proof');
                     break;
 
                 case 'photo':
@@ -1279,6 +1300,64 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
             </div>
+
+            <!-- Address Proof - Documentation Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAddressProof" aria-expanded="false" aria-controls="collapseAddressProof">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>Address Proof - Documentation
+                    </button>
+                </h2>
+                <div id="collapseAddressProof" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+                    <div class="accordion-body">
+                        <div class="dashboard-card">
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Upload a single PDF document (e.g., Aadhaar, Passport, Utility Bill) for address verification.
+                                Your document is private and can only be reviewed by authorized administrators.
+                            </p>
+
+                            <?php if (!empty($currentUser['address_proof_document'])): ?>
+                                <div class="alert alert-success d-flex align-items-center" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <div>
+                                        Document uploaded
+                                        <?php if (!empty($currentUser['address_proof_uploaded_at'])): ?>
+                                            on <?= date('d M Y, h:i A', strtotime($currentUser['address_proof_uploaded_at'])) ?>
+                                        <?php endif; ?>.
+                                        Uploading a new file will replace the existing document.
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>No document uploaded yet.</div>
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="POST" action="" enctype="multipart/form-data" id="addressProofUploadForm">
+                                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                <input type="hidden" name="section" value="address_proof">
+                                <div class="row align-items-end g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Upload Document (PDF only)</label>
+                                        <input type="file" class="form-control" id="addressProofInput" name="address_proof_document" accept="application/pdf,.pdf" required>
+                                        <small class="text-muted d-block mt-1">Only PDF files are allowed. Maximum file size: 5MB.</small>
+                                        <div id="addressProofError" class="alert alert-danger mt-2 py-1 d-none">
+                                            <small><i class="bi bi-exclamation-triangle me-1"></i><span id="addressProofErrorMsg"></span></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn btn-primary w-100" id="addressProofSubmitBtn">
+                                            <i class="bi bi-upload me-1"></i><?= !empty($currentUser['address_proof_document']) ? 'Replace Document' : 'Upload Document' ?>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Single Save Button at Bottom -->
@@ -1802,6 +1881,60 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     });
+
+    // Address Proof upload validation
+    var addressProofInput = document.getElementById('addressProofInput');
+    var addressProofForm = document.getElementById('addressProofUploadForm');
+    var addressProofErrBox = document.getElementById('addressProofError');
+    var addressProofErrMsg = document.getElementById('addressProofErrorMsg');
+    if (addressProofInput && addressProofForm) {
+        function showAddressProofError(msg) {
+            if (addressProofErrBox && addressProofErrMsg) {
+                addressProofErrMsg.textContent = msg;
+                addressProofErrBox.classList.remove('d-none');
+            }
+        }
+        function hideAddressProofError() {
+            if (addressProofErrBox) addressProofErrBox.classList.add('d-none');
+        }
+
+        addressProofInput.addEventListener('change', function() {
+            hideAddressProofError();
+            if (!this.files || !this.files.length) return;
+            var file = this.files[0];
+            var name = (file.name || '').toLowerCase();
+            if (!name.endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+                showAddressProofError('Only PDF files are allowed.');
+                this.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showAddressProofError('File too large. Maximum 5MB allowed.');
+                this.value = '';
+                return;
+            }
+        });
+
+        addressProofForm.addEventListener('submit', function(e) {
+            if (!addressProofInput.files || !addressProofInput.files.length) {
+                e.preventDefault();
+                showAddressProofError('Please select a PDF file to upload.');
+                return;
+            }
+            var file = addressProofInput.files[0];
+            var name = (file.name || '').toLowerCase();
+            if (!name.endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+                e.preventDefault();
+                showAddressProofError('Only PDF files are allowed.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                e.preventDefault();
+                showAddressProofError('File too large. Maximum 5MB allowed.');
+                return;
+            }
+        });
+    }
 })();
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

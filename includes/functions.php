@@ -257,6 +257,71 @@ function uploadIdDocument($file, $userId) {
 }
 
 /**
+ * Upload Address Proof document (PDF only)
+ */
+function uploadAddressProof($file, $userId) {
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        return ['success' => false, 'message' => 'Upload error.'];
+    }
+
+    if ($file['size'] > MAX_PHOTO_SIZE) {
+        return ['success' => false, 'message' => 'File too large. Maximum 5MB allowed.'];
+    }
+
+    // Validate PDF strictly: extension + MIME (browser) + magic bytes
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($ext !== 'pdf') {
+        return ['success' => false, 'message' => 'Invalid file type. Only PDF files are allowed.'];
+    }
+
+    $mime = $file['type'] ?? '';
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo) {
+            $detected = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            if ($detected) $mime = $detected;
+        }
+    }
+    if ($mime !== 'application/pdf') {
+        return ['success' => false, 'message' => 'Invalid file type. Only PDF files are allowed.'];
+    }
+
+    // Magic bytes check
+    $fh = @fopen($file['tmp_name'], 'rb');
+    if ($fh) {
+        $head = fread($fh, 5);
+        fclose($fh);
+        if (strpos($head, '%PDF-') !== 0) {
+            return ['success' => false, 'message' => 'Invalid PDF file.'];
+        }
+    }
+
+    $userDir = UPLOADS_PATH . 'address_proof' . DIRECTORY_SEPARATOR . $userId;
+    if (!is_dir($userDir)) {
+        mkdir($userDir, 0755, true);
+    }
+
+    // Remove any existing PDFs for this user (replace behavior)
+    foreach (glob($userDir . DIRECTORY_SEPARATOR . '*.pdf') ?: [] as $old) {
+        @unlink($old);
+    }
+
+    $filename = 'addressproof_' . uniqid() . '.pdf';
+    $filepath = $userDir . DIRECTORY_SEPARATOR . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        return [
+            'success' => true,
+            'path' => 'uploads/address_proof/' . $userId . '/' . $filename,
+            'filename' => $filename
+        ];
+    }
+
+    return ['success' => false, 'message' => 'Failed to save file.'];
+}
+
+/**
  * Calculate age from date of birth
  */
 function calculateAge($dob) {

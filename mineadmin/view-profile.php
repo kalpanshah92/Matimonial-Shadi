@@ -190,6 +190,48 @@ if ($isPremium) {
             </div>
             <?php endif; ?>
 
+            <!-- Address Proof - Documentation (Super Admin only) -->
+            <?php if ($_SESSION['admin_role'] === 'super_admin'): ?>
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-pdf me-2"></i>Address Proof - Documentation</h5>
+                    <span class="badge bg-dark">Super Admin Only</span>
+                </div>
+                <div class="card-body">
+                    <?php if (isset($_GET['address_proof_deleted'])): ?>
+                        <div class="alert alert-success py-2"><i class="bi bi-check-circle me-1"></i>Document removed.</div>
+                    <?php endif; ?>
+                    <?php if (!empty($user['address_proof_document'])): ?>
+                        <p class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                            Document uploaded
+                            <?php if (!empty($user['address_proof_uploaded_at'])): ?>
+                                on <?= date('d M Y, h:i A', strtotime($user['address_proof_uploaded_at'])) ?>
+                            <?php endif; ?>.
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="address-proof.php?action=view&user_id=<?= $userId ?>" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            <a href="address-proof.php?action=download&user_id=<?= $userId ?>" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download me-1"></i>Download
+                            </a>
+                            <form method="POST" action="address-proof.php" class="d-inline" onsubmit="return confirm('Remove this document permanently?');">
+                                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                <input type="hidden" name="user_id" value="<?= $userId ?>">
+                                <input type="hidden" name="action" value="delete">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash me-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>No document uploaded by this user.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Personal Details -->
             <div class="card mb-4">
                 <div class="card-header">
