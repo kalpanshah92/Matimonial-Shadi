@@ -419,7 +419,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Report Modal -->
 <?php if (isLoggedIn() && !$isOwner): ?>
-<div class="modal fade" id="reportModal" tabindex="-1" style="z-index: 10001;">
+<div class="modal fade" id="reportModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -454,6 +454,22 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var reportModal = document.getElementById('reportModal');
+    if (reportModal) {
+        reportModal.addEventListener('show.bs.modal', function() {
+            // Ensure modal is above everything
+            this.style.zIndex = '10001';
+            var backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.style.zIndex = '10000';
+            }
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
 <!-- Lightbox Overlay -->
