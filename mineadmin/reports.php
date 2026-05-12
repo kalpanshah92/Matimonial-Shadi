@@ -77,7 +77,7 @@ $reports = $stmt->fetchAll();
                             </td>
                             <td><small><?= date('d M Y', strtotime($report['created_at'])) ?></small></td>
                             <td>
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $report['reported_id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <a href="view-profile.php?id=<?= $report['reported_id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <?php if ($report['status'] === 'pending'): ?>
