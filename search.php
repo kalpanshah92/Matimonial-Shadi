@@ -237,7 +237,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <span><i class="bi bi-translate"></i> <?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></span>
                                         </div>
                                         <div class="d-flex gap-2 mt-3">
-                                            <a href="<?= SITE_URL ?>/profile.php?id=<?= $profile['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View Profile</a>
+                                            <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($profile['id']) ?>" class="btn btn-outline-primary btn-sm flex-fill">View Profile</a>
                                             <?php if (isLoggedIn()): ?>
                                                 <?php
                                                 $request = $pendingRequests[$profile['id']] ?? null;

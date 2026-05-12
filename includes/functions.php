@@ -28,6 +28,73 @@ function sanitize($data) {
 }
 
 /**
+ * Encode profile ID to non-predictable hash (reversible)
+ */
+function encodeProfileId($id) {
+    $salt = 'matrimonial-secret-salt-2024-secure';
+    $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $base62 = '';
+
+    // XOR with salt to obscure the ID
+    $obfuscated = $id ^ crc32($salt);
+
+    // Convert to base62
+    $base = 62;
+    while ($obfuscated > 0) {
+        $remainder = $obfuscated % $base;
+        $base62 = $alphabet[$remainder] . $base62;
+        $obfuscated = floor($obfuscated / $base);
+    }
+
+    // Ensure minimum length of 8
+    while (strlen($base62) < 8) {
+        $base62 = $alphabet[0] . $base62;
+    }
+
+    // Add checksum
+    $checksum = substr(md5($salt . $base62), 0, 2);
+    return $base62 . $checksum;
+}
+
+/**
+ * Decode profile ID from hash (reversible)
+ */
+function decodeProfileId($hash) {
+    $salt = 'matrimonial-secret-salt-2024-secure';
+    $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    if (strlen($hash) < 10) {
+        return null;
+    }
+
+    // Extract base62 and checksum
+    $base62 = substr($hash, 0, -2);
+    $checksum = substr($hash, -2);
+
+    // Verify checksum
+    if (substr(md5($salt . $base62), 0, 2) !== $checksum) {
+        return null;
+    }
+
+    // Convert from base62
+    $base = 62;
+    $obfuscated = 0;
+    for ($i = 0; $i < strlen($base62); $i++) {
+        $char = $base62[$i];
+        $pos = strpos($alphabet, $char);
+        if ($pos === false) {
+            return null;
+        }
+        $obfuscated = $obfuscated * $base + $pos;
+    }
+
+    // Reverse XOR to get original ID
+    $id = $obfuscated ^ crc32($salt);
+
+    return $id > 0 ? $id : null;
+}
+
+/**
  * Generate a unique profile ID
  */
 function generateProfileId($gender) {

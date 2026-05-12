@@ -7,7 +7,7 @@ if (!isset($_SESSION['admin_id']) && !isset($_SESSION['user_id'])) {
     redirect(SITE_URL . '/index.php');
 }
 
-$profileId = intval($_GET['id'] ?? 0);
+$profileId = decodeProfileId($_GET['id'] ?? '');
 if (!$profileId) {
     setFlash('error', 'Invalid profile.');
     redirect(SITE_URL . '/search.php');

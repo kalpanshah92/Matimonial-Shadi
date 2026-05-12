@@ -45,34 +45,28 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="col-lg-4 col-md-6">
                         <div class="dashboard-card">
                             <div class="position-relative">
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>">
-                                    <img src="<?= getProfilePic($visitor['profile_pic'], $visitor['gender']) ?>" 
-                                         class="w-100" 
-                                         style="height: 200px; object-fit: cover; border-radius: 8px;"
-                                         alt="<?= sanitize($visitor['name']) ?>">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($visitor['visitor_id']) ?>">
+                                    <img src="<?= getProfilePic($visitor['profile_pic'], $visitor['gender']) ?>"
+                                         class="rounded-circle" width="50" height="50" style="object-fit: cover;">
                                 </a>
-                                <span class="badge bg-primary position-absolute top-0 end-0 m-2">
-                                    <?= calculateAge($visitor['dob']) ?> yrs
-                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($visitor['visitor_id']) ?>"
+                                   class="fw-bold text-dark text-decoration-none">
+                                    <?= sanitize($visitor['name']) ?>
+                                </a>
+                                <small class="d-block text-muted">
+                                    <?= calculateAge($visitor['dob']) ?> yrs | <?= sanitize($visitor['city'] ?? '') ?>
+                                </small>
                             </div>
                             <div class="mt-3">
-                                <h5 class="mb-2">
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
-                                       class="text-decoration-none text-dark">
-                                        <?= sanitize($visitor['name']) ?>
-                                    </a>
-                                </h5>
-                                <?php
-                                $locationParts = array_filter([$visitor['country'] ?? '', $visitor['state'] ?? '', $visitor['city'] ?? '']);
-                                $location = !empty($locationParts) ? implode(', ', $locationParts) : 'Not specified';
-                                ?>
                                 <p class="text-muted small mb-2">
                                     <i class="bi bi-geo-alt me-1"></i><?= sanitize($location) ?>
                                 </p>
                                 <p class="text-muted small mb-2">
                                     <i class="bi bi-calendar me-1"></i>Viewed: <?= date('d M Y, g:i A', strtotime($visitor['visited_at'])) ?>
                                 </p>
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $visitor['visitor_id'] ?>" 
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($visitor['visitor_id']) ?>"
                                    class="btn btn-primary btn-sm w-100">
                                     <i class="bi bi-eye me-1"></i>View Profile
                                 </a>

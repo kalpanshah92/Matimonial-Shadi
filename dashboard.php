@@ -123,22 +123,22 @@ require_once __DIR__ . '/includes/header.php';
                     <?php foreach ($connectionRequests as $req): ?>
                         <div class="request-item d-flex align-items-center justify-content-between p-3 border-bottom">
                             <div class="d-flex align-items-center gap-3">
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($req['sender_id']) ?>">
                                     <img src="<?= getProfilePic($req['profile_pic'], $req['gender']) ?>" 
                                          class="rounded-circle" width="50" height="50" style="object-fit: cover;">
                                 </a>
-                                <div>
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>" class="fw-bold text-dark text-decoration-none">
-                                        <?= sanitize($req['name']) ?>
-                                    </a>
+                            </div>
+                            <div class="flex-grow-1">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($req['sender_id']) ?>" class="fw-bold text-dark text-decoration-none">
+                                    <?= sanitize($req['name']) ?>
+                                </a>
                                     
-                                    <small class="d-block text-muted">
-                                        <?= calculateAge($req['dob']) ?> yrs | <?= sanitize($req['religion'] ?? '') ?> | <?= sanitize($req['city'] ?? '') ?>
-                                    </small>
-                                </div>
+                                <small class="d-block text-muted">
+                                    <?= calculateAge($req['dob']) ?> yrs | <?= sanitize($req['religion'] ?? '') ?> | <?= sanitize($req['city'] ?? '') ?>
+                                </small>
                             </div>
                             <div class="d-flex gap-2 flex-wrap justify-content-end">
-                                <a href="<?= SITE_URL ?>/profile.php?id=<?= $req['sender_id'] ?>" class="btn btn-sm btn-outline-primary">
+                                <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($req['sender_id']) ?>" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye me-1"></i>View
                                 </a>
                                 <button class="btn btn-sm btn-success btn-accept-request" data-request-id="<?= $req['id'] ?>">

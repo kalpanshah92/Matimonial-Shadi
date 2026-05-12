@@ -239,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <small class="text-muted">Profile ID: <strong><?= $user['profile_id'] ?></strong> &middot; <?= htmlspecialchars($user['email']) ?></small>
         </div>
         <div>
-            <a href="<?= SITE_URL ?>/profile.php?id=<?= $user['id'] ?>" target="_blank" class="btn btn-outline-primary"><i class="bi bi-eye me-1"></i>View Public Profile</a>
+            <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($user['id']) ?>" target="_blank" class="btn btn-outline-primary"><i class="bi bi-eye me-1"></i>View Public Profile</a>
             <a href="profiles.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
         </div>
     </div>

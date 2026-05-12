@@ -89,7 +89,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <span><i class="bi bi-geo-alt"></i> <?= sanitize($match['country'] ?? '') ?>, <?= sanitize($match['state'] ?? '') ?>, <?= sanitize($match['city'] ?? '') ?></span>
                                 </div>
                                 <div class="d-flex gap-2 mt-3">
-                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= $match['id'] ?>" class="btn btn-outline-primary btn-sm flex-fill">View</a>
+                                    <a href="<?= SITE_URL ?>/profile.php?id=<?= encodeProfileId($match['id']) ?>" class="btn btn-outline-primary btn-sm flex-fill">View</a>
                                 </div>
                             </div>
                         </div>
