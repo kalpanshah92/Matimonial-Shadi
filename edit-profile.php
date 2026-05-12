@@ -1255,7 +1255,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="dashboard-card">
                             <p class="text-muted small mb-3">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Upload a single PDF document (e.g., Aadhaar, Passport, Driver's License) for identity verification.
+                                Upload a single PDF document <b>(Only One Required)</b> (e.g., Aadhaar, Passport, Driver's License) for identity verification.
                                 Your document is private and can only be reviewed by authorized administrators.
                             </p>
 
