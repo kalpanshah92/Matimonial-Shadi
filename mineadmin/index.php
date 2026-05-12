@@ -162,13 +162,13 @@ $adminPage = 'dashboard';
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="admin-stat-card">
+            <a href="reports.php" class="admin-stat-card text-decoration-none">
                 <div class="stat-icon stat-warning"><i class="bi bi-flag"></i></div>
                 <div>
                     <h4 class="mb-0"><?= $stats['pending_reports'] ?></h4>
                     <small class="text-muted">Pending Reports</small>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6">
             <div class="admin-stat-card">
