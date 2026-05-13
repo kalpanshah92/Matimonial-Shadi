@@ -299,6 +299,32 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="col-12"><small class="text-muted">About Partner</small><br><?= !empty($partnerPrefs['about_partner']) ? nl2br(sanitize($partnerPrefs['about_partner'])) : '<span class="text-muted fst-italic">Not Provided</span>' ?></div>
                     </div>
                 </div>
+
+                <!-- Documentation Verification (visible only to profile owner and admins) -->
+                <?php if ($isOwner || $viewerIsSuperAdmin): ?>
+                <div class="dashboard-card mb-4">
+                    <h5><i class="bi bi-file-earmark-pdf-fill me-2 text-primary"></i>Documentation Verification</h5>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <small class="text-muted">Address Proof</small><br>
+                            <?php if (!empty($profile['address_proof_document'])): ?>
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Uploaded</span>
+                                <small class="text-muted d-block mt-1"><?= date('d M Y, g:i A', strtotime($profile['address_proof_uploaded_at'])) ?></small>
+                            <?php else: ?>
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle me-1"></i>Not Uploaded</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($isOwner): ?>
+                            <div class="col-md-6">
+                                <small class="text-muted">Action</small><br>
+                                <a href="<?= SITE_URL ?>/edit-profile.php#collapseAddressProof" class="btn btn-sm btn-outline-primary mt-1">
+                                    <i class="bi bi-upload me-1"></i>Manage Documents
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Sidebar -->
