@@ -22,6 +22,13 @@ if (isset($_GET['mark_read'])) {
     redirect(SITE_URL . '/notifications.php');
 }
 
+// Clear all notifications
+if (isset($_GET['clear_all'])) {
+    $pdo->prepare("DELETE FROM notifications WHERE user_id = ?")->execute([$userId]);
+    setFlash('success', 'All notifications cleared.');
+    redirect(SITE_URL . '/notifications.php');
+}
+
 $typeIcons = [
     'visit' => 'bi-eye text-info',
     'interest' => 'bi-heart text-danger',
@@ -40,7 +47,10 @@ require_once __DIR__ . '/includes/header.php';
             <div class="col-lg-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3><i class="bi bi-bell me-2"></i>Notifications</h3>
-                    <a href="?mark_read=1" class="btn btn-outline-primary btn-sm">Mark All as Read</a>
+                    <div class="d-flex gap-2">
+                        <a href="?mark_read=1" class="btn btn-outline-primary btn-sm">Mark All as Read</a>
+                        <a href="?clear_all=1" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to clear all notifications?');">Clear All</a>
+                    </div>
                 </div>
 
                 <?php if (!empty($notifications)): ?>
