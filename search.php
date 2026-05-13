@@ -163,6 +163,7 @@ require_once __DIR__ . '/includes/header.php';
                             <label>Marital Status</label>
                             <select name="marital_status" class="form-select form-select-sm">
                                 <option value="">Any</option>
+                                <option value="Not specified" <?= ($_GET['marital_status'] ?? '') === 'Not specified' ? 'selected' : '' ?>>Not specified</option>
                                 <?php foreach ($MARITAL_STATUS as $ms): ?>
                                     <option value="<?= $ms ?>" <?= ($_GET['marital_status'] ?? '') === $ms ? 'selected' : '' ?>><?= $ms ?></option>
                                 <?php endforeach; ?>
@@ -232,7 +233,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <div class="profile-details-mini mt-2">
                                             <span><i class="bi bi-calendar3"></i> <?= calculateAge($profile['dob']) ?> yrs</span>
                                             <span><i class="bi bi-book"></i> <?= sanitize($profile['religion'] ?? 'Not specified') ?></span>
-                                            <span><i class="bi bi-heart"></i> <?= sanitize($profile['marital_status'] ?? 'Not specified') ?></span>
+                                            <span><i class="bi bi-person-circle"></i> <?= sanitize($profile['marital_status'] ?? 'Not specified') ?></span>
                                             <span><i class="bi bi-geo-alt"></i> <?= sanitize($profile['country'] ?? '') ?>, <?= sanitize($profile['state'] ?? '') ?>, <?= sanitize($profile['city'] ?? '') ?></span>
                                             <span><i class="bi bi-translate"></i> <?= sanitize($profile['mother_tongue'] ?? 'Not specified') ?></span>
                                         </div>
