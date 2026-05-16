@@ -182,7 +182,7 @@ $sectionLabels = [
                             <?php foreach ($pendingPhotos as $photo): ?>
                                 <div class="col-md-3 col-6" id="photo-card-<?= $photo['id'] ?>">
                                     <div class="card h-100">
-                                        <img src="<?= SITE_URL ?>/<?= $photo['photo_path'] ?>" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                        <img src="<?= htmlspecialchars(photoUrl($photo['photo_path']), ENT_QUOTES, 'UTF-8') ?>" class="card-img-top" style="height: 200px; object-fit: cover;">
                                         <div class="card-body p-2 text-center">
                                             <strong class="d-block small"><?= htmlspecialchars($photo['name']) ?></strong>
                                             <small class="text-muted"><?= $photo['profile_id'] ?></small>

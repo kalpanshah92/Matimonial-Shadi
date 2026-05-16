@@ -12,47 +12,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $errors[] = 'Invalid form submission.';
     }
-    
-    $email = sanitize($_POST['email'] ?? '');
+
+    $email    = sanitize($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    
-    if (empty($email)) $errors[] = 'Email is required.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Please enter a valid email address.';
-    if (empty($password)) $errors[] = 'Password is required.';
-    
+
+    if (empty($email))                                       $errors[] = 'Email is required.';
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))      $errors[] = 'Please enter a valid email address.';
+    if (empty($password))                                    $errors[] = 'Password is required.';
+
+    // F-07 / F-16 IP + identifier-based throttling
+    if (empty($errors) && isLoginLocked($email, 'user')) {
+        $errors[] = 'Too many failed attempts. Please try again in 15 minutes.';
+    }
+    if (empty($errors) && !rateLimit('login:ip:' . clientIp(), 20, 900)) {
+        $errors[] = 'Too many login attempts from your network. Try again later.';
+    }
+
     if (empty($errors)) {
-        $pdo = getDBConnection();
+        $pdo  = getDBConnection();
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND is_active = 1");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
-        
-        if ($user && password_verify($password, $user['password'])) {
-            // Check if account is approved by admin
-            if ($user['status'] === 'pending') {
-                $errors[] = 'Your account is pending approval. Please wait for admin to approve your registration.';
-            } elseif ($user['status'] === 'rejected') {
-                $errors[] = 'Your account has been rejected. Please contact support for more information.';
-            } elseif ($user['status'] === 'suspended') {
-                $errors[] = 'Your account has been suspended. Please contact support.';
+
+        $passOk = $user && password_verify($password, $user['password']);
+        // F-11 Generic message regardless of email validity / account status.
+        // We still record login attempts so admins can detect enumeration / brute force.
+        if (!$passOk) {
+            recordLoginAttempt($email, false, 'user');
+            $errors[] = 'Invalid credentials or account not available.';
+        } else {
+            if ($user['status'] !== 'approved') {
+                recordLoginAttempt($email, false, 'user');
+                // Generic failure message (do not reveal pending/rejected/suspended state)
+                $errors[] = 'Invalid credentials or account not available.';
             } else {
-                $_SESSION['user_id'] = $user['id'];
-                
-                // Update last login
-                $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-                $stmt->execute([$user['id']]);
-                
-                // Handle remember me
+                // F-08 Session fixation: regenerate session ID on auth-state change
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = (int)$user['id'];
+                recordLoginAttempt($email, true, 'user');
+
+                $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
+
+                // F-09 Proper remember-me selector/validator
                 if (isset($_POST['remember_me'])) {
-                    $token = bin2hex(random_bytes(32));
-                    setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+                    issueRememberToken((int)$user['id']);
                 }
-                
-                $redirect = $_GET['redirect'] ?? SITE_URL . '/dashboard.php';
-                setFlash('success', 'Welcome back, ' . $user['name'] . '!');
+
+                // F-10 Validate redirect target
+                $redirect = safeRedirectTarget($_GET['redirect'] ?? '/dashboard.php', '/dashboard.php');
+                setFlash('success', 'Welcome back, ' . sanitize($user['name']) . '!');
                 redirect($redirect);
             }
-        } else {
-            $errors[] = 'Invalid email or password.';
         }
     }
 }
@@ -75,7 +85,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="alert alert-danger">
                             <ul class="mb-0">
                                 <?php foreach ($errors as $error): ?>
-                                    <li><?= $error ?></li>
+                                    <li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

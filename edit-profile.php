@@ -1163,7 +1163,7 @@ require_once __DIR__ . '/includes/header.php';
                         <?php foreach ($photos as $photo): ?>
                             <div class="col-md-3 col-6">
                                 <div class="position-relative">
-                                    <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" class="rounded w-100" style="height: 180px; object-fit: cover;<?= !$photo['is_approved'] ? ' opacity: 0.6;' : '' ?>">
+                                    <img src="<?= htmlspecialchars(photoUrl($photo['photo_path']), ENT_QUOTES, 'UTF-8') ?>" class="rounded w-100" style="height: 180px; object-fit: cover;<?= !$photo['is_approved'] ? ' opacity: 0.6;' : '' ?>">
                                     <?php if ($photo['is_primary'] && $photo['is_approved']): ?>
                                         <span class="badge bg-success position-absolute top-0 start-0 m-2">Primary</span>
                                     <?php endif; ?>

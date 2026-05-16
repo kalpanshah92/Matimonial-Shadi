@@ -1,7 +1,6 @@
 <?php
-session_start();
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/app.php';
+// F-08/F-14 Hardened session bootstrap (must happen before session_start)
+require_once __DIR__ . '/../includes/functions.php';
 
 if (isset($_SESSION['admin_id'])) {
     header('Location: index.php');
@@ -11,29 +10,48 @@ if (isset($_SESSION['admin_id'])) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // F-16 CSRF
+    if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error = 'Invalid form submission.';
+    }
+
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    
-    if (empty($username) || empty($password)) {
+
+    if (!$error && (empty($username) || empty($password))) {
         $error = 'Please enter username and password.';
-    } else {
+    }
+
+    // F-16 Lockout + rate limit
+    if (!$error && isLoginLocked($username, 'admin')) {
+        $error = 'Too many failed attempts. Please try again in 15 minutes.';
+    }
+    if (!$error && !rateLimit('adminlogin:ip:' . clientIp(), 10, 900)) {
+        $error = 'Too many login attempts. Please try again later.';
+    }
+
+    if (!$error) {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE (username = ? OR email = ?) AND is_active = 1");
         $stmt->execute([$username, $username]);
         $admin = $stmt->fetch();
-        
+
         if ($admin && password_verify($password, $admin['password'])) {
-            $_SESSION['admin_id'] = $admin['id'];
+            // F-08 Regenerate session on privilege escalation
+            session_regenerate_id(true);
+            $_SESSION['admin_id']   = (int)$admin['id'];
             $_SESSION['admin_name'] = $admin['name'];
             $_SESSION['admin_role'] = $admin['role'];
-            
-            $stmt = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
-            $stmt->execute([$admin['id']]);
-            
+
+            recordLoginAttempt($username, true, 'admin');
+            $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?")->execute([$admin['id']]);
+
             header('Location: index.php');
             exit;
         } else {
-            $error = 'Invalid username or password.';
+            recordLoginAttempt($username, false, 'admin');
+            // F-11 Generic error
+            $error = 'Invalid credentials.';
         }
     }
 }
@@ -59,10 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     
                     <?php if ($error): ?>
-                        <div class="alert alert-danger"><?= $error ?></div>
+                        <div class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
-                    
+
                     <form method="POST" action="">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         <div class="mb-3">
                             <label class="form-label">Username or Email</label>
                             <input type="text" class="form-control" name="username" required autofocus>

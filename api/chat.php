@@ -4,14 +4,29 @@ require_once __DIR__ . '/../includes/functions.php';
 header('Content-Type: application/json');
 
 if (!isLoggedIn()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit;
 }
 
-$userId = $_SESSION['user_id'];
-$pdo = getDBConnection();
+$userId = (int)$_SESSION['user_id'];
 
-$action = $_REQUEST['action'] ?? '';
+// F-20 Separate verbs by HTTP method; F-06 CSRF on writes only
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCSRF();
+    $action = $_POST['action'] ?? '';
+} else {
+    $action = $_GET['action'] ?? '';
+}
+
+// F-07 Rate limit message sends
+if ($action === 'send' && !rateLimit('chat:send:' . $userId, 60, 3600)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Too many messages. Slow down.']);
+    exit;
+}
+
+$pdo = getDBConnection();
 
 switch ($action) {
     case 'get_messages':

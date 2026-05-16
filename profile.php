@@ -65,6 +65,11 @@ if (isLoggedIn()) {
     $isOwner = ($currentUserId == $profileId);
     
     if (!$isOwner) {
+        // F-13 Per-viewer daily distinct-profile cap to deter scraping
+        if (!canViewAnotherProfile($currentUserId, $profileId)) {
+            setFlash('error', 'Daily profile view limit reached. Upgrade to premium for higher limits.');
+            redirect(SITE_URL . '/dashboard.php');
+        }
         logProfileVisit($currentUserId, $profileId);
         
         // Check connection status
@@ -135,9 +140,10 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if (!empty($photos) && count($photos) > 1): ?>
                                 <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap">
                                     <?php foreach (array_slice($photos, 0, 4) as $photo): ?>
-                                        <img src="<?= SITE_URL . '/' . $photo['photo_path'] ?>" 
+                                        <?php $purl = photoUrl($photo['photo_path']); ?>
+                                        <img src="<?= htmlspecialchars($purl, ENT_QUOTES, 'UTF-8') ?>"
                                              class="rounded" width="50" height="50" style="object-fit: cover; cursor: pointer;"
-                                             onclick="openLightbox('<?= SITE_URL . '/' . $photo['photo_path'] ?>')">
+                                             onclick="openLightbox('<?= htmlspecialchars($purl, ENT_QUOTES, 'UTF-8') ?>')">
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>

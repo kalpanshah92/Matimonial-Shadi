@@ -17,13 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Please enter a valid email address.';
     }
-    
+
+    // F-07 Rate-limit OTP sends: max 3 per identifier/hour, max 10 per IP/hour
+    if (empty($errors) && !rateLimit('forgot:email:' . strtolower($email), 3, 3600)) {
+        $errors[] = 'Too many requests for this email. Try again later.';
+    }
+    if (empty($errors) && !rateLimit('forgot:ip:' . clientIp(), 10, 3600)) {
+        $errors[] = 'Too many requests. Try again later.';
+    }
+
     if (empty($errors)) {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("SELECT id, name, status FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
-        
+
+        // F-11 Always show the same success message to prevent account enumeration.
+        $genericOk = 'If an account exists for that email, an OTP has been sent.';
         if ($user && $user['status'] === 'approved') {
             $otp = generateOTP();
             saveOTP($email, $otp, 'password_reset');
@@ -68,13 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($emailSent) {
                 $_SESSION['reset_email'] = $email;
-                setFlash('success', 'Password reset OTP has been sent to your email.');
+                setFlash('success', $genericOk);
                 redirect(SITE_URL . '/reset-password.php');
             } else {
-                $errors[] = 'Failed to send email. Please try again later.';
+                // Don't reveal mail-delivery failures separately; still record + flash generic.
+                error_log('forgot-password: email send failed for ' . $email);
+                setFlash('success', $genericOk);
+                redirect(SITE_URL . '/login.php');
             }
         } else {
-            $errors[] = 'Account do not exist or not approved by admin.';
+            // F-11 Same response whether the account exists or not.
+            setFlash('success', $genericOk);
+            redirect(SITE_URL . '/login.php');
         }
     }
 }
@@ -96,7 +111,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="alert alert-danger">
                             <ul class="mb-0">
                                 <?php foreach ($errors as $error): ?>
-                                    <li><?= $error ?></li>
+                                    <li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

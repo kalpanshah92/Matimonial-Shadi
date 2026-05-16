@@ -1,0 +1,18 @@
+# F-02 / F-03 Lock down uploads directory
+# Deny ALL direct access; uploaded content must be served through PHP proxies
+# (photo.php for images, admin-only document viewers for PDFs).
+Order Allow,Deny
+Deny from all
+
+# Belt-and-braces: disable script execution under uploads regardless of mappings
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .phar .php3 .php4 .php5 .php7 .php8
+AddType text/plain .php .phtml .phar .php3 .php4 .php5 .php7 .php8

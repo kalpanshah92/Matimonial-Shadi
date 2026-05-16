@@ -26,6 +26,9 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
     
     <!-- Custom CSS -->
     <link href="<?= SITE_URL ?>/assets/css/style.css" rel="stylesheet">
+
+    <!-- F-06 CSRF token for AJAX (consumed by main.js) -->
+    <meta name="csrf-token" content="<?= htmlspecialchars(generateCSRFToken(), ENT_QUOTES, 'UTF-8') ?>">
     
     <?php if (isset($extraCSS)): ?>
         <?php foreach ($extraCSS as $css): ?>
@@ -201,8 +204,8 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <?php $flash = getFlash(); ?>
 <?php if ($flash): ?>
 <div class="container mt-3">
-    <div class="alert alert-<?= $flash['type'] === 'error' ? 'danger' : $flash['type'] ?> alert-dismissible fade show" role="alert">
-        <?= $flash['message'] ?>
+    <div class="alert alert-<?= htmlspecialchars($flash['type'] === 'error' ? 'danger' : $flash['type'], ENT_QUOTES, 'UTF-8') ?> alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($flash['message'], ENT_QUOTES, 'UTF-8') ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 </div>

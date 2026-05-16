@@ -4,11 +4,14 @@ require_once __DIR__ . '/../includes/functions.php';
 header('Content-Type: application/json');
 
 if (!isLoggedIn()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+requireCSRF(); // F-06
+
+$userId = (int)$_SESSION['user_id'];
 $action = $_POST['action'] ?? '';
 $pdo = getDBConnection();
 

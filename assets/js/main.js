@@ -4,6 +4,24 @@
 
 $(document).ready(function () {
 
+    // F-06 Attach CSRF token to all same-origin AJAX requests.
+    var csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (csrfToken && !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                // Also attach as form field for endpoints that read $_POST['csrf_token']
+                if (typeof settings.data === 'string' && settings.data.indexOf('csrf_token=') === -1) {
+                    settings.data += (settings.data ? '&' : '') + 'csrf_token=' + encodeURIComponent(csrfToken);
+                } else if (settings.data && typeof settings.data === 'object' && !(settings.data instanceof FormData)) {
+                    settings.data.csrf_token = csrfToken;
+                } else if (settings.data instanceof FormData && !settings.data.has('csrf_token')) {
+                    settings.data.append('csrf_token', csrfToken);
+                }
+            }
+        }
+    });
+
     // Back to Top Button
     $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {

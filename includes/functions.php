@@ -12,10 +12,177 @@ if (file_exists($composerAutoload)) {
     require_once $composerAutoload;
 }
 
-// Start session if not started
+// Start session if not started (with hardened cookie params: F-08, F-14)
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+        || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'domain'   => '',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    } else {
+        session_set_cookie_params(0, '/; samesite=Lax', '', $isHttps, true);
+    }
+    @ini_set('session.use_only_cookies', '1');
+    @ini_set('session.use_strict_mode', '1');
     session_start();
 }
+
+/**
+ * Get client IP (best-effort; trust only first hop from a known proxy in prod).
+ */
+function clientIp() {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    return filter_var($ip, FILTER_VALIDATE_IP) ?: '0.0.0.0';
+}
+
+/**
+ * F-07 Generic DB-backed rate limiter. Returns true when under the cap.
+ * Each successful check records a hit. Call BEFORE the protected action.
+ */
+function rateLimit($key, $maxRequests, $windowSeconds) {
+    try {
+        $pdo = getDBConnection();
+        $pdo->prepare("DELETE FROM rate_limits WHERE created_at < (NOW() - INTERVAL ? SECOND)")
+            ->execute([(int)$windowSeconds]);
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM rate_limits WHERE rl_key = ? AND created_at > (NOW() - INTERVAL ? SECOND)");
+        $stmt->execute([$key, (int)$windowSeconds]);
+        if ((int)$stmt->fetchColumn() >= $maxRequests) {
+            return false;
+        }
+        $pdo->prepare("INSERT INTO rate_limits (rl_key) VALUES (?)")->execute([$key]);
+        return true;
+    } catch (Throwable $e) {
+        error_log('rateLimit error: ' . $e->getMessage());
+        return true; // fail-open to avoid DoS on infra error; alarms should catch this
+    }
+}
+
+/**
+ * F-07 / F-16 Track login attempts and check lockout.
+ */
+function recordLoginAttempt($identifier, $success, $scope = 'user') {
+    try {
+        $pdo = getDBConnection();
+        $pdo->prepare("INSERT INTO login_attempts (identifier, ip_address, scope, success) VALUES (?, ?, ?, ?)")
+            ->execute([substr((string)$identifier, 0, 191), clientIp(), $scope, $success ? 1 : 0]);
+    } catch (Throwable $e) { error_log('recordLoginAttempt: '.$e->getMessage()); }
+}
+
+function isLoginLocked($identifier, $scope = 'user') {
+    try {
+        $pdo = getDBConnection();
+        // 10 failed attempts in 15 min from same identifier OR same IP => locked
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM login_attempts
+             WHERE scope = ? AND success = 0
+               AND created_at > (NOW() - INTERVAL 15 MINUTE)
+               AND (identifier = ? OR ip_address = ?)"
+        );
+        $stmt->execute([$scope, substr((string)$identifier, 0, 191), clientIp()]);
+        return ((int)$stmt->fetchColumn()) >= 10;
+    } catch (Throwable $e) { return false; }
+}
+
+/**
+ * F-10 Restrict redirects to local paths only.
+ */
+function safeRedirectTarget($url, $fallback = '/dashboard.php') {
+    if (!is_string($url) || $url === '') return SITE_URL . $fallback;
+    // Reject scheme://, protocol-relative, backslash tricks
+    if (preg_match('#^([a-z][a-z0-9+\-.]*:|//|\\\\)#i', $url)) return SITE_URL . $fallback;
+    // Only allow path/query/fragment
+    if ($url[0] !== '/') $url = '/' . $url;
+    if (!preg_match('#^/[A-Za-z0-9_\-./?&=%#]*$#', $url)) return SITE_URL . $fallback;
+    return SITE_URL . $url;
+}
+
+/**
+ * F-06 Enforce CSRF on JSON API endpoints. Looks for token in header or POST body.
+ */
+function requireCSRF() {
+    $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? '');
+    if (!verifyCSRFToken($token)) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+        exit;
+    }
+}
+
+/**
+ * F-09 Remember-me: create selector/validator cookie scheme.
+ */
+function issueRememberToken($userId) {
+    $pdo = getDBConnection();
+    $selector  = bin2hex(random_bytes(12));   // 24 hex chars
+    $validator = bin2hex(random_bytes(32));   // 64 hex chars
+    $hash      = hash('sha256', $validator);
+    $expires   = date('Y-m-d H:i:s', time() + 30*24*3600);
+    $pdo->prepare("INSERT INTO remember_tokens (user_id, selector, validator_hash, expires_at) VALUES (?, ?, ?, ?)")
+        ->execute([$userId, $selector, $hash, $expires]);
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    setcookie('remember_me', $selector . ':' . $validator, [
+        'expires'  => time() + 30*24*3600,
+        'path'     => '/',
+        'secure'   => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
+function consumeRememberToken() {
+    if (empty($_COOKIE['remember_me']) || isLoggedIn()) return false;
+    $parts = explode(':', $_COOKIE['remember_me'], 2);
+    if (count($parts) !== 2) return false;
+    [$selector, $validator] = $parts;
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare("SELECT * FROM remember_tokens WHERE selector = ? AND expires_at > NOW() LIMIT 1");
+        $stmt->execute([$selector]);
+        $row = $stmt->fetch();
+        if (!$row) return false;
+        if (!hash_equals($row['validator_hash'], hash('sha256', $validator))) {
+            // Possible token theft: invalidate all tokens for that user
+            $pdo->prepare("DELETE FROM remember_tokens WHERE user_id = ?")->execute([$row['user_id']]);
+            return false;
+        }
+        // Rotate token
+        $pdo->prepare("DELETE FROM remember_tokens WHERE id = ?")->execute([$row['id']]);
+        $stmt = $pdo->prepare("SELECT id, status, is_active FROM users WHERE id = ?");
+        $stmt->execute([$row['user_id']]);
+        $user = $stmt->fetch();
+        if (!$user || !$user['is_active'] || $user['status'] !== 'approved') return false;
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int)$user['id'];
+        issueRememberToken($user['id']);
+        return true;
+    } catch (Throwable $e) { return false; }
+}
+
+function clearRememberToken() {
+    if (!empty($_COOKIE['remember_me'])) {
+        $parts = explode(':', $_COOKIE['remember_me'], 2);
+        if (count($parts) === 2) {
+            try {
+                getDBConnection()->prepare("DELETE FROM remember_tokens WHERE selector = ?")
+                    ->execute([$parts[0]]);
+            } catch (Throwable $e) {}
+        }
+        setcookie('remember_me', '', time() - 3600, '/');
+    }
+}
+
+// Attempt auto-login from remember cookie at every request load
+if (!isLoggedIn()) { @consumeRememberToken(); }
+
 
 /**
  * Sanitize input data
@@ -33,8 +200,21 @@ function sanitize($data) {
 /**
  * Encode profile ID to non-predictable hash (reversible)
  */
+function _profileIdSalt() {
+    static $salt = null;
+    if ($salt !== null) return $salt;
+    $env = getenv('PROFILE_ID_SALT');
+    if ($env && strlen($env) >= 16) { $salt = $env; return $salt; }
+    if (defined('PROFILE_ID_SALT') && strlen(PROFILE_ID_SALT) >= 16) {
+        $salt = PROFILE_ID_SALT; return $salt;
+    }
+    // Last-resort fallback (still better than a public constant): derive from DB creds + site URL
+    $salt = hash('sha256', 'profile-id|' . SITE_URL . '|' . DB_NAME . '|' . DB_USER);
+    return $salt;
+}
+
 function encodeProfileId($id) {
-    $salt = 'matrimonial-secret-salt-2024-secure';
+    $salt = _profileIdSalt();
     $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     $base62 = '';
 
@@ -63,7 +243,7 @@ function encodeProfileId($id) {
  * Decode profile ID from hash (reversible)
  */
 function decodeProfileId($hash) {
-    $salt = 'matrimonial-secret-salt-2024-secure';
+    $salt = _profileIdSalt();
     $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
     if (strlen($hash) < 10) {
@@ -229,36 +409,64 @@ function getFlash() {
  * Upload a photo
  */
 function uploadPhoto($file, $userId) {
-    if ($file['error'] !== UPLOAD_ERR_OK) {
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
         return ['success' => false, 'message' => 'Upload error'];
     }
-    
     if ($file['size'] > MAX_PHOTO_SIZE) {
         return ['success' => false, 'message' => 'File too large. Maximum 5MB allowed.'];
     }
-    
-    if (!in_array($file['type'], ALLOWED_PHOTO_TYPES)) {
-        return ['success' => false, 'message' => 'Invalid file type. Only JPG, PNG, and WebP allowed.'];
+
+    // F-03 Validate by content (finfo), NOT by client-provided Content-Type / extension
+    $real = null;
+    if (function_exists('finfo_open')) {
+        $f = finfo_open(FILEINFO_MIME_TYPE);
+        if ($f) { $real = finfo_file($f, $file['tmp_name']); finfo_close($f); }
     }
-    
+    $map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    if (!$real || !isset($map[$real])) {
+        return ['success' => false, 'message' => 'Invalid image. Only JPG, PNG, or WebP allowed.'];
+    }
+    if (!in_array($real, ALLOWED_PHOTO_TYPES)) {
+        return ['success' => false, 'message' => 'Invalid image type.'];
+    }
+
+    // Re-decode and re-encode to strip EXIF, polyglots, embedded scripts
+    if (!function_exists('imagecreatefromstring')) {
+        return ['success' => false, 'message' => 'Server image library unavailable.'];
+    }
+    $raw = @file_get_contents($file['tmp_name']);
+    if ($raw === false) return ['success' => false, 'message' => 'Read failed.'];
+    // Suppress libgd warnings, validate result
+    $img = @imagecreatefromstring($raw);
+    if (!$img) return ['success' => false, 'message' => 'Corrupt or unsupported image.'];
+
+    // Cap dimensions to mitigate decompression bombs
+    $w = imagesx($img); $h = imagesy($img);
+    if ($w > 4096 || $h > 4096) {
+        $scale = min(4096 / $w, 4096 / $h);
+        $nw = (int)round($w * $scale); $nh = (int)round($h * $scale);
+        $resized = imagecreatetruecolor($nw, $nh);
+        imagecopyresampled($resized, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+        imagedestroy($img); $img = $resized;
+    }
+
     $userDir = UPLOADS_PATH . 'photos' . DIRECTORY_SEPARATOR . $userId;
-    if (!is_dir($userDir)) {
-        mkdir($userDir, 0755, true);
-    }
-    
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = uniqid('photo_') . '.' . $ext;
+    if (!is_dir($userDir)) { mkdir($userDir, 0750, true); }
+
+    // Opaque, unguessable filename; safe fixed extension; force JPEG output for uniformity
+    $filename = bin2hex(random_bytes(16)) . '.jpg';
     $filepath = $userDir . DIRECTORY_SEPARATOR . $filename;
-    
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        return [
-            'success' => true,
-            'path' => 'uploads/photos/' . $userId . '/' . $filename,
-            'filename' => $filename
-        ];
-    }
-    
-    return ['success' => false, 'message' => 'Failed to save file'];
+    $ok = imagejpeg($img, $filepath, 85);
+    imagedestroy($img);
+    if (!$ok) return ['success' => false, 'message' => 'Failed to save file'];
+    @chmod($filepath, 0640);
+
+    return [
+        'success' => true,
+        'path' => 'uploads/photos/' . $userId . '/' . $filename,
+        'filename' => $filename,
+        'access_token' => bin2hex(random_bytes(16)),
+    ];
 }
 
 /**
@@ -501,19 +709,47 @@ function createNotification($userId, $type, $title, $message, $link = null) {
  */
 function logProfileVisit($visitorId, $visitedId) {
     if ($visitorId === $visitedId) return;
-    
+
     $pdo = getDBConnection();
     // Check if visited in last hour
     $stmt = $pdo->prepare(
         "SELECT id FROM profile_visits WHERE visitor_id = ? AND visited_id = ? AND visited_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)"
     );
     $stmt->execute([$visitorId, $visitedId]);
-    
+
     if (!$stmt->fetch()) {
         $stmt = $pdo->prepare("INSERT INTO profile_visits (visitor_id, visited_id) VALUES (?, ?)");
         $stmt->execute([$visitorId, $visitedId]);
-        createNotification($visitedId, 'visit', 'Profile Viewed', 'Someone viewed your profile', 'profile.php?id=' . $visitorId);
+        // F-15 Use encoded id; for non-premium recipients front-end can hide the link.
+        createNotification($visitedId, 'visit', 'Profile Viewed', 'Someone viewed your profile', 'profile.php?id=' . encodeProfileId($visitorId));
     }
+}
+
+/**
+ * F-13 Enforce a daily cap on distinct profile views per viewer to deter scraping.
+ * Returns true when viewer is allowed to view another *new* profile today.
+ * Premium users get a higher cap. Already-seen profiles within 24h do not count.
+ */
+function canViewAnotherProfile($visitorId, $targetId) {
+    if ($visitorId === $targetId) return true;
+    try {
+        $pdo = getDBConnection();
+        // Already viewed today? -> always allowed (revisit)
+        $stmt = $pdo->prepare(
+            "SELECT 1 FROM profile_visits WHERE visitor_id = ? AND visited_id = ?
+             AND visited_at > DATE_SUB(NOW(), INTERVAL 24 HOUR) LIMIT 1"
+        );
+        $stmt->execute([$visitorId, $targetId]);
+        if ($stmt->fetch()) return true;
+
+        $cap = isPremium($visitorId) ? 500 : 100;
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(DISTINCT visited_id) FROM profile_visits
+             WHERE visitor_id = ? AND visited_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        );
+        $stmt->execute([$visitorId]);
+        return ((int)$stmt->fetchColumn()) < $cap;
+    } catch (Throwable $e) { return true; }
 }
 
 /**
@@ -642,11 +878,51 @@ function verifyCSRFToken($token) {
 }
 
 /**
+ * F-02 Build a proxied photo URL that enforces ACL via photo.php.
+ * Accepts a stored relative path (e.g. 'uploads/photos/42/abc.jpg').
+ * Falls back to a placeholder when the photo row cannot be resolved.
+ */
+function photoUrl($photoPath, $gender = null) {
+    static $cache = [];
+    if (empty($photoPath)) {
+        return getPlaceholderPic($gender);
+    }
+    if (isset($cache[$photoPath])) return $cache[$photoPath];
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare("SELECT id, access_token FROM photos WHERE photo_path = ? LIMIT 1");
+        $stmt->execute([$photoPath]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $param = !empty($row['access_token'])
+                ? ('t=' . urlencode($row['access_token']))
+                : ('id=' . (int)$row['id']);
+            $url = SITE_URL . '/photo.php?' . $param;
+            $cache[$photoPath] = $url;
+            return $url;
+        }
+    } catch (Throwable $e) {}
+    // No DB row (legacy users.profile_pic strings): still route through proxy by path lookup
+    return SITE_URL . '/photo.php?path=' . urlencode($photoPath);
+}
+
+/**
+ * Gender-based placeholder helper (split out of getProfilePic for reuse).
+ */
+function getPlaceholderPic($gender = null) {
+    $placeholder = ($gender && in_array($gender, ['Male', 'Female'])) ? 'default-' . strtolower($gender) : 'default-male';
+    if (file_exists(ROOT_PATH . 'assets/images/' . $placeholder . '.png') && filesize(ROOT_PATH . 'assets/images/' . $placeholder . '.png') > 0) {
+        return SITE_URL . '/assets/images/' . $placeholder . '.png';
+    }
+    return SITE_URL . '/assets/images/' . $placeholder . '.svg';
+}
+
+/**
  * Get profile picture URL
  */
 function getProfilePic($profilePic, $gender = null) {
     if ($profilePic && file_exists(ROOT_PATH . $profilePic)) {
-        return SITE_URL . '/' . $profilePic;
+        return photoUrl($profilePic, $gender);
     }
     // Gender-based placeholder
     if ($gender && in_array($gender, ['Male', 'Female'])) {
@@ -685,7 +961,8 @@ function sendEmail($to, $subject, $body, $isHtml = true) {
         // Use PHPMailer if available, otherwise fallback to mail()
         $usePHPMailer = class_exists('PHPMailer\PHPMailer\PHPMailer');
         
-        error_log("sendEmail: PHPMailer available=" . ($usePHPMailer ? 'yes' : 'no') . ", to=$to, host=" . SMTP_HOST . ", user=" . SMTP_USERNAME);
+        // F-17 Avoid logging credentials. Log only non-sensitive context.
+        error_log("sendEmail: PHPMailer=" . ($usePHPMailer ? 'yes' : 'no') . ", to_hash=" . substr(hash('sha256', $to), 0, 12) . ", host=" . SMTP_HOST);
         
         if ($usePHPMailer) {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);

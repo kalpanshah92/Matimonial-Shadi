@@ -30,17 +30,19 @@ define('ALLOWED_PHOTO_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
 define('RESULTS_PER_PAGE', 12);
 define('ADMIN_RESULTS_PER_PAGE', 20);
 
-// Payment Gateway (Razorpay)
-define('RAZORPAY_KEY_ID', 'your_razorpay_key_id');
-define('RAZORPAY_KEY_SECRET', 'your_razorpay_key_secret');
+// F-04 / F-05 Secrets — read from environment ONLY. No insecure defaults.
+// Provide via OS env, Docker env, or a .env loader (gitignored).
+define('RAZORPAY_KEY_ID',     getenv('RAZORPAY_KEY_ID')     ?: '');
+define('RAZORPAY_KEY_SECRET', getenv('RAZORPAY_KEY_SECRET') ?: '');
+define('PROFILE_ID_SALT',     getenv('PROFILE_ID_SALT')     ?: '');
 
-// Email/SMTP Settings
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
-define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USERNAME', getenv('SMTP_USERNAME') ?: 'your_email@gmail.com');
-define('SMTP_PASSWORD', getenv('SMTP_PASSWORD') ?: 'your_app_password');
+// Email/SMTP Settings (no credentials hardcoded)
+define('SMTP_HOST',       getenv('SMTP_HOST')       ?: 'smtp.gmail.com');
+define('SMTP_PORT',       getenv('SMTP_PORT')       ?: 587);
+define('SMTP_USERNAME',   getenv('SMTP_USERNAME')   ?: '');
+define('SMTP_PASSWORD',   getenv('SMTP_PASSWORD')   ?: '');
 define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'noreply@matrimonialshadi.com');
-define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Matrimonial Shadi');
+define('SMTP_FROM_NAME',  getenv('SMTP_FROM_NAME')  ?: 'Matrimonial Shadi');
 define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION') ?: 'tls');
 
 // Common Email Provider SMTP Settings (for reference)

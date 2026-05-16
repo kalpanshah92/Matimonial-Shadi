@@ -4,12 +4,29 @@ require_once __DIR__ . '/../includes/functions.php';
 header('Content-Type: application/json');
 
 if (!isLoggedIn()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+// F-06 CSRF
+requireCSRF();
+
+$userId = (int)$_SESSION['user_id'];
 $action = $_POST['action'] ?? '';
+
+// F-07 Rate limit interest-spam: 30 send/day, 60 accept-or-decline/hour
+if ($action === 'send' && !rateLimit('conn:send:' . $userId, 30, 86400)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Daily interest limit reached.']);
+    exit;
+}
+if (in_array($action, ['accept','decline'], true) && !rateLimit('conn:resp:' . $userId, 60, 3600)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Too many requests.']);
+    exit;
+}
+
 $pdo = getDBConnection();
 
 switch ($action) {
