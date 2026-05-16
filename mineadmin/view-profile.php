@@ -418,7 +418,8 @@ if ($isPremium) {
                             <button type="button"
                                     class="btn btn-outline-danger btn-delete-profile"
                                     data-user-id="<?= (int)$user['id'] ?>"
-                                    data-user-name="<?= htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8') ?>">
+                                    data-user-name="<?= htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                    data-profile-id="<?= htmlspecialchars($user['profile_id'], ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="bi bi-trash3 me-1"></i>Delete Profile
                             </button>
                             <small class="text-muted text-center d-block mt-1">
@@ -538,18 +539,19 @@ function verifyProfile(userId) {
 
 // Delete profile (super admin) — two-step confirm to avoid accidents.
 $(document).on('click', '.btn-delete-profile', function () {
-    var btn      = $(this);
-    var userId   = btn.data('user-id');
-    var userName = btn.data('user-name');
+    var btn       = $(this);
+    var userId    = btn.data('user-id');
+    var userName  = btn.data('user-name');
+    var profileId = String(btn.data('profile-id') || '').trim();
 
-    if (!confirm('Are you sure?\n\nThis will PERMANENTLY delete "' + userName + '" and ALL linked data:\n  • Profile + photos + documents\n  • Matches / interests / shortlist\n  • Chat history\n  • Notifications & subscriptions\n\nThis action CANNOT be undone.')) {
+    if (!confirm('Are you sure?\n\nThis will PERMANENTLY delete "' + userName + '" (' + profileId + ') and ALL linked data:\n  • Profile + photos + documents\n  • Matches / interests / shortlist\n  • Chat history\n  • Notifications & subscriptions\n\nThis action CANNOT be undone.')) {
         return;
     }
-    // Second prompt makes the admin retype the name — defence against muscle-memory clicks.
-    var typed = prompt('Type the user\'s name exactly to confirm deletion:\n\n' + userName);
+    // Second prompt makes the admin retype the profile ID — defence against muscle-memory clicks.
+    var typed = prompt('Type the Profile ID exactly to confirm deletion (e.g. ' + profileId + '):');
     if (typed === null) return;
-    if (typed.trim() !== String(userName).trim()) {
-        alert('Name did not match. Deletion cancelled.');
+    if (typed.trim().toUpperCase() !== profileId.toUpperCase()) {
+        alert('Profile ID did not match. Deletion cancelled.');
         return;
     }
 
