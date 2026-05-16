@@ -96,10 +96,10 @@ function isLoginLocked($identifier, $scope = 'user') {
 function safeRedirectTarget($url, $fallback = '/dashboard.php') {
     if (!is_string($url) || $url === '') return SITE_URL . $fallback;
     // Reject scheme://, protocol-relative, backslash tricks
-    if (preg_match('#^([a-z][a-z0-9+\-.]*:|//|\\\\)#i', $url)) return SITE_URL . $fallback;
+    if (preg_match('~^([a-z][a-z0-9+\-.]*:|//|\\\\)~i', $url)) return SITE_URL . $fallback;
     // Only allow path/query/fragment
     if ($url[0] !== '/') $url = '/' . $url;
-    if (!preg_match('#^/[A-Za-z0-9_\-./?&=%#]*$#', $url)) return SITE_URL . $fallback;
+    if (!preg_match('~^/[A-Za-z0-9_\-./?&=%#]*$~', $url)) return SITE_URL . $fallback;
     return SITE_URL . $url;
 }
 
