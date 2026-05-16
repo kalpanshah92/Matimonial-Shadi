@@ -188,6 +188,124 @@ switch ($action) {
         }
         break;
 
+    case 'delete_profile':
+        // Permanently delete the user and all linked data.
+        // Restricted to super_admin because the operation is irreversible.
+        if (($_SESSION['admin_role'] ?? '') !== 'super_admin') {
+            echo json_encode(['success' => false, 'message' => 'Only super admin can delete profiles']);
+            break;
+        }
+
+        try {
+            // Fetch user first so we know which files to remove on disk
+            $stmt = $pdo->prepare("SELECT id, email, phone, profile_pic, id_document, address_proof_document FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+            if (!$user) {
+                echo json_encode(['success' => false, 'message' => 'User not found']);
+                break;
+            }
+
+            // Collect photo paths before deleting rows
+            $stmt = $pdo->prepare("SELECT photo_path FROM photos WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $photoPaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            $pdo->beginTransaction();
+
+            // Wipe every table that references this user. Order matters only where
+            // foreign keys might exist; we use plain DELETEs which work regardless.
+            $deletes = [
+                "DELETE FROM messages              WHERE sender_id = :u OR receiver_id = :u",
+                "DELETE FROM connection_requests   WHERE sender_id = :u OR receiver_id = :u",
+                "DELETE FROM shortlisted           WHERE user_id   = :u OR shortlisted_id = :u",
+                "DELETE FROM profile_visits        WHERE visitor_id = :u OR visited_id    = :u",
+                "DELETE FROM reports               WHERE reporter_id = :u OR reported_id  = :u",
+                "DELETE FROM notifications         WHERE user_id = :u",
+                "DELETE FROM profile_change_requests WHERE user_id = :u",
+                "DELETE FROM deactivation_requests WHERE user_id = :u",
+                "DELETE FROM subscriptions         WHERE user_id = :u",
+                "DELETE FROM success_stories       WHERE user_id = :u",
+                "DELETE FROM privacy_settings      WHERE user_id = :u",
+                "DELETE FROM partner_preferences   WHERE user_id = :u",
+                "DELETE FROM family_details        WHERE user_id = :u",
+                "DELETE FROM profile_details       WHERE user_id = :u",
+                "DELETE FROM photos                WHERE user_id = :u",
+            ];
+            foreach ($deletes as $sql) {
+                $st = $pdo->prepare($sql);
+                $st->execute([':u' => $userId]);
+            }
+
+            // Optional tables (may not exist on older deployments)
+            $optional = [
+                "DELETE FROM remember_tokens WHERE user_id = :u",
+            ];
+            foreach ($optional as $sql) {
+                try { $pdo->prepare($sql)->execute([':u' => $userId]); } catch (Throwable $e) {}
+            }
+
+            // Clean OTPs + login attempts tied to this email/phone
+            if (!empty($user['email'])) {
+                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = :e")->execute([':e' => $user['email']]); } catch (Throwable $e) {}
+                try { $pdo->prepare("DELETE FROM login_attempts    WHERE identifier = :e AND scope='user'")->execute([':e' => $user['email']]); } catch (Throwable $e) {}
+            }
+            if (!empty($user['phone'])) {
+                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = :p")->execute([':p' => $user['phone']]); } catch (Throwable $e) {}
+            }
+
+            // Finally, the user row itself
+            $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$userId]);
+
+            $pdo->commit();
+
+            // Best-effort filesystem cleanup AFTER commit — restricted to the user's
+            // own folder to prevent any path-traversal mistakes.
+            $rootUploads = realpath(__DIR__ . '/../../uploads');
+            $userPhotoDir = $rootUploads ? $rootUploads . DIRECTORY_SEPARATOR . 'photos' . DIRECTORY_SEPARATOR . (int)$userId : null;
+
+            $deleteIfInside = function ($absPath) use ($rootUploads) {
+                if (!$rootUploads || !$absPath) return;
+                $real = realpath($absPath);
+                if ($real && strpos($real, $rootUploads) === 0 && is_file($real)) {
+                    @unlink($real);
+                }
+            };
+
+            // Photo files from photos table
+            foreach ($photoPaths as $rel) {
+                if (!is_string($rel) || $rel === '') continue;
+                $deleteIfInside(__DIR__ . '/../../' . $rel);
+            }
+            // Profile picture (legacy users.profile_pic — may be a path or basename)
+            if (!empty($user['profile_pic'])) {
+                $deleteIfInside(__DIR__ . '/../../' . $user['profile_pic']);
+                $deleteIfInside(__DIR__ . '/../../uploads/profiles/' . basename($user['profile_pic']));
+            }
+            // ID doc & address proof
+            foreach (['id_document', 'address_proof_document'] as $col) {
+                if (!empty($user[$col])) {
+                    $deleteIfInside(__DIR__ . '/../../' . $user[$col]);
+                }
+            }
+            // Empty per-user photo dir if it exists
+            if ($userPhotoDir && is_dir($userPhotoDir)) {
+                foreach ((array)@scandir($userPhotoDir) as $f) {
+                    if ($f === '.' || $f === '..') continue;
+                    $deleteIfInside($userPhotoDir . DIRECTORY_SEPARATOR . $f);
+                }
+                @rmdir($userPhotoDir);
+            }
+
+            error_log("admin {$_SESSION['admin_id']} deleted user $userId ({$user['email']})");
+            echo json_encode(['success' => true, 'message' => 'Profile and all linked data deleted']);
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log("delete_profile error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to delete profile']);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }

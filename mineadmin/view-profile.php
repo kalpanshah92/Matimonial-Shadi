@@ -412,6 +412,19 @@ if ($isPremium) {
                                 <i class="bi bi-star me-1"></i>Upgrade to Premium
                             </button>
                         <?php endif; ?>
+
+                        <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+                            <hr class="my-2">
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-delete-profile"
+                                    data-user-id="<?= (int)$user['id'] ?>"
+                                    data-user-name="<?= htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8') ?>">
+                                <i class="bi bi-trash3 me-1"></i>Delete Profile
+                            </button>
+                            <small class="text-muted text-center d-block mt-1">
+                                Permanently removes the user and all linked data (matches, chat history, photos, documents).
+                            </small>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -522,6 +535,46 @@ function verifyProfile(userId) {
         }, 'json');
     }
 }
+
+// Delete profile (super admin) — two-step confirm to avoid accidents.
+$(document).on('click', '.btn-delete-profile', function () {
+    var btn      = $(this);
+    var userId   = btn.data('user-id');
+    var userName = btn.data('user-name');
+
+    if (!confirm('Are you sure?\n\nThis will PERMANENTLY delete "' + userName + '" and ALL linked data:\n  • Profile + photos + documents\n  • Matches / interests / shortlist\n  • Chat history\n  • Notifications & subscriptions\n\nThis action CANNOT be undone.')) {
+        return;
+    }
+    // Second prompt makes the admin retype the name — defence against muscle-memory clicks.
+    var typed = prompt('Type the user\'s name exactly to confirm deletion:\n\n' + userName);
+    if (typed === null) return;
+    if (typed.trim() !== String(userName).trim()) {
+        alert('Name did not match. Deletion cancelled.');
+        return;
+    }
+
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting...');
+
+    $.ajax({
+        url: 'api/profiles.php',
+        method: 'POST',
+        data: { action: 'delete_profile', user_id: userId },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                alert('Profile deleted.');
+                window.location.href = 'profiles.php';
+            } else {
+                alert(response.message || 'Failed to delete profile.');
+                btn.prop('disabled', false).html('<i class="bi bi-trash3 me-1"></i>Delete Profile');
+            }
+        },
+        error: function () {
+            alert('Request failed. Please try again.');
+            btn.prop('disabled', false).html('<i class="bi bi-trash3 me-1"></i>Delete Profile');
+        }
+    });
+});
 
 // Premium upgrade modal
 var premiumModal;
