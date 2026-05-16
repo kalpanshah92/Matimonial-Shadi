@@ -540,9 +540,13 @@ function verifyProfile(userId) {
 // Delete profile (super admin) — two-step confirm to avoid accidents.
 $(document).on('click', '.btn-delete-profile', function () {
     var btn       = $(this);
-    var userId    = btn.data('user-id');
-    var userName  = btn.data('user-name');
-    var profileId = String(btn.data('profile-id') || '').trim();
+    var userId    = btn.attr('data-user-id');
+    var userName  = btn.attr('data-user-name') || '';
+    // Use .attr() not .data() — jQuery's .data() coerces numeric-looking strings
+    // (e.g. "021272") to Numbers and strips leading zeros.
+    var profileId = String(btn.attr('data-profile-id') || '').trim();
+    // Normalise: strip whitespace and compare case-insensitively.
+    var norm = function (s) { return String(s || '').replace(/\s+/g, '').toUpperCase(); };
 
     if (!confirm('Are you sure?\n\nThis will PERMANENTLY delete "' + userName + '" (' + profileId + ') and ALL linked data:\n  • Profile + photos + documents\n  • Matches / interests / shortlist\n  • Chat history\n  • Notifications & subscriptions\n\nThis action CANNOT be undone.')) {
         return;
@@ -550,8 +554,8 @@ $(document).on('click', '.btn-delete-profile', function () {
     // Second prompt makes the admin retype the profile ID — defence against muscle-memory clicks.
     var typed = prompt('Type the Profile ID exactly to confirm deletion (e.g. ' + profileId + '):');
     if (typed === null) return;
-    if (typed.trim().toUpperCase() !== profileId.toUpperCase()) {
-        alert('Profile ID did not match. Deletion cancelled.');
+    if (norm(typed) !== norm(profileId)) {
+        alert('Profile ID did not match. Deletion cancelled.\n\nExpected: ' + profileId + '\nReceived: ' + typed);
         return;
     }
 
