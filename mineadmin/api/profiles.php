@@ -213,45 +213,53 @@ switch ($action) {
 
             $pdo->beginTransaction();
 
-            // Wipe every table that references this user. Order matters only where
-            // foreign keys might exist; we use plain DELETEs which work regardless.
-            $deletes = [
-                "DELETE FROM messages              WHERE sender_id = :u OR receiver_id = :u",
-                "DELETE FROM connection_requests   WHERE sender_id = :u OR receiver_id = :u",
-                "DELETE FROM shortlisted           WHERE user_id   = :u OR shortlisted_id = :u",
-                "DELETE FROM profile_visits        WHERE visitor_id = :u OR visited_id    = :u",
-                "DELETE FROM reports               WHERE reporter_id = :u OR reported_id  = :u",
-                "DELETE FROM notifications         WHERE user_id = :u",
-                "DELETE FROM profile_change_requests WHERE user_id = :u",
-                "DELETE FROM deactivation_requests WHERE user_id = :u",
-                "DELETE FROM subscriptions         WHERE user_id = :u",
-                "DELETE FROM success_stories       WHERE user_id = :u",
-                "DELETE FROM privacy_settings      WHERE user_id = :u",
-                "DELETE FROM partner_preferences   WHERE user_id = :u",
-                "DELETE FROM family_details        WHERE user_id = :u",
-                "DELETE FROM profile_details       WHERE user_id = :u",
-                "DELETE FROM photos                WHERE user_id = :u",
+            // Wipe every table that references this user. PDO is configured with
+            // EMULATE_PREPARES=false, so we use positional `?` placeholders and
+            // pass the id once per occurrence (named placeholders can't repeat
+            // under native prepares).
+            $deletesTwoCols = [
+                "DELETE FROM messages            WHERE sender_id   = ? OR receiver_id    = ?",
+                "DELETE FROM connection_requests WHERE sender_id   = ? OR receiver_id    = ?",
+                "DELETE FROM shortlisted         WHERE user_id     = ? OR shortlisted_id = ?",
+                "DELETE FROM profile_visits      WHERE visitor_id  = ? OR visited_id     = ?",
+                "DELETE FROM reports             WHERE reporter_id = ? OR reported_id    = ?",
             ];
-            foreach ($deletes as $sql) {
-                $st = $pdo->prepare($sql);
-                $st->execute([':u' => $userId]);
+            foreach ($deletesTwoCols as $sql) {
+                $pdo->prepare($sql)->execute([$userId, $userId]);
             }
 
-            // Optional tables (may not exist on older deployments)
+            $deletesOneCol = [
+                "DELETE FROM notifications         WHERE user_id = ?",
+                "DELETE FROM profile_change_requests WHERE user_id = ?",
+                "DELETE FROM subscriptions         WHERE user_id = ?",
+                "DELETE FROM success_stories       WHERE user_id = ?",
+                "DELETE FROM privacy_settings      WHERE user_id = ?",
+                "DELETE FROM partner_preferences   WHERE user_id = ?",
+                "DELETE FROM family_details        WHERE user_id = ?",
+                "DELETE FROM profile_details       WHERE user_id = ?",
+                "DELETE FROM photos                WHERE user_id = ?",
+            ];
+            foreach ($deletesOneCol as $sql) {
+                $pdo->prepare($sql)->execute([$userId]);
+            }
+
+            // Optional tables (may not exist on older deployments — must NOT abort the txn)
             $optional = [
-                "DELETE FROM remember_tokens WHERE user_id = :u",
+                "DELETE FROM deactivation_requests WHERE user_id = ?",
+                "DELETE FROM remember_tokens       WHERE user_id = ?",
             ];
             foreach ($optional as $sql) {
-                try { $pdo->prepare($sql)->execute([':u' => $userId]); } catch (Throwable $e) {}
+                try { $pdo->prepare($sql)->execute([$userId]); }
+                catch (Throwable $e) { error_log('delete_profile optional: ' . $e->getMessage()); }
             }
 
             // Clean OTPs + login attempts tied to this email/phone
             if (!empty($user['email'])) {
-                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = :e")->execute([':e' => $user['email']]); } catch (Throwable $e) {}
-                try { $pdo->prepare("DELETE FROM login_attempts    WHERE identifier = :e AND scope='user'")->execute([':e' => $user['email']]); } catch (Throwable $e) {}
+                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = ?")->execute([$user['email']]); } catch (Throwable $e) {}
+                try { $pdo->prepare("DELETE FROM login_attempts    WHERE identifier = ? AND scope = 'user'")->execute([$user['email']]); } catch (Throwable $e) {}
             }
             if (!empty($user['phone'])) {
-                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = :p")->execute([':p' => $user['phone']]); } catch (Throwable $e) {}
+                try { $pdo->prepare("DELETE FROM otp_verifications WHERE identifier = ?")->execute([$user['phone']]); } catch (Throwable $e) {}
             }
 
             // Finally, the user row itself
@@ -299,10 +307,14 @@ switch ($action) {
 
             error_log("admin {$_SESSION['admin_id']} deleted user $userId ({$user['email']})");
             echo json_encode(['success' => true, 'message' => 'Profile and all linked data deleted']);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             error_log("delete_profile error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Failed to delete profile']);
+            // Super-admin sees the underlying error to ease debugging in production.
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to delete profile: ' . $e->getMessage(),
+            ]);
         }
         break;
 
