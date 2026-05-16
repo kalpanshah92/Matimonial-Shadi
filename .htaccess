@@ -3,8 +3,15 @@
 # Enable URL Rewriting
 RewriteEngine On
 
-# F-14 Force HTTPS in production (skipped on localhost so dev still works)
+# F-14 Force HTTPS in production. Skip when:
+#  - already on HTTPS (%{HTTPS} on)
+#  - terminated by an upstream proxy/LB that set X-Forwarded-Proto: https
+#  - running on localhost / 127.0.0.1 (dev)
+# This prevents an infinite redirect loop when Apache sits behind Nginx /
+# Cloudflare / an ALB that handles TLS and forwards plain HTTP to the origin.
 RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTP:X-Forwarded-Ssl}   !=on
 RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
