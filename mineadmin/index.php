@@ -17,7 +17,11 @@ $stats = [];
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
 $stats['total_users'] = $stmt->fetch()['count'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE status = 'pending'");
+// Only count profiles where registration payment is settled — pre-payment
+// rows are not yet a real submission for review.
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM users
+                      WHERE status = 'pending'
+                        AND registration_payment_status IN ('completed','bypassed')");
 $stats['pending_profiles'] = $stmt->fetch()['count'];
 
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE is_premium = 1");
@@ -47,8 +51,13 @@ try {
     $stats['pending_changes'] = 0;
 }
 
-// Recent registrations
-$stmt = $pdo->query("SELECT id, profile_id, name, email, gender, religion, status, created_at FROM users ORDER BY created_at DESC LIMIT 10");
+// Recent registrations — exclude users who haven't completed registration payment.
+$stmt = $pdo->query(
+    "SELECT id, profile_id, name, email, gender, religion, status, created_at
+       FROM users
+      WHERE registration_payment_status IN ('completed','bypassed')
+      ORDER BY created_at DESC LIMIT 10"
+);
 $recentUsers = $stmt->fetchAll();
 
 // Pending reports

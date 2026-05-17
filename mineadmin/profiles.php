@@ -18,7 +18,9 @@ $gender = $_GET['gender'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $offset = ($page - 1) * ADMIN_RESULTS_PER_PAGE;
 
-$where = ["1=1"];
+// Hide users who completed OTP but haven't paid (or used a 100% coupon) yet.
+// They become visible only once their registration payment is settled.
+$where = ["u.registration_payment_status IN ('completed','bypassed')"];
 $params = [];
 
 if ($status) {
