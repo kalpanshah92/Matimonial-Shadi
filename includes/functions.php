@@ -878,6 +878,80 @@ function verifyCSRFToken($token) {
 }
 
 /**
+ * Registration payment helpers
+ * ----------------------------------------------------------------------------
+ * Pricing is driven entirely by the `plans` table. We pick the plan whose
+ * `name` contains 'Male' or 'Female' (mirrors the admin upgrade modal). If no
+ * gender-specific plan is found we fall back to the cheapest active plan.
+ */
+function getRegistrationPlanForGender($gender) {
+    $pdo = getDBConnection();
+    $stmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
+    $plans = $stmt->fetchAll();
+    if (!$plans) return null;
+    $genderLc = strtolower((string)$gender);
+    foreach ($plans as $p) {
+        $isFemalePlan = stripos($p['name'], 'Female') !== false;
+        $isMalePlan   = !$isFemalePlan && stripos($p['name'], 'Male') !== false;
+        if ($genderLc === 'female' && $isFemalePlan) return $p;
+        if ($genderLc === 'male'   && $isMalePlan)   return $p;
+    }
+    return $plans[0];
+}
+
+/**
+ * Server-side coupon validation. Returns ['ok'=>true,'coupon'=>row,'discount_amount'=>x,'final_amount'=>y]
+ * or ['ok'=>false,'message'=>...]. NEVER trust a client-supplied discount.
+ */
+function validateCoupon($code, $userGender, $originalAmount) {
+    $code = strtoupper(trim((string)$code));
+    if ($code === '') return ['ok' => false, 'message' => 'Enter a coupon code.'];
+
+    $pdo = getDBConnection();
+    $stmt = $pdo->prepare("SELECT * FROM coupons WHERE code = ? LIMIT 1");
+    $stmt->execute([$code]);
+    $coupon = $stmt->fetch();
+    if (!$coupon)              return ['ok' => false, 'message' => 'Invalid coupon code.'];
+    if (!$coupon['is_active']) return ['ok' => false, 'message' => 'This coupon is no longer active.'];
+
+    $today = date('Y-m-d');
+    if (!empty($coupon['valid_from'])  && $today < $coupon['valid_from'])  return ['ok' => false, 'message' => 'Coupon not yet valid.'];
+    if (!empty($coupon['valid_until']) && $today > $coupon['valid_until']) return ['ok' => false, 'message' => 'Coupon has expired.'];
+
+    if (!empty($coupon['max_redemptions'])
+        && (int)$coupon['redemptions_count'] >= (int)$coupon['max_redemptions']) {
+        return ['ok' => false, 'message' => 'Coupon redemption limit reached.'];
+    }
+
+    if ($coupon['gender_restriction'] !== 'any'
+        && strcasecmp($coupon['gender_restriction'], (string)$userGender) !== 0) {
+        return ['ok' => false, 'message' => 'Coupon not applicable to your profile.'];
+    }
+
+    $percent = max(0, min(100, (int)$coupon['discount_percent']));
+    $original = round((float)$originalAmount, 2);
+    $discount = round($original * $percent / 100, 2);
+    $final    = round(max(0, $original - $discount), 2);
+
+    return [
+        'ok'              => true,
+        'coupon'          => $coupon,
+        'discount_amount' => $discount,
+        'final_amount'    => $final,
+    ];
+}
+
+/**
+ * Returns true when Razorpay is fully configured at runtime.
+ */
+function isRazorpayConfigured() {
+    return defined('RAZORPAY_KEY_ID') && defined('RAZORPAY_KEY_SECRET')
+        && RAZORPAY_KEY_ID !== '' && RAZORPAY_KEY_SECRET !== ''
+        && RAZORPAY_KEY_ID !== 'your_razorpay_key_id'
+        && RAZORPAY_KEY_SECRET !== 'your_razorpay_key_secret';
+}
+
+/**
  * F-02 Build a proxied photo URL that enforces ACL via photo.php.
  * Accepts a stored relative path (e.g. 'uploads/photos/42/abc.jpg').
  * Falls back to a placeholder when the photo row cannot be resolved.

@@ -99,8 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 unset($_SESSION['pending_registration']);
 
-                setFlash('success', 'Your account is pending for admin approval. You will be able to login once approved.');
-                redirect(SITE_URL . '/login.php');
+                // Route the freshly-verified user into the registration payment step.
+                // The user is NOT logged in yet — we keep a short-lived session token
+                // identifying the row that must complete payment.
+                $_SESSION['registration_payment_user_id'] = (int)$userId;
+                $_SESSION['registration_payment_expires'] = time() + 1800; // 30 min window
+                redirect(SITE_URL . '/registration-payment.php');
             } catch (PDOException $e) {
                 error_log("Registration Error: " . $e->getMessage());
                 $errors[] = 'Registration failed. Please try again.';

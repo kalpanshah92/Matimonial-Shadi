@@ -61,6 +61,11 @@
         <a class="nav-link <?= ($adminPage ?? '') === 'plans' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/plans.php">
             <i class="bi bi-star"></i>Plans & Pricing
         </a>
+        <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+            <a class="nav-link <?= ($adminPage ?? '') === 'coupons' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/coupons.php">
+                <i class="bi bi-ticket-perforated"></i>Coupons
+            </a>
+        <?php endif; ?>
         <a class="nav-link <?= ($adminPage ?? '') === 'analytics' ? 'active' : '' ?>" href="<?= SITE_URL ?>/mineadmin/analytics.php">
             <i class="bi bi-graph-up"></i>Analytics
         </a>

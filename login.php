@@ -41,9 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             recordLoginAttempt($email, false, 'user');
             $errors[] = 'Invalid credentials or account not available.';
         } else {
-            if ($user['status'] !== 'approved') {
+            // Hard gate: unpaid registrations cannot log in even if an admin mis-approved them.
+            $regPaid = !array_key_exists('registration_payment_status', $user)
+                       || in_array($user['registration_payment_status'], ['completed','bypassed'], true);
+            if ($user['status'] !== 'approved' || !$regPaid) {
                 recordLoginAttempt($email, false, 'user');
-                // Generic failure message (do not reveal pending/rejected/suspended state)
+                // Generic failure message (do not reveal pending/rejected/suspended/unpaid state)
                 $errors[] = 'Invalid credentials or account not available.';
             } else {
                 // F-08 Session fixation: regenerate session ID on auth-state change
