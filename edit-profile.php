@@ -1361,12 +1361,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Single Save Button at Bottom -->
-        <div class="mt-4 text-center">
-            <button type="button" class="btn btn-primary btn-lg px-5" id="saveAllChanges" disabled>
-                <i class="bi bi-check-lg me-2"></i>Save Changes
-            </button>
-        </div>
     </div>
 </section>
 
@@ -1526,12 +1520,36 @@ require_once __DIR__ . '/includes/header.php';
         });
     }
 
+    // Warn the user if they try to leave with unsaved edits in any section.
+    // sessionStorage drafts survive reloads within the same tab, but closing
+    // the tab/window or navigating off-site loses them — hence this guard.
+    function attachUnloadGuard() {
+        window.addEventListener('beforeunload', function(e) {
+            // Skip the warning if the user just clicked a section's Save submit button.
+            if (window.__skipUnloadGuard) return;
+            var dirty = document.querySelector('.section-form.has-changes');
+            if (dirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chromium to show the prompt
+                return '';
+            }
+        });
+
+        // When any section form is submitted, allow navigation without prompt.
+        document.querySelectorAll('.section-form').forEach(function(form) {
+            form.addEventListener('submit', function() {
+                window.__skipUnloadGuard = true;
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // If server signaled successful save for a section, clear its draft first
         if (SAVED_SECTION) clearSection(SAVED_SECTION);
         restoreAll();
         attachAutoSave();
         attachChangeDetection();
+        attachUnloadGuard();
 
         // Employment Status dynamic dropdown behavior
         var employmentStatus = document.getElementById('employmentStatus');
