@@ -530,10 +530,11 @@ require_once __DIR__ . '/includes/header.php';
                 font-weight: 600;
                 font-size: 1.1rem;
             }
-            .section-form .btn {
+            /* Save buttons are hidden by default and shown via JS when changes detected */
+            .section-form .btn-save-section {
                 display: none;
             }
-            .section-form #saveContact {
+            .section-form.has-changes .btn-save-section {
                 display: inline-block;
             }
         </style>
@@ -625,7 +626,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="about_me" class="form-control" rows="4" placeholder="Write something about yourself..."><?= sanitize($currentUser['about_me'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="saveBasic" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="saveBasic" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
@@ -716,7 +717,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="hobbies" class="form-control" rows="3" placeholder="E.g., Reading, Traveling, Cooking..."><?= sanitize($details['hobbies'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="savePersonal" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="savePersonal" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
@@ -809,7 +810,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="working_city" value="<?= sanitize($details['working_city'] ?? '') ?>">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="saveProfessional" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="saveProfessional" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
@@ -920,7 +921,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="about_family" class="form-control" rows="3"><?= sanitize($family['about_family'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="saveFamily" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="saveFamily" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
@@ -948,7 +949,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="place_of_birth" value="<?= sanitize($details['place_of_birth'] ?? '') ?>" placeholder="Enter place of birth">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="saveHoroscope" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="saveHoroscope" disabled><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                     </form>
                     </div>
                 </div>
@@ -1043,7 +1044,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <textarea name="pref_about_partner" class="form-control" rows="3"><?= sanitize($partnerPrefs['about_partner'] ?? '') ?></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="savePartner" disabled><i class="bi bi-check-lg me-1"></i>Save Preferences</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="savePartner" disabled><i class="bi bi-check-lg me-1"></i>Save Preferences</button>
                     </form>
                     </div>
                 </div>
@@ -1141,7 +1142,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3" id="saveContact"><i class="bi bi-check-lg me-1"></i>Save Contact Details</button>
+                        <button type="submit" class="btn btn-primary mt-3 btn-save-section" id="saveContact" disabled><i class="bi bi-check-lg me-1"></i>Save Contact Details</button>
                     </form>
                     </div>
                 </div>
@@ -1484,11 +1485,6 @@ require_once __DIR__ . '/includes/header.php';
 
     // Attach change detection and button enable/disable logic
     function attachChangeDetection() {
-        var saveAllButton = document.getElementById('saveAllChanges');
-        if (!saveAllButton) return;
-
-        var formStates = {};
-
         document.querySelectorAll('.section-form').forEach(function(form) {
             var section = getSectionFromForm(form);
             if (!section) return;
@@ -1500,22 +1496,22 @@ require_once __DIR__ . '/includes/header.php';
                 initialData[field.name] = getFieldValue(field);
             });
 
-            formStates[section] = {
-                form: form,
-                initialData: initialData,
-                hasChanges: false
-            };
-
             // Check for changes and update button state
             function updateButtonState() {
                 var hasChanges = hasFormChanges(form, initialData);
-                formStates[section].hasChanges = hasChanges;
 
-                // Enable save button if any form has changes
-                var anyChanges = Object.values(formStates).some(function(state) {
-                    return state.hasChanges;
-                });
-                saveAllButton.disabled = !anyChanges;
+                // Add/remove has-changes class to trigger CSS display of save button
+                if (hasChanges) {
+                    form.classList.add('has-changes');
+                } else {
+                    form.classList.remove('has-changes');
+                }
+
+                // Enable/disable the specific section's save button
+                var saveBtn = form.querySelector('.btn-save-section');
+                if (saveBtn) {
+                    saveBtn.disabled = !hasChanges;
+                }
             }
 
             // Listen for input and change events
@@ -1524,22 +1520,6 @@ require_once __DIR__ . '/includes/header.php';
 
             // Initial check
             updateButtonState();
-        });
-
-        // Handle save button click - submit all forms with changes
-        saveAllButton.addEventListener('click', function() {
-            var formsToSubmit = [];
-            Object.values(formStates).forEach(function(state) {
-                if (state.hasChanges) {
-                    formsToSubmit.push(state.form);
-                }
-            });
-
-            if (formsToSubmit.length === 0) return;
-
-            // Submit the first form with changes (for simplicity)
-            // In the future, we could submit all forms sequentially
-            formsToSubmit[0].submit();
         });
     }
 
