@@ -1377,13 +1377,16 @@ require_once __DIR__ . '/includes/header.php';
     var STORAGE_PREFIX = 'editProfile_user<?= (int)$userId ?>_';
     var SAVED_SECTION = <?php echo json_encode($_GET['saved'] ?? ''); ?>;
 
-    // Map of section name -> tab pane id
+    // Map of section name -> tab pane id. MUST include every form's
+    // <input name="section"> value, otherwise change detection skips it.
     var SECTION_TABS = {
         'basic': 'basic',
         'personal': 'personal',
         'professional': 'professional',
         'family': 'family',
-        'partner': 'partner'
+        'horoscope': 'horoscope',
+        'partner': 'partner',
+        'contact': 'contact'
     };
 
     function getFieldKey(section, name) {
