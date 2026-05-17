@@ -112,7 +112,17 @@ require_once __DIR__ . '/includes/header.php';
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <?php endif; ?>
 <script>
-(function () {
+// jQuery is loaded by includes/footer.php AFTER this <script> block, so we
+// must wait until DOMContentLoaded — by then the parser has executed every
+// <script> tag in the body, including jQuery and Razorpay checkout.js.
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.jQuery === 'undefined') {
+        console.error('registration-payment: jQuery not loaded');
+        var el = document.getElementById('coupon-msg');
+        if (el) { el.className = 'form-text text-danger'; el.textContent = 'Page failed to load required scripts. Refresh the page.'; }
+        return;
+    }
+    var $ = window.jQuery;
     var planId          = <?= (int)$plan['id'] ?>;
     var originalAmount  = <?= number_format((float)$plan['price'], 2, '.', '') ?>;
     var appliedCoupon   = null;       // server-confirmed coupon code or null
@@ -275,7 +285,7 @@ require_once __DIR__ . '/includes/header.php';
             $('#btn-pay-label').text(origLabel);
         });
     });
-})();
+}); // end DOMContentLoaded
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
