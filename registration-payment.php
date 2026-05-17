@@ -121,6 +121,12 @@ require_once __DIR__ . '/includes/header.php';
     var siteName        = <?= json_encode(SITE_NAME) ?>;
     var userEmail       = <?= json_encode($user['email']) ?>;
     var userName        = <?= json_encode($user['name']) ?>;
+    var csrfToken       = <?= json_encode(generateCSRFToken()) ?>;
+
+    // Send CSRF on every same-origin AJAX so requireCSRF() on the API passes.
+    $.ajaxSetup({
+        headers: { 'X-CSRF-Token': csrfToken }
+    });
 
     function fmt(n) { return Number(n).toFixed(2); }
 
