@@ -889,6 +889,22 @@ require_once __DIR__ . '/includes/header.php';
                                 <label class="form-label">Mother's Occupation</label>
                                 <input type="text" class="form-control" name="mother_occupation" value="<?= sanitize($family['mother_occupation'] ?? '') ?>">
                             </div>
+                            <?php
+                            $parentsAddr = $family['parents_address'] ?? '';
+                            $parentsAddrType = $family['parents_address_type'] ?? '';
+                            ?>
+                            <div class="col-md-8">
+                                <label class="form-label">Parents Address</label>
+                                <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
+                            </div>
+                            <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
+                                <label class="form-label">Do You Own The Property</label>
+                                <select name="parents_address_type" id="parents_address_type" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="Yes" <?= $parentsAddrType === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="No" <?= $parentsAddrType === 'No' ? 'selected' : '' ?>>No</option>
+                                </select>
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label">Brothers</label>
                                 <input type="number" class="form-control" name="brothers" value="<?= $family['brothers'] ?? 0 ?>" min="0" max="10">
@@ -926,22 +942,6 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label">Gotra</label>
                                 <input type="text" class="form-control" name="gotra" value="<?= sanitize($family['gotra'] ?? '') ?>">
-                            </div>
-                            <?php
-                            $parentsAddr = $family['parents_address'] ?? '';
-                            $parentsAddrType = $family['parents_address_type'] ?? '';
-                            ?>
-                            <div class="col-md-8">
-                                <label class="form-label">Parents Address</label>
-                                <input type="text" class="form-control" id="parents_address" name="parents_address" value="<?= sanitize($parentsAddr) ?>" placeholder="Enter parents address">
-                            </div>
-                            <div class="col-md-4" id="parents_address_type_wrapper" style="display: <?= !empty($parentsAddr) ? 'block' : 'none' ?>;">
-                                <label class="form-label">Do You Own The Property</label>
-                                <select name="parents_address_type" id="parents_address_type" class="form-select">
-                                    <option value="">Select</option>
-                                    <option value="Yes" <?= $parentsAddrType === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                    <option value="No" <?= $parentsAddrType === 'No' ? 'selected' : '' ?>>No</option>
-                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">About Family</label>
