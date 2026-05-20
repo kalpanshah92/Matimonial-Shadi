@@ -175,7 +175,6 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                             <li><a class="dropdown-item" href="<?= SITE_URL ?>/my-profile.php"><i class="bi bi-person me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item" href="<?= SITE_URL ?>/edit-profile.php"><i class="bi bi-pencil-square me-2"></i>Edit Profile</a></li>
                             <li><a class="dropdown-item" href="<?= SITE_URL ?>/settings.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
-                            <li><a class="dropdown-item" href="<?= SITE_URL ?>/subscription.php"><i class="bi bi-star me-2"></i>Upgrade Plan</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="<?= SITE_URL ?>/logout.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>

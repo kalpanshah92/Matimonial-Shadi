@@ -67,7 +67,7 @@ if (isLoggedIn()) {
     if (!$isOwner) {
         // F-13 Per-viewer daily distinct-profile cap to deter scraping
         if (!canViewAnotherProfile($currentUserId, $profileId)) {
-            setFlash('error', 'Daily profile view limit reached. Upgrade to premium for higher limits.');
+            setFlash('error', 'Daily profile view limit reached. Please try again tomorrow.');
             redirect(SITE_URL . '/dashboard.php');
         }
         logProfileVisit($currentUserId, $profileId);

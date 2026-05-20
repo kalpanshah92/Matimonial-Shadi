@@ -24,10 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             switch ($section) {
                 case 'privacy':
-                    if (!$isPremiumUser) {
-                        $errors[] = 'Privacy Settings is a premium feature. Please upgrade your account.';
-                        break;
-                    }
                     $stmt = $pdo->prepare(
                         "UPDATE privacy_settings SET show_phone=?, show_email=?, show_photo=?, 
                          show_income=?, profile_visibility=?, allow_messages=?, updated_at=NOW() WHERE user_id=?"
@@ -110,16 +106,6 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Privacy Settings -->
                 <div class="dashboard-card mb-4">
                     <h5><i class="bi bi-shield-lock me-2 text-primary"></i>Privacy Settings</h5>
-                    <?php if (!$isPremiumUser): ?>
-                        <div class="text-center py-4">
-                            <i class="bi bi-lock-fill display-4 text-muted mb-3"></i>
-                            <h5 class="text-muted">Privacy Settings is a Premium Feature</h5>
-                            <p class="text-muted">Upgrade your account to control who can view your phone, email, photos, income, profile and who can message you.</p>
-                            <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-accent mt-2">
-                                <i class="bi bi-star me-1"></i>Upgrade Account
-                            </a>
-                        </div>
-                    <?php else: ?>
                     <form method="POST" class="mt-3">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         <input type="hidden" name="section" value="privacy">
@@ -163,7 +149,6 @@ require_once __DIR__ . '/includes/header.php';
                         
                         <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Save Privacy Settings</button>
                     </form>
-                    <?php endif; ?>
                 </div>
 
                 <!-- Change Password -->

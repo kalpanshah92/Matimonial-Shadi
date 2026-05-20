@@ -9,6 +9,11 @@ $userId = $currentUser['id'];
 $profileCompletion = getProfileCompletion($userId);
 $isPremiumUser = isPremium($userId);
 
+// Fetch latest active subscription to display membership expiry
+$stmt = $pdo->prepare("SELECT end_date FROM subscriptions WHERE user_id = ? AND status = 'active' AND end_date >= CURDATE() ORDER BY end_date DESC LIMIT 1");
+$stmt->execute([$userId]);
+$membershipEndDate = $stmt->fetchColumn() ?: null;
+
 // Matches count
 $oppositeGender = ($currentUser['gender'] === 'Male') ? 'Female' : 'Male';
 $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE gender = ? AND id != ? AND is_active = 1 AND status = 'approved'");
@@ -60,6 +65,13 @@ require_once __DIR__ . '/includes/header.php';
                             <span class="badge bg-info ms-1"><i class="bi bi-patch-check-fill"></i> Verified</span>
                         <?php endif; ?>
                     </p>
+                    <?php if ($membershipEndDate): ?>
+                        <p class="mb-2 opacity-90">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            <strong>Membership Valid Till:</strong>
+                            <?= date('d M Y', strtotime($membershipEndDate)) ?>
+                        </p>
+                    <?php endif; ?>
                     <div class="mt-3">
                         <small>Profile Completion: <?= $profileCompletion ?>%</small>
                         <div class="completion-bar mt-1" style="max-width: 300px;">
@@ -173,11 +185,6 @@ require_once __DIR__ . '/includes/header.php';
                         <a href="<?= SITE_URL ?>/settings.php" class="btn btn-outline-primary btn-sm text-start">
                             <i class="bi bi-shield-lock me-2"></i>Privacy Settings
                         </a>
-                        <?php if (!$isPremiumUser): ?>
-                            <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-accent btn-sm text-start">
-                                <i class="bi bi-star me-2"></i>Upgrade to Premium
-                            </a>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
