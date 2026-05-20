@@ -614,8 +614,9 @@ function calculateAge($dob) {
 function formatHeight($cm) {
     if (!$cm) return 'Not specified';
     $totalInches = $cm / 2.54;
-    $feet = floor($totalInches / 12);
-    $inches = round($totalInches % 12);
+    $feet = (int) floor($totalInches / 12);
+    $inches = (int) round(fmod($totalInches, 12));
+    if ($inches === 12) { $feet += 1; $inches = 0; }
     return "$feet' $inches\" ($cm cm)";
 }
 
