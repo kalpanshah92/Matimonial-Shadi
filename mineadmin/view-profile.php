@@ -406,12 +406,6 @@ if ($isPremium) {
                                 <i class="bi bi-patch-check me-1"></i>Verify Profile
                             </button>
                         <?php endif; ?>
-                        <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin' && !$isPremium): ?>
-                            <button class="btn btn-warning btn-upgrade-premium" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars($user['name']) ?>">
-                                <i class="bi bi-star me-1"></i>Upgrade to Premium
-                            </button>
-                        <?php endif; ?>
-
                         <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
                             <hr class="my-2">
                             <button type="button"
@@ -440,59 +434,6 @@ if ($isPremium) {
                     <div class="mb-2"><strong>Verified:</strong> <?= $user['is_verified'] ? '<span class="text-success">Yes</span>' : '<span class="text-danger">No</span>' ?></div>
                     <div><strong>Premium:</strong> <?= $isPremium ? '<span class="text-warning">Yes</span>' : '<span class="text-muted">No</span>' ?></div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Premium Upgrade Modal -->
-<div class="modal fade" id="premiumUpgradeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Upgrade to Premium</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="premiumUpgradeForm">
-                    <input type="hidden" name="user_id" id="premiumUserId">
-                    <div class="mb-3">
-                        <label class="form-label">User</label>
-                        <input type="text" class="form-control" id="premiumUserName" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Premium Until</label>
-                        <input type="date" class="form-control" name="end_date" id="premiumEndDate" required>
-                        <small class="text-muted">Select the date when premium access should expire</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Plan</label>
-                        <select class="form-select" name="plan_id" id="premiumPlanId" required>
-                            <?php
-                            $planStmt = $pdo->query("SELECT * FROM plans WHERE is_active = 1 ORDER BY price ASC");
-                            $plans = $planStmt->fetchAll();
-                            // Filter plans by this user's gender
-                            $userGender = strtolower($user['gender'] ?? '');
-                            $plans = array_values(array_filter($plans, function ($plan) use ($userGender) {
-                                $isFemalePlan = stripos($plan['name'], 'Female') !== false;
-                                $isMalePlan = !$isFemalePlan && stripos($plan['name'], 'Male') !== false;
-                                if ($userGender === 'female') return $isFemalePlan;
-                                if ($userGender === 'male') return $isMalePlan;
-                                return true;
-                            }));
-                            foreach ($plans as $plan):
-                            ?>
-                                <option value="<?= $plan['id'] ?>" data-duration="<?= $plan['duration_days'] ?>">
-                                    <?= htmlspecialchars($plan['name']) ?> - ₹<?= number_format($plan['price']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="btnConfirmPremiumUpgrade">Upgrade to Premium</button>
             </div>
         </div>
     </div>
@@ -581,79 +522,33 @@ $(document).on('click', '.btn-delete-profile', function () {
     });
 });
 
-// Premium upgrade modal
-var premiumModal;
+// Edit End Date modal
 $(document).ready(function() {
-    premiumModal = new bootstrap.Modal(document.getElementById('premiumUpgradeModal'));
-    
-    $('.btn-upgrade-premium').click(function() {
+    var editEndDateModal = new bootstrap.Modal(document.getElementById('editEndDateModal'));
+
+    $('#btnEditEndDate').click(function() {
         var userId = $(this).data('user-id');
-        var userName = $(this).data('user-name');
-        
-        $('#premiumUserId').val(userId);
-        $('#premiumUserName').val(userName);
-        
-        // Set default end date to 2 years from now
-        var defaultDate = new Date();
-        defaultDate.setFullYear(defaultDate.getFullYear() + 2);
-        $('#premiumEndDate').val(defaultDate.toISOString().split('T')[0]);
-        
-        premiumModal.show();
+        var currentEndDate = $(this).data('current-end-date');
+
+        $('#editEndDateUserId').val(userId);
+        $('#editEndDateValue').val(currentEndDate);
+
+        editEndDateModal.show();
     });
-    
-    $('#premiumPlanId').change(function() {
-        var duration = $(this).find(':selected').data('duration');
-        var endDate = new Date();
-        endDate.setDate(endDate.getDate() + parseInt(duration));
-        $('#premiumEndDate').val(endDate.toISOString().split('T')[0]);
-    });
-    
-    $('#btnConfirmPremiumUpgrade').click(function() {
-        var formData = $('#premiumUpgradeForm').serialize();
-        formData += '&action=upgrade_premium';
-        
-        $.post('api/profiles.php', formData, function(response) {
+
+    $('#btnSaveEndDate').click(function() {
+        var formData = $('#editEndDateForm').serialize();
+
+        $.post('api/profiles.php', formData + '&action=update_end_date', function(response) {
             if (response.success) {
-                alert('User upgraded to premium successfully!');
-                premiumModal.hide();
+                alert('End date updated successfully!');
+                editEndDateModal.hide();
                 location.reload();
             } else {
-                alert(response.message || 'Failed to upgrade user to premium.');
+                alert(response.message || 'Failed to update end date.');
             }
         }, 'json').fail(function() {
             alert('Failed to process request.');
-        });
-    });
-
-    // Edit End Date modal
-    var editEndDateModal;
-    $(document).ready(function() {
-        editEndDateModal = new bootstrap.Modal(document.getElementById('editEndDateModal'));
-        
-        $('#btnEditEndDate').click(function() {
-            var userId = $(this).data('user-id');
-            var currentEndDate = $(this).data('current-end-date');
-            
-            $('#editEndDateUserId').val(userId);
-            $('#editEndDateValue').val(currentEndDate);
-            
-            editEndDateModal.show();
-        });
-        
-        $('#btnSaveEndDate').click(function() {
-            var formData = $('#editEndDateForm').serialize();
-            
-            $.post('api/profiles.php', formData + '&action=update_end_date', function(response) {
-                if (response.success) {
-                    alert('End date updated successfully!');
-                    editEndDateModal.hide();
-                    location.reload();
-                } else {
-                    alert(response.message || 'Failed to update end date.');
-                }
-            }, 'json').fail(function() {
-                alert('Failed to process request.');
-            });
         });
     });
 });
