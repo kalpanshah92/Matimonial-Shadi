@@ -786,6 +786,14 @@ require_once __DIR__ . '/includes/header.php';
                                 <input type="text" class="form-control" name="education_detail" value="<?= sanitize($details['education_detail'] ?? '') ?>" placeholder="E.g., IIT Delhi, B.Tech CSE">
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Employment Type</label>
+                                <select name="employment_status" class="form-select" id="employmentStatus">
+                                    <option value="">Select Employment Type</option>
+                                    <option value="Job" <?= ($details['employment_status'] ?? '') === 'Job' ? 'selected' : '' ?>>Job</option>
+                                    <option value="Business" <?= ($details['employment_status'] ?? '') === 'Business' ? 'selected' : '' ?>>Business</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Occupation</label>
                                 <select name="occupation" class="form-select">
                                     <option value="">Select</option>
@@ -797,14 +805,6 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label">Occupation Detail</label>
                                 <input type="text" class="form-control" name="occupation_detail" value="<?= sanitize($details['occupation_detail'] ?? '') ?>" placeholder="E.g., Senior Software Engineer">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Employment Status</label>
-                                <select name="employment_status" class="form-select" id="employmentStatus">
-                                    <option value="">Select Employment Status</option>
-                                    <option value="Job" <?= ($details['employment_status'] ?? '') === 'Job' ? 'selected' : '' ?>>Job</option>
-                                    <option value="Business" <?= ($details['employment_status'] ?? '') === 'Business' ? 'selected' : '' ?>>Business</option>
-                                </select>
                             </div>
                             <div class="col-md-6" id="jobDescriptionContainer" style="display: none;">
                                 <label class="form-label">Job Description</label>
@@ -1578,7 +1578,7 @@ require_once __DIR__ . '/includes/header.php';
         attachChangeDetection();
         attachUnloadGuard();
 
-        // Employment Status dynamic dropdown behavior
+        // Employment Type dynamic dropdown behavior
         var employmentStatus = document.getElementById('employmentStatus');
         var jobDescriptionContainer = document.getElementById('jobDescriptionContainer');
         var businessDescriptionContainer = document.getElementById('businessDescriptionContainer');
