@@ -148,8 +148,6 @@ $FAMILY_TYPES = ['Joint Family', 'Nuclear Family'];
 
 $FAMILY_STATUS = ['Middle Class', 'Upper Middle Class', 'Rich', 'Affluent'];
 
-$FAMILY_VALUES = ['Orthodox', 'Traditional', 'Moderate', 'Liberal'];
-
 $INCOME_RANGES = [
     'Below 2 Lakh', '2-4 Lakh', '4-6 Lakh', '6-8 Lakh', '8-10 Lakh',
     '10-15 Lakh', '15-20 Lakh', '20-30 Lakh', '30-50 Lakh', '50 Lakh - 1 Crore',

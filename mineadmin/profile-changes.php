@@ -90,7 +90,6 @@ $fieldLabels = [
     'sisters_married' => 'Sisters Married',
     'family_type' => 'Family Type',
     'family_status' => 'Family Status',
-    'family_values' => 'Family Values',
     'gotra' => 'Gotra',
     'about_family' => 'About Family',
     'min_age' => 'Min Age',
@@ -259,7 +258,7 @@ $sectionLabels = [
                                             $sectionsWithChanges['personal'] = true;
                                         } elseif (in_array($key, ['education', 'education_detail', 'occupation', 'occupation_detail', 'company', 'annual_income', 'working_city'])) {
                                             $sectionsWithChanges['professional'] = true;
-                                        } elseif (in_array($key, ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'family_values', 'gotra', 'parents_address', 'parents_address_type', 'about_family'])) {
+                                        } elseif (in_array($key, ['father_name', 'father_occupation', 'mother_name', 'mother_occupation', 'brothers', 'brothers_married', 'sisters', 'sisters_married', 'family_type', 'family_status', 'gotra', 'parents_address', 'parents_address_type', 'about_family'])) {
                                             $sectionsWithChanges['family'] = true;
                                         } elseif (in_array($key, ['min_age', 'max_age', 'min_height', 'max_height', 'min_income', 'max_income', 'about_partner'])) {
                                             $sectionsWithChanges['partner'] = true;

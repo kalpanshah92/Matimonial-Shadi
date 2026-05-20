@@ -90,7 +90,6 @@ CREATE TABLE IF NOT EXISTS family_details (
     sisters_married INT DEFAULT 0,
     family_type VARCHAR(30),
     family_status VARCHAR(30),
-    family_values VARCHAR(30),
     family_income VARCHAR(50),
     gotra VARCHAR(100),
     family_location VARCHAR(150),

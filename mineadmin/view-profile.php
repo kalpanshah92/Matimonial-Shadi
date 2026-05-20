@@ -284,7 +284,6 @@ if ($isPremium) {
                         <div class="col-md-4"><strong>Mother's Occupation:</strong> <?= htmlspecialchars($user['mother_occupation'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Family Type:</strong> <?= htmlspecialchars($user['family_type'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Family Status:</strong> <?= htmlspecialchars($user['family_status'] ?? '-') ?></div>
-                        <div class="col-md-4"><strong>Family Values:</strong> <?= htmlspecialchars($user['family_values'] ?? '-') ?></div>
                         <div class="col-md-4"><strong>Brothers:</strong> <?= isset($user['brothers']) ? ($user['brothers'] . ' (' . ($user['brothers_married'] ?? 0) . ' married)') : '-' ?></div>
                         <div class="col-md-4"><strong>Sisters:</strong> <?= isset($user['sisters']) ? ($user['sisters'] . ' (' . ($user['sisters_married'] ?? 0) . ' married)') : '-' ?></div>
                         <div class="col-md-4"><strong>Gotra:</strong> <?= htmlspecialchars($user['gotra'] ?? '-') ?></div>

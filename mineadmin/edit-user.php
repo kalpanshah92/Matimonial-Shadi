@@ -170,9 +170,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 case 'family':
                     $stmt = $pdo->prepare(
-                        "UPDATE family_details SET father_name=?, father_occupation=?, mother_name=?, 
+                        "UPDATE family_details SET father_name=?, father_occupation=?, mother_name=?,
                          mother_occupation=?, brothers=?, brothers_married=?, sisters=?, sisters_married=?,
-                         family_type=?, family_status=?, family_values=?, gotra=?, about_family=? WHERE user_id=?"
+                         family_type=?, family_status=?, gotra=?, about_family=? WHERE user_id=?"
                     );
                     $stmt->execute([
                         sanitize($_POST['father_name']),
@@ -185,7 +185,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         intval($_POST['sisters_married']),
                         sanitize($_POST['family_type']),
                         sanitize($_POST['family_status']),
-                        sanitize($_POST['family_values']),
                         sanitize($_POST['gotra']),
                         sanitize($_POST['about_family']),
                         $userId
@@ -374,7 +373,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-3"><label class="form-label">Sisters Married</label><input type="number" min="0" class="form-control" name="sisters_married" value="<?= $family['sisters_married'] ?? 0 ?>"></div>
                         <div class="col-md-4"><label class="form-label">Family Type</label><input class="form-control" name="family_type" value="<?= htmlspecialchars($family['family_type'] ?? '') ?>"></div>
                         <div class="col-md-4"><label class="form-label">Family Status</label><input class="form-control" name="family_status" value="<?= htmlspecialchars($family['family_status'] ?? '') ?>"></div>
-                        <div class="col-md-4"><label class="form-label">Family Values</label><input class="form-control" name="family_values" value="<?= htmlspecialchars($family['family_values'] ?? '') ?>"></div>
                         <div class="col-md-6"><label class="form-label">Gotra</label><input class="form-control" name="gotra" value="<?= htmlspecialchars($family['gotra'] ?? '') ?>"></div>
                         <div class="col-12"><label class="form-label">About Family</label><textarea class="form-control" name="about_family" rows="3"><?= htmlspecialchars($family['about_family'] ?? '') ?></textarea></div>
                     </div>

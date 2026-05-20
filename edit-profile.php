@@ -206,7 +206,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'sisters_married' => intval($_POST['sisters_married'] ?? 0),
                         'family_type' => sanitize($_POST['family_type'] ?? ''),
                         'family_status' => sanitize($_POST['family_status'] ?? ''),
-                        'family_values' => sanitize($_POST['family_values'] ?? ''),
                         'gotra' => sanitize($_POST['gotra'] ?? ''),
                         'parents_address' => $parentsAddress,
                         'parents_address_type' => $parentsAddressType,
@@ -921,15 +920,6 @@ require_once __DIR__ . '/includes/header.php';
                                     <option value="">Select</option>
                                     <?php foreach ($FAMILY_STATUS as $fs): ?>
                                         <option value="<?= $fs ?>" <?= ($family['family_status'] ?? '') === $fs ? 'selected' : '' ?>><?= $fs ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Family Values</label>
-                                <select name="family_values" class="form-select">
-                                    <option value="">Select</option>
-                                    <?php foreach ($FAMILY_VALUES as $fv): ?>
-                                        <option value="<?= $fv ?>" <?= ($family['family_values'] ?? '') === $fv ? 'selected' : '' ?>><?= $fv ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
