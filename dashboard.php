@@ -1,18 +1,22 @@
 <?php
 $pageTitle = 'Dashboard';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/AccountEntitlement.php';
 
 $pdo = getDBConnection();
 $userId = $currentUser['id'];
+
+// Get account entitlement info
+$entitlement = AccountEntitlement::forUser($userId);
+$accountStatus = $entitlement->isExpired() ? 'expired' : ($entitlement->isInGracePeriod() ? 'grace' : 'active');
+$daysUntilExpiry = $entitlement->daysUntilExpiry();
 
 // Get stats
 $profileCompletion = getProfileCompletion($userId);
 $isPremiumUser = isPremium($userId);
 
-// Fetch latest active subscription to display membership expiry
-$stmt = $pdo->prepare("SELECT end_date FROM subscriptions WHERE user_id = ? AND status = 'active' AND end_date >= CURDATE() ORDER BY end_date DESC LIMIT 1");
-$stmt->execute([$userId]);
-$membershipEndDate = $stmt->fetchColumn() ?: null;
+// Account expiry info from entitlement system (primary source)
+$accountExpiryDate = $entitlement->getExpiryDate();
 
 // Matches count
 $oppositeGender = ($currentUser['gender'] === 'Male') ? 'Female' : 'Male';
@@ -65,11 +69,16 @@ require_once __DIR__ . '/includes/header.php';
                             <span class="badge bg-info ms-1"><i class="bi bi-patch-check-fill"></i> Verified</span>
                         <?php endif; ?>
                     </p>
-                    <?php if ($membershipEndDate): ?>
+                    <?php if ($accountExpiryDate): ?>
                         <p class="mb-2 opacity-90">
                             <i class="bi bi-calendar-check me-1"></i>
-                            <strong>Membership Valid Till:</strong>
-                            <?= date('d M Y', strtotime($membershipEndDate)) ?>
+                            <strong>Account Valid Till:</strong>
+                            <?= date('d M Y', strtotime($accountExpiryDate)) ?>
+                            <?php if ($entitlement->isExpired()): ?>
+                                <span class="badge bg-danger ms-1">Expired</span>
+                            <?php elseif ($daysUntilExpiry !== null && $daysUntilExpiry <= 30): ?>
+                                <span class="badge bg-warning text-dark ms-1">Expires in <?= $daysUntilExpiry ?> days</span>
+                            <?php endif; ?>
                         </p>
                     <?php endif; ?>
                     <div class="mt-3">
@@ -89,6 +98,45 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+
+        <!-- Account Expiry Alerts -->
+        <?php if ($accountStatus === 'expired'): ?>
+            <div class="alert alert-danger mb-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h5 class="alert-heading mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Your account has expired</h5>
+                        <p class="mb-0">Your membership expired on <strong><?= $entitlement->getFormattedExpiryDate() ?></strong>. You can still access your dashboard and profile, but cannot search for partners or use chat.</p>
+                    </div>
+                    <a href="<?= SITE_URL ?>/renew.php" class="btn btn-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Renew Your Account
+                    </a>
+                </div>
+            </div>
+        <?php elseif ($accountStatus === 'grace'): ?>
+            <div class="alert alert-warning mb-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h5 class="alert-heading mb-1"><i class="bi bi-clock-history me-2"></i>Your account has expired</h5>
+                        <p class="mb-0">Your membership expired on <strong><?= $entitlement->getFormattedExpiryDate() ?></strong>. Grace period ends on <strong><?= $entitlement->getGracePeriodEndDate() ?></strong>. Please renew now to avoid service interruption.</p>
+                    </div>
+                    <a href="<?= SITE_URL ?>/renew.php" class="btn btn-warning">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Renew Now
+                    </a>
+                </div>
+            </div>
+        <?php elseif ($daysUntilExpiry !== null && $daysUntilExpiry <= 30 && $daysUntilExpiry > 0): ?>
+            <div class="alert alert-info mb-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h5 class="alert-heading mb-1"><i class="bi bi-info-circle-fill me-2"></i>Your account will expire soon</h5>
+                        <p class="mb-0">Your membership expires in <strong><?= $daysUntilExpiry ?> days</strong> (<?= $entitlement->getFormattedExpiryDate() ?>). Renew now to ensure uninterrupted access.</p>
+                    </div>
+                    <a href="<?= SITE_URL ?>/subscription.php" class="btn btn-info text-white">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Extend Membership
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Stats Row -->
         <div class="row g-3 mb-4">

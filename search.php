@@ -1,6 +1,10 @@
 <?php
 $pageTitle = 'Search Profiles';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/AccountEntitlement.php';
+
+// Check account access - expired users cannot search
+requireAccountAccess(AccountEntitlement::FEATURE_SEARCH, '/dashboard.php');
 
 $pdo = getDBConnection();
 $results = [];

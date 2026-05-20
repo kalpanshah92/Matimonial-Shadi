@@ -261,6 +261,122 @@ switch ($action) {
         }
         break;
 
+    case 'update_account_expiry':
+        // Only super admin can update account expiry
+        if (($_SESSION['admin_role'] ?? '') !== 'super_admin') {
+            echo json_encode(['success' => false, 'message' => 'Only super admin can update account expiry']);
+            break;
+        }
+
+        $expiryDate = $_POST['expiry_date'] ?? '';
+        $adminNote = $_POST['admin_note'] ?? '';
+
+        if (empty($expiryDate)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid expiry date']);
+            break;
+        }
+
+        try {
+            require_once __DIR__ . '/../../includes/AccountEntitlement.php';
+
+            $entitlement = AccountEntitlement::forUser($userId);
+            $oldExpiry = $entitlement->getExpiryDate();
+
+            // Set the new expiry date with admin audit logging
+            $success = $entitlement->setExpiryDate($expiryDate, (int)$_SESSION['admin_id']);
+
+            if (!$success) {
+                throw new Exception('Failed to update account expiry');
+            }
+
+            // Log additional admin note if provided
+            if (!empty($adminNote)) {
+                $pdo->prepare(
+                    "INSERT INTO admin_audit_log (admin_id, user_id, action, old_value, new_value, details)
+                     VALUES (?, ?, 'update_expiry_note', ?, ?, ?)"
+                )->execute([
+                    (int)$_SESSION['admin_id'],
+                    $userId,
+                    $oldExpiry,
+                    $expiryDate,
+                    json_encode(['admin_note' => $adminNote, 'source' => 'manual_update'])
+                ]);
+            }
+
+            // Create notification for user
+            createNotification(
+                $userId,
+                'account',
+                'Account Expiry Updated',
+                'Your account expiry date has been updated by admin. New expiry: ' . date('d M Y', strtotime($expiryDate))
+            );
+
+            echo json_encode(['success' => true, 'message' => 'Account expiry updated successfully']);
+        } catch (Exception $e) {
+            error_log("Account expiry update error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to update account expiry']);
+        }
+        break;
+
+    case 'extend_account':
+        // Only super admin can extend account
+        if (($_SESSION['admin_role'] ?? '') !== 'super_admin') {
+            echo json_encode(['success' => false, 'message' => 'Only super admin can extend accounts']);
+            break;
+        }
+
+        $days = intval($_POST['days'] ?? 0);
+        $adminNote = $_POST['admin_note'] ?? '';
+
+        if ($days <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid extension duration']);
+            break;
+        }
+
+        try {
+            require_once __DIR__ . '/../../includes/AccountEntitlement.php';
+
+            $entitlement = AccountEntitlement::forUser($userId);
+
+            // Extend the account with admin audit logging
+            $success = $entitlement->extendExpiry($days, (int)$_SESSION['admin_id']);
+
+            if (!$success) {
+                throw new Exception('Failed to extend account');
+            }
+
+            $newExpiry = $entitlement->getExpiryDate();
+            $newExpiryFormatted = $entitlement->getFormattedExpiryDate();
+
+            // Log additional admin note if provided
+            if (!empty($adminNote)) {
+                $pdo->prepare(
+                    "UPDATE admin_audit_log SET details = JSON_SET(details, '$.admin_note', ?)
+                     WHERE admin_id = ? AND user_id = ? AND action = 'extend_expiry'
+                     ORDER BY created_at DESC LIMIT 1"
+                )->execute([$adminNote, (int)$_SESSION['admin_id'], $userId]);
+            }
+
+            // Create notification for user
+            createNotification(
+                $userId,
+                'account',
+                'Account Extended',
+                'Your account has been extended by ' . $days . ' days. New expiry: ' . $newExpiryFormatted
+            );
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Account extended successfully',
+                'new_expiry' => $newExpiryFormatted,
+                'expiry_date' => $newExpiry
+            ]);
+        } catch (Exception $e) {
+            error_log("Account extend error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to extend account']);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }

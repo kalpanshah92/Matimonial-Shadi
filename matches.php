@@ -1,6 +1,10 @@
 <?php
 $pageTitle = 'My Matches';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/AccountEntitlement.php';
+
+// Check account access - expired users cannot use matchmaking
+requireAccountAccess(AccountEntitlement::FEATURE_MATCHES, '/dashboard.php');
 
 $pdo = getDBConnection();
 $userId = $currentUser['id'];

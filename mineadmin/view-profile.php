@@ -3,6 +3,7 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/AccountEntitlement.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: login.php');
@@ -35,6 +36,13 @@ if (!$user) {
 
 // Check premium status (use is_premium flag from users table for consistency with profiles.php)
 $isPremium = $user['is_premium'] ? true : false;
+
+// Get account entitlement info
+$userEntitlement = AccountEntitlement::forUser($userId);
+$accountExpiryDate = $userEntitlement->getExpiryDate();
+$isAccountExpired = $userEntitlement->isExpired();
+$isInGracePeriod = $userEntitlement->isInGracePeriod();
+$daysUntilExpiry = $userEntitlement->daysUntilExpiry();
 
 // Get partner preferences
 $stmt = $pdo->prepare("SELECT * FROM partner_preferences WHERE user_id = ?");
@@ -425,41 +433,138 @@ if ($isPremium) {
 
             <!-- Account Status -->
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0">Account Status</h5>
+                    <?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" id="btnExtendAccountQuick"
+                                    data-user-id="<?= $user['id'] ?>">
+                                <i class="bi bi-calendar-plus me-1"></i>Quick Extend
+                            </button>
+                            <button class="btn btn-outline-primary" id="btnEditAccountExpiry"
+                                    data-user-id="<?= $user['id'] ?>"
+                                    data-current-expiry="<?= $accountExpiryDate ?>">
+                                <i class="bi bi-pencil me-1"></i>Edit Expiry
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body">
                     <div class="mb-2"><strong>Active:</strong> <?= $user['is_active'] ? '<span class="text-success">Yes</span>' : '<span class="text-danger">No</span>' ?></div>
                     <div class="mb-2"><strong>Status:</strong> <span class="badge bg-<?= $user['status'] === 'approved' ? 'success' : ($user['status'] === 'pending' ? 'warning' : 'danger') ?>"><?= ucfirst($user['status']) ?></span></div>
                     <div class="mb-2"><strong>Verified:</strong> <?= $user['is_verified'] ? '<span class="text-success">Yes</span>' : '<span class="text-danger">No</span>' ?></div>
-                    <div><strong>Premium:</strong> <?= $isPremium ? '<span class="text-warning">Yes</span>' : '<span class="text-muted">No</span>' ?></div>
+                    <div class="mb-2"><strong>Premium:</strong> <?= $isPremium ? '<span class="text-warning">Yes</span>' : '<span class="text-muted">No</span>' ?></div>
+                    <div class="mb-2">
+                        <strong>Account Expiry:</strong>
+                        <?php if ($accountExpiryDate): ?>
+                            <span class="<?= $isAccountExpired ? 'text-danger fw-bold' : ($isInGracePeriod ? 'text-warning fw-bold' : 'text-success') ?>">
+                                <?= date('d M Y', strtotime($accountExpiryDate)) ?>
+                                <?php if ($isAccountExpired): ?>
+                                    <span class="badge bg-danger ms-1">Expired</span>
+                                <?php elseif ($isInGracePeriod): ?>
+                                    <span class="badge bg-warning text-dark ms-1">Grace Period</span>
+                                <?php elseif ($daysUntilExpiry <= 30): ?>
+                                    <span class="badge bg-info ms-1"><?= $daysUntilExpiry ?> days left</span>
+                                <?php endif; ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="text-muted">Not set</span>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Edit End Date Modal -->
+<!-- Edit Premium End Date Modal -->
 <div class="modal fade" id="editEndDateModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Edit Premium End Date</h5>
+                <h5 class="modal-title">Edit Premium Subscription End Date</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="editEndDateForm">
                     <input type="hidden" name="user_id" id="editEndDateUserId">
                     <div class="mb-3">
-                        <label class="form-label">New End Date</label>
+                        <label class="form-label">New Premium End Date</label>
                         <input type="date" class="form-control" name="end_date" id="editEndDateValue" required>
-                        <small class="text-muted">Select the new expiration date for premium access</small>
+                        <small class="text-muted">Select the new expiration date for premium subscription</small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="btnSaveEndDate">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Account Expiry Modal -->
+<div class="modal fade" id="editAccountExpiryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Account Expiry Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAccountExpiryForm">
+                    <input type="hidden" name="user_id" id="editAccountExpiryUserId">
+                    <div class="mb-3">
+                        <label class="form-label">New Account Expiry Date</label>
+                        <input type="date" class="form-control" name="expiry_date" id="editAccountExpiryValue" required>
+                        <small class="text-muted">This controls when the user account expires and loses access to search/chat features</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Note (optional)</label>
+                        <textarea class="form-control" name="admin_note" id="editAccountExpiryNote" rows="2" placeholder="Reason for change..."></textarea>
+                        <small class="text-muted">This will be recorded in the audit log</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSaveAccountExpiry">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extend Account Quick Actions -->
+<div class="modal fade" id="extendAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Extend Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="extendAccountForm">
+                    <input type="hidden" name="user_id" id="extendAccountUserId">
+                    <div class="mb-3">
+                        <label class="form-label">Extension Duration</label>
+                        <select class="form-select" name="days" id="extendAccountDays" required>
+                            <option value="365">1 Year (+365 days)</option>
+                            <option value="730" selected>2 Years (+730 days)</option>
+                            <option value="1095">3 Years (+1095 days)</option>
+                        </select>
+                        <small class="text-muted">Adds days to current expiry (or from today if expired)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Note (optional)</label>
+                        <textarea class="form-control" name="admin_note" id="extendAccountNote" rows="2" placeholder="Reason for extension..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="btnExtendAccount">
+                    <i class="bi bi-calendar-plus me-1"></i>Extend Account
+                </button>
             </div>
         </div>
     </div>
@@ -522,9 +627,10 @@ $(document).on('click', '.btn-delete-profile', function () {
     });
 });
 
-// Edit End Date modal
+// Edit Premium End Date modal
+var editEndDateModal;
 $(document).ready(function() {
-    var editEndDateModal = new bootstrap.Modal(document.getElementById('editEndDateModal'));
+    editEndDateModal = new bootstrap.Modal(document.getElementById('editEndDateModal'));
 
     $('#btnEditEndDate').click(function() {
         var userId = $(this).data('user-id');
@@ -541,11 +647,73 @@ $(document).ready(function() {
 
         $.post('api/profiles.php', formData + '&action=update_end_date', function(response) {
             if (response.success) {
-                alert('End date updated successfully!');
+                alert('Premium end date updated successfully!');
                 editEndDateModal.hide();
                 location.reload();
             } else {
                 alert(response.message || 'Failed to update end date.');
+            }
+        }, 'json').fail(function() {
+            alert('Failed to process request.');
+        });
+    });
+});
+
+// Edit Account Expiry modal
+var editAccountExpiryModal;
+$(document).ready(function() {
+    editAccountExpiryModal = new bootstrap.Modal(document.getElementById('editAccountExpiryModal'));
+
+    $('#btnEditAccountExpiry').click(function() {
+        var userId = $(this).data('user-id');
+        var currentExpiry = $(this).data('current-expiry');
+
+        $('#editAccountExpiryUserId').val(userId);
+        $('#editAccountExpiryValue').val(currentExpiry);
+
+        editAccountExpiryModal.show();
+    });
+
+    $('#btnSaveAccountExpiry').click(function() {
+        var formData = $('#editAccountExpiryForm').serialize();
+
+        $.post('api/profiles.php', formData + '&action=update_account_expiry', function(response) {
+            if (response.success) {
+                alert('Account expiry updated successfully!');
+                editAccountExpiryModal.hide();
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to update account expiry.');
+            }
+        }, 'json').fail(function() {
+            alert('Failed to process request.');
+        });
+    });
+});
+
+// Extend Account Quick modal
+var extendAccountModal;
+$(document).ready(function() {
+    extendAccountModal = new bootstrap.Modal(document.getElementById('extendAccountModal'));
+
+    $('#btnExtendAccountQuick').click(function() {
+        var userId = $(this).data('user-id');
+
+        $('#extendAccountUserId').val(userId);
+
+        extendAccountModal.show();
+    });
+
+    $('#btnExtendAccount').click(function() {
+        var formData = $('#extendAccountForm').serialize();
+
+        $.post('api/profiles.php', formData + '&action=extend_account', function(response) {
+            if (response.success) {
+                alert('Account extended successfully! New expiry: ' + response.new_expiry);
+                extendAccountModal.hide();
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to extend account.');
             }
         }, 'json').fail(function() {
             alert('Failed to process request.');

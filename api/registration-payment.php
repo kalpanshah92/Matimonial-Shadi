@@ -93,9 +93,11 @@ if ($action === 'initiate') {
                 $pdo->prepare("UPDATE coupons SET redemptions_count = redemptions_count + 1 WHERE id = ?")->execute([$couponId]);
             }
 
+            // Set account expiry to 2 years from today, and activate the account
+            $expiryDate = date('Y-m-d', strtotime('+2 years'));
             $pdo->prepare(
-                "UPDATE users SET registration_payment_status = 'bypassed', status = 'pending' WHERE id = ?"
-            )->execute([$pendingUserId]);
+                "UPDATE users SET registration_payment_status = 'bypassed', status = 'pending', account_status = 'active', expiry_date = ? WHERE id = ?"
+            )->execute([$expiryDate, $pendingUserId]);
 
             $pdo->commit();
         } catch (Throwable $e) {
@@ -252,9 +254,11 @@ if ($action === 'verify') {
                 ->execute([(int)$rp['coupon_id']]);
         }
 
+        // Set account expiry to 2 years from today, and activate the account
+        $expiryDate = date('Y-m-d', strtotime('+2 years'));
         $pdo->prepare(
-            "UPDATE users SET registration_payment_status = 'completed', status = 'pending' WHERE id = ?"
-        )->execute([$pendingUserId]);
+            "UPDATE users SET registration_payment_status = 'completed', status = 'pending', account_status = 'active', expiry_date = ? WHERE id = ?"
+        )->execute([$expiryDate, $pendingUserId]);
 
         $pdo->commit();
     } catch (Throwable $e) {

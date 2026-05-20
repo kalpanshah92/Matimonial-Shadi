@@ -77,7 +77,8 @@ try {
     );
     $stmt->execute([$userId, $planId, $startDate, $endDate, $razorpayPaymentId, $plan['price']]);
 
-    $pdo->prepare("UPDATE users SET is_premium = 1 WHERE id = ?")->execute([$userId]);
+    // Update user: set premium, active status, and extend expiry date
+    $pdo->prepare("UPDATE users SET is_premium = 1, account_status = 'active', expiry_date = ? WHERE id = ?")->execute([$endDate, $userId]);
 
     createNotification($userId, 'subscription', 'Plan Activated', 'Your ' . $plan['name'] . ' plan has been activated until ' . $endDate);
 

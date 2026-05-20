@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/AccountEntitlement.php';
 
 header('Content-Type: application/json');
 
@@ -17,6 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 } else {
     $action = $_GET['action'] ?? '';
+}
+
+// Check account status for sending messages - expired/suspended users cannot send
+if ($action === 'send') {
+    $entitlement = AccountEntitlement::forUser($userId);
+    if (!$entitlement->canAccess(AccountEntitlement::FEATURE_CHAT)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => $entitlement->isExpired() ? 'Your account has expired. Please renew your subscription to send messages.' : 'Access denied.']);
+        exit;
+    }
 }
 
 // F-07 Rate limit message sends

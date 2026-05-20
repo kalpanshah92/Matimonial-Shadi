@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_premium TINYINT(1) DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1,
     status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'pending',
+    account_status VARCHAR(20) DEFAULT 'active' COMMENT 'active, expired, or suspended',
+    expiry_date DATE NULL COMMENT 'Account expiration date (typically reg date + 2 years)',
     email_verified TINYINT(1) DEFAULT 0,
     phone_verified TINYINT(1) DEFAULT 0,
     last_login DATETIME,
@@ -355,6 +357,22 @@ CREATE TABLE IF NOT EXISTS deactivation_requests (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_user_deact (user_id, status)
+) ENGINE=InnoDB;
+
+-- Admin Audit Log Table (tracks admin changes to user accounts)
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    user_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL COMMENT "e.g., extend_expiry, update_expiry, update_status",
+    old_value TEXT NULL,
+    new_value TEXT NULL,
+    details JSON NULL COMMENT "Additional context for the change",
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin_id (admin_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_action (action),
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB;
 
 -- Insert Default Subscription Plans
