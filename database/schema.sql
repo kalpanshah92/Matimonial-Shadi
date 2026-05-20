@@ -11,7 +11,12 @@ USE matrimonial_shadi;
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     profile_id VARCHAR(10) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(60) NOT NULL,
+    middle_name VARCHAR(60) NULL,
+    last_name VARCHAR(60) NOT NULL,
+    -- `name` is auto-populated by triggers (see split_name_into_first_middle_last.sql)
+    -- and kept in sync with first/middle/last so legacy reads keep working.
+    name VARCHAR(200) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     phone VARCHAR(15),
     password VARCHAR(255) NOT NULL,

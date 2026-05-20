@@ -104,7 +104,10 @@ switch ($action) {
             $pdo->beginTransaction();
 
             // Apply changes to users table (basic fields)
-            $basicFields = ['name', 'phone', 'email', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city', 'about_me'];
+            // Note: `name` itself is auto-recomputed by the BEFORE UPDATE trigger from
+            // first_name + middle_name + last_name, but we still allow it through so
+            // legacy change requests created before the migration apply correctly.
+            $basicFields = ['first_name', 'middle_name', 'last_name', 'name', 'phone', 'email', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city', 'about_me'];
             $basicUpdates = [];
             $basicParams = [];
             foreach ($basicFields as $field) {

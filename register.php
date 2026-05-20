@@ -20,8 +20,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Normalize country code (strip "-us", "-ca" suffixes for storage)
     $cleanCountryCode = preg_replace('/-.*$/', '', $countryCode);
     $rawPhone = sanitize($_POST['phone'] ?? '');
+    $firstNameRaw  = $_POST['first_name']  ?? '';
+    $middleNameRaw = $_POST['middle_name'] ?? '';
+    $lastNameRaw   = $_POST['last_name']   ?? '';
+    $firstName  = normalizeNamePart($firstNameRaw);
+    $middleName = normalizeNamePart($middleNameRaw);
+    $lastName   = normalizeNamePart($lastNameRaw);
+    $fullName   = trim(implode(' ', array_filter([$firstName, $middleName, $lastName], 'strlen')));
     $formData = [
-        'name'       => sanitize($_POST['name'] ?? ''),
+        'first_name'  => $firstName,
+        'middle_name' => $middleName,
+        'last_name'   => $lastName,
+        'name'        => $fullName, // legacy convenience for templates that still read it
         'email'      => sanitize($_POST['email'] ?? ''),
         'country_code' => $countryCode,
         'phone'      => $rawPhone ? $cleanCountryCode . ' ' . $rawPhone : '',
@@ -39,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
     
     // Validation
-    if (empty($formData['name'])) $errors[] = 'Name is required.';
+    if ($err = validateNamePart($firstName, 'First Name', true)) $errors[] = $err;
+    if ($err = validateNamePart($middleName, 'Middle Name', false)) $errors[] = $err;
+    if ($err = validateNamePart($lastName, 'Last Name', true))   $errors[] = $err;
     if (empty($formData['email']) || !filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
     if (empty($rawPhone) || !preg_match('/^[0-9]+$/', $rawPhone)) $errors[] = 'Valid mobile number is required.';
     if (strlen($formData['password']) < 8) $errors[] = 'Password must be at least 8 characters long.';
@@ -129,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class='container'>
                         <div class='header'><h2>Verify Your Email</h2></div>
                         <div class='content'>
-                            <p>Dear {$formData['name']},</p>
+                            <p>Dear {$firstName},</p>
                             <p>Thank you for registering at " . SITE_NAME . ". Please use the following OTP to verify your email address:</p>
                             <div class='otp'>$otp</div>
                             <p><strong>This OTP is valid for " . OTP_EXPIRY_MINUTES . " minutes.</strong></p>
@@ -206,13 +218,30 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         
                         <div class="row g-3">
-                            <!-- Name -->
-                            <div class="col-md-6">
-                                <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="name" name="name" 
-                                       value="<?= $formData['name'] ?? '' ?>" required placeholder="Enter full name">
+                            <!-- First Name -->
+                            <div class="col-md-4">
+                                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name"
+                                       value="<?= htmlspecialchars($formData['first_name'] ?? '') ?>" required maxlength="60"
+                                       pattern="^\p{L}[\p{L}\s'\-]*$" placeholder="First name">
                             </div>
-                            
+
+                            <!-- Middle Name -->
+                            <div class="col-md-4">
+                                <label for="middle_name" class="form-label">Middle Name</label>
+                                <input type="text" class="form-control" id="middle_name" name="middle_name"
+                                       value="<?= htmlspecialchars($formData['middle_name'] ?? '') ?>" maxlength="60"
+                                       pattern="^\p{L}[\p{L}\s'\-]*$" placeholder="Optional">
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="col-md-4">
+                                <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="last_name" name="last_name"
+                                       value="<?= htmlspecialchars($formData['last_name'] ?? '') ?>" required maxlength="60"
+                                       pattern="^\p{L}[\p{L}\s'\-]*$" placeholder="Last name">
+                            </div>
+
                             <!-- Gender -->
                             <div class="col-md-6">
                                 <label class="form-label">Gender <span class="text-danger">*</span></label>

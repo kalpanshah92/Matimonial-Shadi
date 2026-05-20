@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $otp = generateOTP();
         if (saveOTP($pending['email'], $otp, 'registration')) {
             $subject = 'Email Verification OTP - ' . SITE_NAME;
-            $body = "<p>Dear {$pending['name']},</p><p>Your new OTP is:</p><h2 style='color:#C0392B;letter-spacing:5px;'>$otp</h2><p>Valid for " . OTP_EXPIRY_MINUTES . " minutes.</p>";
+            $greetName = firstNameOf($pending) ?: ($pending['name'] ?? '');
+            $body = "<p>Dear {$greetName},</p><p>Your new OTP is:</p><h2 style='color:#C0392B;letter-spacing:5px;'>$otp</h2><p>Valid for " . OTP_EXPIRY_MINUTES . " minutes.</p>";
             if (sendEmail($pending['email'], $subject, $body)) {
                 setFlash('success', 'A new OTP has been sent to your email.');
             } else {
@@ -48,14 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo = getDBConnection();
                 $profileId = generateProfileId($pending['gender']);
 
+                // `name` is auto-populated by the BEFORE INSERT trigger from
+                // first_name + middle_name + last_name (see migration
+                // database/migrations/split_name_into_first_middle_last.sql).
                 $stmt = $pdo->prepare(
-                    "INSERT INTO users (profile_id, name, email, phone, password, gender, dob, religion, caste, mother_tongue, country, state, city, email_verified, status)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'pending')"
+                    "INSERT INTO users (profile_id, first_name, middle_name, last_name, email, phone, password, gender, dob, religion, caste, mother_tongue, country, state, city, email_verified, status)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'pending')"
                 );
 
                 $stmt->execute([
                     $profileId,
-                    $pending['name'],
+                    $pending['first_name']  ?? '',
+                    !empty($pending['middle_name']) ? $pending['middle_name'] : null,
+                    $pending['last_name']   ?? '',
                     $pending['email'],
                     $pending['phone'],
                     $pending['password'],

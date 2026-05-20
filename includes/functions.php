@@ -952,6 +952,80 @@ function isRazorpayConfigured() {
 }
 
 /**
+ * Normalise a name part: trim, collapse internal whitespace, decode HTML entities.
+ * Preserves Unicode letters, apostrophes and hyphens for international names
+ * (e.g. "D'Souza", "Al-Rashid", "Mary-Jane").
+ */
+function normalizeNamePart($value) {
+    $value = (string)$value;
+    // Strip control characters but keep Unicode letters
+    $value = preg_replace('/[\p{C}]+/u', '', $value) ?? '';
+    // Collapse all whitespace runs to single spaces
+    $value = preg_replace('/\s+/u', ' ', $value) ?? '';
+    return trim($value);
+}
+
+/**
+ * Validate a single name part.
+ *  - $required=true means non-empty after normalization.
+ *  - Allows Unicode letters, spaces, apostrophes and hyphens.
+ *  - Length: 1-60 chars.
+ *  - First character must be a letter.
+ *
+ * Returns null if valid, or an error message string if invalid.
+ */
+function validateNamePart($value, $fieldLabel, $required = true, $maxLen = 60) {
+    $value = normalizeNamePart($value);
+    if ($value === '') {
+        return $required ? "$fieldLabel is required." : null;
+    }
+    if (mb_strlen($value) > $maxLen) {
+        return "$fieldLabel must be $maxLen characters or fewer.";
+    }
+    // First char letter; remaining letters / spaces / hyphens / apostrophes
+    if (!preg_match("/^\p{L}[\p{L}\s'\-]*$/u", $value)) {
+        return "$fieldLabel may contain only letters, spaces, hyphens and apostrophes.";
+    }
+    return null;
+}
+
+/**
+ * Build a display name from a user/profile array. Accepts either:
+ *   - a row containing first_name / middle_name / last_name, or
+ *   - a row containing only `name` (legacy fallback).
+ * Always returns a single trimmed string with no double spaces.
+ */
+function displayName($u) {
+    if (is_array($u)) {
+        $first  = isset($u['first_name'])  ? trim((string)$u['first_name'])  : '';
+        $middle = isset($u['middle_name']) ? trim((string)$u['middle_name']) : '';
+        $last   = isset($u['last_name'])   ? trim((string)$u['last_name'])   : '';
+        if ($first !== '' || $last !== '') {
+            $parts = array_filter([$first, $middle, $last], 'strlen');
+            return implode(' ', $parts);
+        }
+        if (isset($u['name'])) {
+            return trim(preg_replace('/\s+/u', ' ', (string)$u['name']));
+        }
+    }
+    return '';
+}
+
+/**
+ * Convenience: short greeting name (first name only) with safe fallback to legacy `name`.
+ */
+function firstNameOf($u) {
+    if (is_array($u)) {
+        if (!empty($u['first_name'])) return trim($u['first_name']);
+        if (!empty($u['name'])) {
+            $parts = preg_split('/\s+/u', trim($u['name']));
+            return $parts[0] ?? '';
+        }
+    }
+    return '';
+}
+
+/**
  * F-02 Build a proxied photo URL that enforces ACL via photo.php.
  * Accepts a stored relative path (e.g. 'uploads/photos/42/abc.jpg').
  * Falls back to a placeholder when the photo row cannot be resolved.

@@ -94,7 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($submittedMaritalStatus)) {
                         $submittedMaritalStatus = $currentUser['marital_status'] ?? '';
                     }
-                    $submittedName = sanitize($_POST['name']);
+                    $submittedFirst  = normalizeNamePart($_POST['first_name']  ?? '');
+                    $submittedMiddle = normalizeNamePart($_POST['middle_name'] ?? '');
+                    $submittedLast   = normalizeNamePart($_POST['last_name']   ?? '');
+                    if ($err = validateNamePart($submittedFirst,  'First Name', true))  { $errors[] = $err; }
+                    if ($err = validateNamePart($submittedMiddle, 'Middle Name', false)) { $errors[] = $err; }
+                    if ($err = validateNamePart($submittedLast,   'Last Name',  true))  { $errors[] = $err; }
+                    $submittedName = trim(implode(' ', array_filter([$submittedFirst, $submittedMiddle, $submittedLast], 'strlen')));
 
                     // Auto-update everything except name directly on users table
                     $autoFields = [
@@ -120,11 +126,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $params[] = $userId;
                     $pdo->prepare("UPDATE users SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
 
-                    // Name change requires admin approval
-                    if ($submittedName !== ($currentUser['name'] ?? '')) {
-                        $oldData = ['name' => $currentUser['name'] ?? ''];
-                        $newData = ['name' => $submittedName];
-                    } else {
+                    // Name change requires admin approval. Track each part
+                    // individually so the approval flow can apply them granularly,
+                    // and include `name` so any legacy reads stay coherent.
+                    $nameChanged = (
+                        $submittedFirst  !== ($currentUser['first_name']  ?? '') ||
+                        $submittedMiddle !== ($currentUser['middle_name'] ?? '') ||
+                        $submittedLast   !== ($currentUser['last_name']   ?? '')
+                    );
+                    if (empty($errors) && $nameChanged) {
+                        $oldData = [
+                            'first_name'  => $currentUser['first_name']  ?? '',
+                            'middle_name' => $currentUser['middle_name'] ?? '',
+                            'last_name'   => $currentUser['last_name']   ?? '',
+                            'name'        => $currentUser['name']        ?? '',
+                        ];
+                        $newData = [
+                            'first_name'  => $submittedFirst,
+                            'middle_name' => $submittedMiddle,
+                            'last_name'   => $submittedLast,
+                            'name'        => $submittedName,
+                        ];
+                    } elseif (empty($errors)) {
                         setFlash('success', 'Profile Updated Successfully');
                         redirect(SITE_URL . '/edit-profile.php?tab=basic');
                     }
@@ -553,9 +576,23 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                             <input type="hidden" name="section" value="basic">
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Full Name *</label>
-                                <input type="text" class="form-control" name="name" value="<?= sanitize($currentUser['name']) ?>" required>
+                            <div class="col-md-4">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" name="first_name"
+                                       value="<?= htmlspecialchars($currentUser['first_name'] ?? firstNameOf($currentUser)) ?>"
+                                       required maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Middle Name</label>
+                                <input type="text" class="form-control" name="middle_name"
+                                       value="<?= htmlspecialchars($currentUser['middle_name'] ?? '') ?>"
+                                       maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$" placeholder="Optional">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" name="last_name"
+                                       value="<?= htmlspecialchars($currentUser['last_name'] ?? '') ?>"
+                                       required maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Religion</label>

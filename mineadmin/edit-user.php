@@ -72,25 +72,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             switch ($section) {
                 case 'account':
-                    $stmt = $pdo->prepare(
-                        "UPDATE users SET name=?, email=?, phone=?, gender=?, dob=?, status=?, 
-                         is_active=?, is_verified=?, is_premium=?, email_verified=?, phone_verified=? WHERE id=?"
-                    );
-                    $stmt->execute([
-                        sanitize($_POST['name']),
-                        sanitize($_POST['email']),
-                        sanitize($_POST['phone']),
-                        $_POST['gender'],
-                        $_POST['dob'],
-                        $_POST['status'],
-                        isset($_POST['is_active']) ? 1 : 0,
-                        isset($_POST['is_verified']) ? 1 : 0,
-                        isset($_POST['is_premium']) ? 1 : 0,
-                        isset($_POST['email_verified']) ? 1 : 0,
-                        isset($_POST['phone_verified']) ? 1 : 0,
-                        $userId
-                    ]);
-                    $success = 'Account information updated.';
+                    // Validate name parts (admin path uses same rules as user path).
+                    $adminFirst  = normalizeNamePart($_POST['first_name']  ?? '');
+                    $adminMiddle = normalizeNamePart($_POST['middle_name'] ?? '');
+                    $adminLast   = normalizeNamePart($_POST['last_name']   ?? '');
+                    if ($err = validateNamePart($adminFirst,  'First Name', true))  { $errors[] = $err; }
+                    if ($err = validateNamePart($adminMiddle, 'Middle Name', false)) { $errors[] = $err; }
+                    if ($err = validateNamePart($adminLast,   'Last Name',  true))  { $errors[] = $err; }
+
+                    if (empty($errors)) {
+                        // BEFORE UPDATE trigger recomputes `name` from the parts.
+                        $stmt = $pdo->prepare(
+                            "UPDATE users SET first_name=?, middle_name=?, last_name=?,
+                             email=?, phone=?, gender=?, dob=?, status=?,
+                             is_active=?, is_verified=?, is_premium=?, email_verified=?, phone_verified=? WHERE id=?"
+                        );
+                        $stmt->execute([
+                            $adminFirst,
+                            $adminMiddle === '' ? null : $adminMiddle,
+                            $adminLast,
+                            sanitize($_POST['email']),
+                            sanitize($_POST['phone']),
+                            $_POST['gender'],
+                            $_POST['dob'],
+                            $_POST['status'],
+                            isset($_POST['is_active']) ? 1 : 0,
+                            isset($_POST['is_verified']) ? 1 : 0,
+                            isset($_POST['is_premium']) ? 1 : 0,
+                            isset($_POST['email_verified']) ? 1 : 0,
+                            isset($_POST['phone_verified']) ? 1 : 0,
+                            $userId
+                        ]);
+                        $success = 'Account information updated.';
+                    }
                     $activeTab = 'account';
                     break;
 
@@ -267,7 +281,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                     <input type="hidden" name="section" value="account">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Name</label><input class="form-control" name="name" value="<?= htmlspecialchars($user['name']) ?>" required></div>
+                        <div class="col-md-4"><label class="form-label">First Name *</label><input class="form-control" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? firstNameOf($user)) ?>" required maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$"></div>
+                        <div class="col-md-4"><label class="form-label">Middle Name</label><input class="form-control" name="middle_name" value="<?= htmlspecialchars($user['middle_name'] ?? '') ?>" maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$" placeholder="Optional"></div>
+                        <div class="col-md-4"><label class="form-label">Last Name *</label><input class="form-control" name="last_name" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required maxlength="60" pattern="^\p{L}[\p{L}\s'\-]*$"></div>
                         <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="<?= htmlspecialchars($user['email']) ?>" required></div>
                         <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>"></div>
                         <div class="col-md-3"><label class="form-label">Gender</label><select class="form-select" name="gender"><option value="Male" <?= $user['gender']==='Male'?'selected':'' ?>>Male</option><option value="Female" <?= $user['gender']==='Female'?'selected':'' ?>>Female</option></select></div>

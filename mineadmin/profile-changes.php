@@ -47,6 +47,9 @@ $requests = $stmt->fetchAll();
 
 // Field labels for human-readable display
 $fieldLabels = [
+    'first_name' => 'First Name',
+    'middle_name' => 'Middle Name',
+    'last_name' => 'Last Name',
     'name' => 'Full Name',
     'phone' => 'Phone Number',
     'email' => 'Email Address',
@@ -250,7 +253,7 @@ $sectionLabels = [
                                         // Map field to section based on field labels
                                         if (in_array($key, ['phone', 'email'])) {
                                             $sectionsWithChanges['contact'] = true;
-                                        } elseif (in_array($key, ['name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city'])) {
+                                        } elseif (in_array($key, ['first_name', 'middle_name', 'last_name', 'name', 'religion', 'caste', 'sub_caste', 'mother_tongue', 'marital_status', 'address', 'address_type', 'country', 'state', 'city'])) {
                                             $sectionsWithChanges['basic'] = true;
                                         } elseif (in_array($key, ['height', 'weight', 'complexion', 'body_type', 'blood_group', 'diet', 'smoking', 'drinking', 'hobbies', 'about_me'])) {
                                             $sectionsWithChanges['personal'] = true;
